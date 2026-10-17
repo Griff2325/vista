@@ -2,6 +2,23 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.5.0 — October 17, 2026
+
+- Renamed the dashboard and GitHub repository to Vista. Existing Android component identifiers are retained for in-place upgrades and bridge/permission compatibility.
+
+- Distinct native Explore and Spotify vibes icons; installed app shortcuts retain their original logos.
+- Eight Home tiles: six installed app shortcuts, Explore, and Spotify vibes; separate News briefs and This week reading controls.
+- Cincinnati-local winter countdown to December 21 and detailed screensaver weather: timestamped current observations, available feels-like/humidity/wind, precipitation chance, and three forecast periods.
+- Preserved the original tree texture and added a separate antialiased silk web tied to its existing branch coordinates, with a separately animated spider.
+- Two-minute idle transition from the open window into a fullscreen scene, with a standard Android DreamService and a reversible Fire OS configuration helper. Set TV sleep to 60 minutes. The local Fire OS dream-route supervisor, like the Home bridge, needs restarting after a full reboot.
+- Screensaver clock, Cincinnati forecast, publisher news briefs, one next-seven-days local events feed, and 24–72-hour snow estimates for three editable resort points.
+- Variable native cloud silhouettes and bounded weather effects driven by Cincinnati NWS observations, with conservative stale-data behavior. Higher-resolution nearest-upscaled terrain preserves pixel edges during fullscreen mesh motion.
+- Tightened the lake mask and kept side-bank vertices fixed so the right shoreline no longer deforms with the water.
+- Falling leaves use integrated wind speed, fractional positions, flutter and edge fades to avoid snapped steps and wind-update jumps.
+- October adds three variations of the original ghost with independent wandering/fade cycles, an occasional broom-riding witch with a sparse sparkle trail, a larger hanging left-tree spider and cached branch web, and a blinking black cat on the foreground rocks. The detailed foreground pumpkins remain; the small background lanterns were removed.
+- Native movie/TV Explorer with optional personal TMDB catalog credential, US JustWatch availability, service/genre filters and a local saved list. Streaming sign-ins and private watch history are not aggregated.
+- Compact Spotify vibe popout, editable Spotify links, and optional real local media-session controls through explicit Android notification access.
+
 ## 0.4.1 — October 17, 2026
 
 - Removed the curtain, folds, and curtain rail from the room, leaving a clear open-window surround.
@@ -32,4 +49,4 @@ Repository established October 17, 2026. Earlier development stages below are su
 
 - WebView-based solarpunk conservatory dashboard with layered plants and animations.
 - Favorite app launching, input/settings actions, NWS forecast, and read-only Watch Next integration.
-- Accessibility helper targeted Sol; Home returned through Amazon's launcher and could flash.
+- Accessibility helper targeted Vista; Home returned through Amazon's launcher and could flash.

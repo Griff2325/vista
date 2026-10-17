@@ -24,7 +24,7 @@ case "$ACTION" in
       echo 'This installer is limited to the tested lassen / RS8180.3742N firmware.' >&2; exit 1
     fi
     test -f "$ROOT/build/bridge/sol-home-bridge" || { echo 'Run scripts/build-bridge.sh first.' >&2; exit 1; }
-    "${ADB[@]}" shell pm path com.griffin.solhome | grep -q '^package:' || { echo 'Install Sol Home first.' >&2; exit 1; }
+    "${ADB[@]}" shell pm path com.griffin.solhome | grep -q '^package:' || { echo 'Install Vista first.' >&2; exit 1; }
     stop_bridge
     "${ADB[@]}" push "$ROOT/build/bridge/sol-home-bridge" /data/local/tmp/sol-home-bridge
     "${ADB[@]}" push "$ROOT/bridge/supervisor.sh" /data/local/tmp/sol-bridge-supervisor.sh

@@ -29,7 +29,7 @@ mkdir -p "$(dirname "$KEYSTORE")"
 if [[ ! -f "$KEYSTORE" ]]; then
   "${JAVABIN}keytool" -genkeypair -noprompt -keystore "$KEYSTORE" -storetype PKCS12 \
     -storepass android -keypass android -alias androiddebugkey \
-    -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Sol Home Development'
+    -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Vista Development'
 fi
 "${JAVABIN}java" -jar "$TOOLS/lib/apksigner.jar" sign --ks "$KEYSTORE" \
   --ks-pass pass:android --out "$ROOT/build/sol-home-debug.apk" "$BUILD/aligned.apk"

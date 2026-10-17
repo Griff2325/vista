@@ -1,6 +1,8 @@
 package com.griffin.solhome;
 
 import android.app.*;
+import android.animation.ValueAnimator;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.os.*;
 import android.content.*;
 import android.content.pm.*;
@@ -21,26 +23,53 @@ import java.text.SimpleDateFormat;
 public class MainActivity extends Activity {
   private HomeView home;
   private PixelSceneView scene;
+  private AmbientWidgetsView widgets;
+  private ValueAnimator immersionAnimator;
+  private boolean ambient=false;
+  private int wakeKey=-1;
+  private static final long IDLE_MS=120000, TRANSITION_MS=2000;
+  private final Runnable idle=()->{if(this.foreground&&hasWindowFocus())setAmbient(true,true);};
   private final Handler handler=new Handler(Looper.getMainLooper());
   private boolean foreground=false;
   private JSONObject weather;
+  private final Runnable widgetChanged=()->{weather=WidgetRepository.get(this).weather();if(home!=null)home.invalidate();};
   private final ArrayList<JSONObject> watching=new ArrayList<>();
   private final String[] favorites={"com.amazon.firetv.youtube","com.netflix.ninja","com.hulu.plus","com.disney.disneyplus","com.spotify.tv.android","com.apple.atve.amazon.appletv"};
   private final String[] names={"YouTube","Netflix","Hulu","Disney+","Spotify","Apple TV"};
   private final Runnable minuteTick=new Runnable(){public void run(){if(foreground){home.invalidate();loadWeather();handler.postDelayed(this,60000);}}};
   @Override public void onCreate(Bundle state){
     super.onCreate(state);getWindow().getDecorView().setSystemUiVisibility(5894);
-    home=new HomeView();scene=new PixelSceneView(this);FrameLayout root=new FrameLayout(this);root.setBackgroundColor(0xff17242a);root.addView(scene);root.addView(home);setContentView(root);home.requestFocus();
+    home=new HomeView();scene=new PixelSceneView(this);FrameLayout root=new FrameLayout(this);root.setBackgroundColor(0xff17242a);root.addView(scene);root.addView(home);widgets=new AmbientWidgetsView(this);widgets.setAlpha(0);root.addView(widgets);setContentView(root);home.requestFocus();
     new Thread(()->{
       Bitmap[] logos=new Bitmap[6];for(int n=0;n<6;n++){try{PackageManager pm=getPackageManager();Intent intent=pm.getLeanbackLaunchIntentForPackage(favorites[n]);Drawable d=intent!=null?pm.getActivityBanner(intent.getComponent()):null;if(d==null)d=pm.getApplicationBanner(favorites[n]);if(d==null)d=pm.getApplicationIcon(favorites[n]);Bitmap icon=Bitmap.createBitmap(256,144,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(icon);float ratio=Math.min(256f/Math.max(1,d.getIntrinsicWidth()),144f/Math.max(1,d.getIntrinsicHeight()));int w=Math.round(d.getIntrinsicWidth()*ratio),h=Math.round(d.getIntrinsicHeight()*ratio);d.setBounds((256-w)/2,(144-h)/2,(256+w)/2,(144+h)/2);d.draw(c);logos[n]=icon;}catch(Exception ignored){}}
       runOnUiThread(()->{home.logos=logos;home.invalidate();});
     },"sol-logos").start();
   }
-  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));}
-  @Override protected void onResume(){super.onResume();foreground=true;home.ambient=false;home.requestFocus();home.invalidate();handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.start();loadWatching();}
-  @Override protected void onPause(){foreground=false;handler.removeCallbacks(minuteTick);scene.stop();super.onPause();}
+  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);SpotifyPanel.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));setAmbient(false,true);armIdle();}
+  @Override protected void onResume(){super.onResume();foreground=true;setAmbient(false,true);home.requestFocus();handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
+  @Override protected void onPause(){foreground=false;handler.removeCallbacks(minuteTick);handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();scene.stop();widgets.stop();WidgetRepository.get(this).unlisten(widgetChanged);super.onPause();}
   @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);scene.release();super.onDestroy();}
-  @Override public void onBackPressed(){home.ambient=false;home.selected=home.lastApp;home.invalidate();}
+  @Override public void onWindowFocusChanged(boolean focus){super.onWindowFocusChanged(focus);if(focus)armIdle();else handler.removeCallbacks(idle);}
+  @Override public void onUserInteraction(){super.onUserInteraction();armIdle();}
+  private void armIdle(){handler.removeCallbacks(idle);if(foreground&&!ambient){long delay=Math.max(1000,Math.min(IDLE_MS,getIntent().getLongExtra("sol.preview.idle_ms",IDLE_MS)));handler.postDelayed(idle,Math.max(0,delay-TRANSITION_MS));}}
+  private void setAmbient(boolean value,boolean animate){
+    ambient=value;handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();
+    float target=value?1:0;
+    if(!animate||Math.abs(scene.immersion()-target)<.001f){setImmersion(target);return;}
+    immersionAnimator=ValueAnimator.ofFloat(scene.immersion(),target);immersionAnimator.setDuration(value?TRANSITION_MS:650);immersionAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+    immersionAnimator.addUpdateListener(a->setImmersion((Float)a.getAnimatedValue()));immersionAnimator.start();
+    android.util.Log.i("SolAmbient",value?"Expanding to screensaver":"Returning to Home");
+  }
+  private void setImmersion(float amount){scene.setImmersion(amount);home.setAlpha(1-amount);home.invalidate();widgets.setAlpha(Math.max(0,(amount-.55f)/.45f));}
+  @Override public boolean dispatchKeyEvent(KeyEvent event){
+    int key=event.getKeyCode();
+    if(wakeKey==key){if(event.getAction()==KeyEvent.ACTION_UP)wakeKey=-1;return true;}
+    if(event.getAction()==KeyEvent.ACTION_DOWN&&ambient){setAmbient(false,true);armIdle();
+      if(key!=KeyEvent.KEYCODE_VOLUME_UP&&key!=KeyEvent.KEYCODE_VOLUME_DOWN&&key!=KeyEvent.KEYCODE_VOLUME_MUTE&&key!=KeyEvent.KEYCODE_POWER){wakeKey=key;return true;}}
+    return super.dispatchKeyEvent(event);
+  }
+  @Override public boolean dispatchTouchEvent(MotionEvent event){if(ambient){if(event.getAction()==MotionEvent.ACTION_UP){setAmbient(false,true);armIdle();}return true;}return super.dispatchTouchEvent(event);}
+  @Override public void onBackPressed(){setAmbient(false,true);home.selected=home.lastApp;home.invalidate();armIdle();}
   private String localTime(String pattern,Date date){SimpleDateFormat format=new SimpleDateFormat(pattern,Locale.US);format.setTimeZone(TimeZone.getTimeZone(CincinnatiSky.ZONE_ID));return format.format(date);}
   private void toast(String s){runOnUiThread(()->Toast.makeText(this,s,Toast.LENGTH_SHORT).show());}
   private void openApp(String pkg){try{
@@ -63,7 +92,17 @@ public class MainActivity extends Activity {
       catch(Exception e){toast("Use the Input button on your TV remote.");}
     }).setNegativeButton("Close",null).show();
   }catch(Exception e){toast("Use the Input button on your TV remote.");}}
-  private void settings(){try{startActivity(new Intent().setClassName("com.amazon.tv.launcher","com.amazon.tv.launcher.ui.MainSettingsActivity"));}catch(Exception e){toast("Hold Home to open TV settings.");}}
+  private void tvSettings(){try{startActivity(new Intent().setClassName("com.amazon.tv.launcher","com.amazon.tv.launcher.ui.MainSettingsActivity"));}catch(Exception e){toast("Hold Home to open TV settings.");}}
+  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes"},(d,n)->{if(n==0)tvSettings();else if(n==1)snowLocations();else if(n==2)EventsPanel.interests(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
+  private void snowLocations(){WidgetRepository repo=WidgetRepository.get(this);JSONArray locations=repo.locations();String[] labels=new String[locations.length()+2];for(int i=0;i<locations.length();i++)labels[i]=locations.optJSONObject(i).optString("name");labels[locations.length()]="Add location";labels[locations.length()+1]="Restore default resorts";
+    new AlertDialog.Builder(this).setTitle("Snow forecast locations").setItems(labels,(d,n)->{if(n==locations.length()+1){repo.resetLocations();snowLocations();}else editSnowLocation(locations,n);}).setNegativeButton("Close",null).show();}
+  private void editSnowLocation(JSONArray locations,int index){
+    JSONObject current=locations.optJSONObject(index);android.widget.LinearLayout form=new android.widget.LinearLayout(this);form.setOrientation(1);form.setPadding(32,12,32,12);
+    android.widget.EditText name=new android.widget.EditText(this),point=new android.widget.EditText(this);name.setHint("Resort or location name");point.setHint("Forecast point: latitude, longitude (US)");name.setSingleLine(true);point.setSingleLine(true);form.addView(name);form.addView(point);
+    if(current!=null){name.setText(current.optString("name"));point.setText(current.optDouble("lat")+", "+current.optDouble("lon"));}
+    AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Snow location").setView(form).setPositiveButton("Save",null).setNegativeButton("Cancel",null).setNeutralButton(current==null?"Defaults":"Remove",(d,w)->{if(current==null)WidgetRepository.get(this).resetLocations();else{locations.remove(index);if(locations.length()==0)WidgetRepository.get(this).resetLocations();else WidgetRepository.get(this).saveLocations(locations);}}).create();
+    dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{try{String label=name.getText().toString().trim();String[] pair=point.getText().toString().split(",");double lat=Double.parseDouble(pair[0].trim()),lon=Double.parseDouble(pair[1].trim());if(label.isEmpty()||label.length()>40||pair.length!=2||!Double.isFinite(lat)||!Double.isFinite(lon)||lat<18||lat>72||lon< -180||lon> -60||(current==null&&locations.length()>=6))throw new IllegalArgumentException();locations.put(index,WidgetRepository.location(label,lat,lon));WidgetRepository.get(this).saveLocations(locations);dialog.dismiss();}catch(Exception error){point.setError("Enter a name and valid US latitude, longitude");}}));dialog.show();
+  }
   private void loadWatching(){new Thread(()->{
     ArrayList<JSONObject> items=new ArrayList<>();
     try(Cursor c=getContentResolver().query(Uri.parse("content://android.media.tv/watch_next_program"),new String[]{"package_name","title","intent_uri","last_playback_position_millis","duration_millis"},null,null,"last_engagement_time_utc_millis DESC")){
@@ -74,42 +113,25 @@ public class MainActivity extends Activity {
     runOnUiThread(()->{watching.clear();watching.addAll(items);home.invalidate();});
   },"sol-progress").start();}
   private void continueWatching(){
-    if(watching.isEmpty()){new AlertDialog.Builder(this).setTitle("Continue watching").setMessage("Your streaming apps have not shared any viewing progress with Sol. You can still resume inside each app.").setPositiveButton("OK",null).show();return;}
+    if(watching.isEmpty()){new AlertDialog.Builder(this).setTitle("Continue watching").setMessage("Your streaming apps have not shared any viewing progress with Vista. You can still resume inside each app.").setPositiveButton("OK",null).show();return;}
     final ArrayList<JSONObject> snapshot=new ArrayList<>(watching);String[] titles=new String[snapshot.size()];
     for(int n=0;n<titles.length;n++){JSONObject p=snapshot.get(n);long total=p.optLong("duration"),position=p.optLong("position");titles[n]=p.optString("title")+(total>0?"  ·  "+(position*100/total)+"%":"");}
     new AlertDialog.Builder(this).setTitle("Continue watching").setItems(titles,(d,n)->{
       JSONObject item=snapshot.get(n);try{Intent i=Intent.parseUri(item.getString("link"),Intent.URI_INTENT_SCHEME);i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);i.setSelector(null);i.setClipData(null);i.setPackage(item.getString("pkg"));startActivity(i);}catch(Exception e){openApp(item.optString("pkg"));}
     }).setNegativeButton("Close",null).show();
   }
-  private JSONObject getJson(String url)throws Exception{
-    HttpURLConnection c=(HttpURLConnection)new URL(url).openConnection();c.setConnectTimeout(8000);c.setReadTimeout(8000);c.setRequestProperty("User-Agent","SolHome/0.4 (Cincinnati forecast)");c.setRequestProperty("Accept","application/geo+json");
-    try(BufferedReader r=new BufferedReader(new InputStreamReader(c.getInputStream(),"UTF-8"))){StringBuilder s=new StringBuilder();String line;while((line=r.readLine())!=null)s.append(line);return new JSONObject(s.toString());}finally{c.disconnect();}
-  }
-  private volatile boolean weatherLoading=false;
-  private long lastWeatherAttempt=0;
-  private void loadWeather(){
-    SharedPreferences p=getSharedPreferences("weather",0);String cached=p.getString("value",null);long at=p.getLong("at",0);
-    if(cached!=null)try{weather=new JSONObject(cached).put("stale",System.currentTimeMillis()-at>3600000);home.invalidate();}catch(Exception ignored){}
-    if(weatherLoading||(cached!=null&&System.currentTimeMillis()-at<1800000)||System.currentTimeMillis()-lastWeatherAttempt<300000)return;
-    weatherLoading=true;lastWeatherAttempt=System.currentTimeMillis();
-    new Thread(()->{try{
-      String endpoint=getJson("https://api.weather.gov/points/39.1031,-84.5120").getJSONObject("properties").getString("forecast");if(!endpoint.startsWith("https://api.weather.gov/"))throw new IOException();
-      JSONObject first=getJson(endpoint).getJSONObject("properties").getJSONArray("periods").getJSONObject(0);
-      JSONObject data=new JSONObject().put("temperature",first.getInt("temperature")).put("unit",first.getString("temperatureUnit")).put("summary",first.getString("shortForecast")).put("period",first.getString("name")).put("detail",first.getString("detailedForecast")).put("stale",false);
-      p.edit().putString("value",data.toString()).putLong("at",System.currentTimeMillis()).apply();runOnUiThread(()->{weather=data;home.invalidate();});
-    }catch(Exception ignored){}finally{weatherLoading=false;}},"sol-weather").start();
-  }
+  private void loadWeather(){WidgetRepository.get(this).refresh();weather=WidgetRepository.get(this).weather();home.invalidate();}
   class HomeView extends View {
-    Bitmap[] logos=new Bitmap[6];int selected=0,lastApp=0;boolean ambient=false;
+    Bitmap[] logos=new Bitmap[6];int selected=0,lastApp=0;
     final Paint paint=new Paint(3);final int white=Color.rgb(242,240,231),muted=Color.rgb(168,174,173),gold=Color.rgb(207,182,132);
     final String[] controls={"All apps","Inputs","Ambient","Settings","Watching"};
     final float[] controlX={100,300,492,700,930};
     final Shader wallLight=new LinearGradient(0,0,1920,900,0xff192b2c,0xff30403c,Shader.TileMode.CLAMP);
     final Shader railLight=new LinearGradient(72,0,577,0,0xff152323,0xff1c2e2c,Shader.TileMode.CLAMP);
-    HomeView(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);setContentDescription("Sol Home. Use arrows to choose an app tile or bottom control, and OK to open.");}
+    HomeView(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);setContentDescription("Vista. Use arrows to choose an app tile or bottom control, and OK to open.");}
     void text(Canvas c,String s,float x,float y,float size,int color,boolean bold){paint.setShader(null);paint.setColor(color);paint.setTextSize(size);paint.setTypeface(Typeface.create("sans-serif"+(bold?"-medium":"-light"),Typeface.NORMAL));c.drawText(s,x,y,paint);}
     void drawRoom(Canvas c){
-      float l=PixelSceneView.WINDOW_LEFT,t=PixelSceneView.WINDOW_TOP,r=PixelSceneView.WINDOW_RIGHT,b=PixelSceneView.WINDOW_BOTTOM;
+      float l=scene.windowLeft(),t=scene.windowTop(),r=scene.windowRight(),b=scene.windowBottom();
       paint.setStyle(Paint.Style.FILL);
       // Room surfaces stay in this retained View; only the view outdoors animates.
       c.save();c.clipOutRect(l,t,r,b);paint.setShader(wallLight);c.drawRect(0,0,1920,1080,paint);paint.setShader(null);
@@ -128,8 +150,8 @@ public class MainActivity extends Activity {
       paint.setColor(0xff30413a);c.drawRect(1204,970,1206,1044,paint);
     }
     void drawAppNiche(Canvas c){
-      paint.setShader(null);paint.setColor(0x30081113);c.drawRoundRect(new RectF(74,46,584,889),18,18,paint);
-      paint.setShader(railLight);c.drawRoundRect(new RectF(77,40,580,880),16,16,paint);paint.setShader(null);
+      paint.setShader(null);paint.setColor(0x30081113);c.drawRoundRect(new RectF(74,46,584,938),18,18,paint);
+      paint.setShader(railLight);c.drawRoundRect(new RectF(77,40,580,931),16,16,paint);paint.setShader(null);
     }
     void utilityIcon(Canvas c,int kind,float x,float y,int color){
       c.save();c.translate(x,y);paint.setShader(null);paint.setColor(color);paint.setStrokeWidth(2);paint.setStyle(Paint.Style.STROKE);
@@ -141,20 +163,37 @@ public class MainActivity extends Activity {
       paint.setStyle(Paint.Style.FILL);c.restore();
     }
     @Override protected void onDraw(Canvas c){
-      super.onDraw(c);scene.setAmbient(ambient);c.save();c.scale(getWidth()/1920f,getHeight()/1080f);
-      drawRoom(c);if(ambient){c.restore();return;}
+      super.onDraw(c);c.save();c.scale(getWidth()/1920f,getHeight()/1080f);
+      drawRoom(c);
       drawAppNiche(c);
-      text(c,"SOL",108,82,25,white,true);text(c,"/",174,82,23,muted,false);text(c,"HOME",201,82,17,muted,false);
+      text(c,"VISTA",108,82,25,white,true);text(c,"/",207,82,23,muted,false);text(c,"HOME",234,82,17,muted,false);
       Date now=new Date();text(c,localTime("h:mm",now),103,207,99,white,false);
       text(c,localTime("a",now),368,204,19,muted,false);
       text(c,localTime("EEEE, MMMM d",now),108,252,23,muted,false);
-      for(int i=0;i<names.length;i++){
-        float x=108+(i%2)*233,y=326+(i/2)*166;boolean focus=selected==i;RectF tile=new RectF(x,y,x+200,y+113);
+      for(int i=0;i<8;i++){
+        int item=i<6?i:i+5;String label=i<6?names[i]:i==6?"Explore":"Spotify vibes";
+        float x=108+(i%2)*233,y=286+(i/2)*150;boolean focus=selected==item;RectF tile=new RectF(x,y,x+200,y+113);
         paint.setColor(focus?0xffcfb684:0xff3c4c4b);c.drawRoundRect(new RectF(x-3,y-3,x+203,y+116),8,8,paint);
         paint.setColor(0xff192322);c.drawRoundRect(tile,6,6,paint);
-        if(logos[i]!=null){paint.setColor(Color.WHITE);c.drawBitmap(logos[i],null,tile,paint);}else text(c,names[i],x+18,y+67,25,white,true);
-        text(c,names[i],x,y+144,21,focus?white:muted,focus);
+        Bitmap logo=logos[i<6?i:4];
+        if(i==6){
+          paint.setColor(0xff405f54);c.drawRoundRect(new RectF(x+55,y+35,x+127,y+85),8,8,paint);
+          paint.setColor(0xffb9d4a7);c.drawRoundRect(new RectF(x+73,y+23,x+145,y+73),8,8,paint);
+          paint.setColor(0xff1b302a);Path play=new Path();play.moveTo(x+101,y+36);play.lineTo(x+122,y+48);play.lineTo(x+101,y+60);play.close();c.drawPath(play,paint);
+          paint.setColor(gold);c.drawRect(x+151,y+25,x+154,y+42,paint);c.drawRect(x+144,y+32,x+161,y+35,paint);
+        }
+        else if(i==7){
+          paint.setColor(0xffb9d4a7);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(6);paint.setStrokeCap(Paint.Cap.ROUND);
+          Path arch=new Path();arch.moveTo(x+74,y+59);arch.cubicTo(x+74,y+16,x+126,y+16,x+126,y+59);c.drawPath(arch,paint);
+          paint.setStyle(Paint.Style.FILL);c.drawRoundRect(new RectF(x+68,y+50,x+82,y+79),6,6,paint);c.drawRoundRect(new RectF(x+118,y+50,x+132,y+79),6,6,paint);
+          paint.setStrokeWidth(3);c.drawLine(x+92,y+52,x+92,y+66,paint);c.drawLine(x+100,y+45,x+100,y+72,paint);c.drawLine(x+108,y+49,x+108,y+68,paint);
+          paint.setStrokeCap(Paint.Cap.BUTT);paint.setColor(gold);c.drawRect(x+145,y+24,x+148,y+41,paint);c.drawRect(x+138,y+31,x+155,y+34,paint);
+        }
+        else if(logo!=null){paint.setColor(Color.WHITE);c.drawBitmap(logo,null,tile,paint);}else text(c,label,x+18,y+67,25,white,true);
+        text(c,label,x,y+137,20,focus?white:muted,focus);
       }
+      String[] shortcuts={"News briefs","This week"};
+      for(int i=0;i<shortcuts.length;i++){float x=108+i*233;boolean focus=selected==13+i;paint.setColor(focus?0xff405549:0xff223832);c.drawRoundRect(new RectF(x,896,x+200,926),8,8,paint);text(c,shortcuts[i],x+16,918,18,focus?white:muted,focus);}
       for(int i=0;i<controls.length;i++){
         boolean focus=selected==6+i;float x=controlX[i];String label=controls[i]+(i==4&&!watching.isEmpty()?" · "+watching.size():"");
         utilityIcon(c,i,x,986,focus?gold:muted);text(c,label,x+34,1010,22,focus?white:muted,focus);
@@ -170,24 +209,23 @@ public class MainActivity extends Activity {
     }
     void activate(){
       if(selected<6){lastApp=selected;openApp(favorites[selected]);}
-      else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:ambient=true;invalidate();break;case 9:settings();break;case 10:continueWatching();break;}
+      else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;}
     }
     @Override public boolean onKeyDown(int key,KeyEvent e){
-      if(ambient){ambient=false;invalidate();return true;}
       switch(key){
-        case KeyEvent.KEYCODE_DPAD_UP:if(selected>=6)selected=lastApp;else selected=Math.max(selected%2,selected-2);break;
-        case KeyEvent.KEYCODE_DPAD_DOWN:if(selected<4)selected+=2;else if(selected<6){lastApp=selected;selected=6;}break;
-        case KeyEvent.KEYCODE_DPAD_RIGHT:if(selected<6){if(selected%2==0)selected++;else{lastApp=selected;selected=6;}}else selected=Math.min(10,selected+1);break;
-        case KeyEvent.KEYCODE_DPAD_LEFT:if(selected>6)selected--;else if(selected==6)selected=lastApp;else if(selected%2==1)selected--;break;
+        case KeyEvent.KEYCODE_DPAD_UP:if(selected>=13)selected-=2;else if(selected>=11)selected=selected==11?4:5;else if(selected>=6)selected=lastApp;else selected=Math.max(selected%2,selected-2);break;
+        case KeyEvent.KEYCODE_DPAD_DOWN:if(selected<4)selected+=2;else if(selected<6){lastApp=selected;selected=selected==4?11:12;}else if(selected==11||selected==12)selected+=2;else if(selected>=13)selected=6;break;
+        case KeyEvent.KEYCODE_DPAD_RIGHT:if(selected==11||selected==13)selected++;else if(selected==12||selected==14)selected=6;else if(selected<6){if(selected%2==0)selected++;else{lastApp=selected;selected=6;}}else selected=Math.min(10,selected+1);break;
+        case KeyEvent.KEYCODE_DPAD_LEFT:if(selected==12||selected==14)selected--;else if(selected>=11){}else if(selected>6)selected--;else if(selected==6)selected=lastApp;else if(selected%2==1)selected--;break;
         case KeyEvent.KEYCODE_DPAD_CENTER:case KeyEvent.KEYCODE_ENTER:if(e.getRepeatCount()==0)activate();return true;
         default:return super.onKeyDown(key,e);
       }
       if(selected<6)lastApp=selected;invalidate();return true;
     }
     @Override public boolean onTouchEvent(android.view.MotionEvent e){if(e.getAction()!=android.view.MotionEvent.ACTION_UP)return true;
-      if(ambient){ambient=false;invalidate();return true;}
       float x=e.getX()*1920/getWidth(),y=e.getY()*1080/getHeight();
-      if(x>=88&&x<570&&y>=310&&y<824){selected=Math.min(5,Math.max(0,(int)((y-326)/166))*2+(x>=328?1:0));activate();}
+      if(x>=88&&x<570&&y>=280&&y<882){int row=Math.min(3,Math.max(0,(int)((y-286)/150))),col=x>=328?1:0;selected=row<3?row*2+col:11+col;activate();}
+      else if(y>=896&&y<934&&x>=100&&x<573){selected=x<328?13:14;activate();}
       else if(y>954&&x<1180){for(int i=controls.length-1;i>=0;i--)if(x>=controlX[i]-20){selected=6+i;activate();break;}}
       else if(y>954&&x>1220){new AlertDialog.Builder(MainActivity.this).setTitle("Cincinnati forecast").setMessage(weather==null?"Forecast unavailable":weather.optString("detail")+"\n\nNational Weather Service · Cincinnati city center").setPositiveButton("Close",null).show();}
       invalidate();return true;

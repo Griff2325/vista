@@ -2,11 +2,11 @@
 
 This is a small ARM32 Linux syscall-only program, not an Android Accessibility Service and not a root exploit. On the tested Panasonic firmware, the already authorized ADB shell belongs to the `input` and `uhid` groups and is permitted to use the needed evdev/uinput operations. An ordinary APK does not have those privileges.
 
-The program exclusively grabs the physical remote using EVIOCGRAB, recreates its supported keyboard buttons through uinput, and handles Home itself before Android sees a Home event. Short Home release starts Sol directly through `cmd activity start`; holding for more than 800 ms opens the existing system Settings Activity. Other supported keys pass through. Capability bits and vendor/product IDs are specific to the tested remote's keymap.
+The program exclusively grabs the physical remote using EVIOCGRAB, recreates its supported keyboard buttons through uinput, and handles Home itself before Android sees a Home event. Short Home release starts Vista directly through `cmd activity start`; holding for more than 800 ms opens the existing system Settings Activity. Other supported keys pass through. Capability bits and vendor/product IDs are specific to the tested remote's keymap.
 
 The original all-key capability prototype was misclassified by Android as an external stylus. Restricting capabilities to the real buttons fixed forwarding. The owner then confirmed the Home path and other tested buttons worked. No high-speed screen recording or automated end-to-end physical-key assertion was captured.
 
-`supervisor.sh` discovers the physical remote through `getevent -lp`, starts the bridge, and retries after it exits. The virtual remote is named `Sol Home Remote`, so it is not selected as the physical source. Physical Bluetooth reconnection has not yet been tested. The supervisor PID guard is meant to avoid duplicate launches, not to provide a general hardened service manager.
+`supervisor.sh` discovers the physical remote through `getevent -lp`, starts the bridge, and retries after it exits. The virtual remote is named `Vista Remote`, so it is not selected as the physical source. Physical Bluetooth reconnection has not yet been tested. The supervisor PID guard is meant to avoid duplicate launches, not to provide a general hardened service manager.
 
 ## Build and run on the tested TV
 

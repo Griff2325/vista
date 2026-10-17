@@ -85,6 +85,59 @@
         "pass": true
       },
       "notes": "Smooth room and open aperture, no app-row dividers; approximately 30 fps. Short development sample, not whole-TV performance."
+    },
+    "pixel_autumn_0_5": {
+      "navigation": {
+        "frames": 834,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 6,
+        "source_sha256": "1eb4e15098ffe30ad4214b187a3ac1303a85188b4c878dae05889448c9684160"
+      },
+      "idle": {
+        "frames": 93,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 5,
+        "source_sha256": "c599f4270b5f37f13b7e928d29213a1058f1241d9676f3baa85310c676d5fa5f"
+      },
+      "main_process_pss_kib": 92669,
+      "memory_source_sha256": "17e544d84fd3fc70574ac81536b3082f231c37d7d216205da72ac9e1cf7a7830",
+      "decoded_scene_bytes": 8202040,
+      "ambient_idle": {
+        "frames": 93,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 5,
+        "source_sha256": "540ff7f18a90c4a4a4edf70c2ded70c8cb0b248bf3ecd6dd21a58a37e605daee"
+      },
+      "ambient_process_pss_kib": 71859,
+      "ambient_memory_source_sha256": "b3b36b108e37fcc37b26921d685e0fc5b022588b0aea846b1a35f2aa4d48b579",
+      "hidden_animation_check": {
+        "before": 110,
+        "after": 110,
+        "pass": true,
+        "before_source_sha256": "87b9ad003f194e0a4cba51f3327aed8f4d08fb6879c3f5af5be7e57d0051af1a",
+        "after_source_sha256": "5387697d457231b5c204b85535deb073f2ce3efafe320c92115ae8a86287a64f"
+      },
+      "system_dream": {
+        "natural_idle_bound_at_seconds": 124,
+        "natural_idle_capture_sha256": "d9fd12923373f3b8cfe4b66d33319e9bf86bc5530fb09d0d7d535566ea5de8e1",
+        "final_manual_reentry_bound": true,
+        "final_reentry_capture_sha256": "3a464e46dce398dd4aa5139073c49d722dbc65e1c34079ab4bf252288877394d",
+        "wake_unbound": true,
+        "wake_capture_sha256": "3766d1d5cb2586bf7d477f2c924b687380b15e9af1d4c8d45a2c30e8d0bfbf3e",
+        "sleep_setting_ms": 3600000,
+        "full_sleep_cycle_observed": false
+      },
+      "notes": "Eight Home tiles, live widgets, observation-driven weather and three fading ghosts/spider/sparkling witch. Cold Home memory includes unreclaimed startup/runtime caches; later dream memory is a separate snapshot, not an apples-to-apples mode saving. Short development samples, not whole-TV performance.",
+      "final_polish": {
+        "separate_web_and_vista_branding_installed": true,
+        "home_capture_sha256": "ed3ea51e88848e968e1ae3296f86bbbf5f7f3a2972a59091073b33fbe34126ab",
+        "ambient_capture_sha256": "39730518c746a853b705d881f63b74e565e34d3b0a7bdcceb1bb21cf6aec3343",
+        "dream_capture_sha256": "e19e47ffe025854ff39d70003e26dde7a8028e70e63afd84990213846594045e",
+        "notes": "Visual check after final weather/countdown/web polish. No new performance measurement claimed."
+      }
     }
   }
 }

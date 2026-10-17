@@ -2,7 +2,7 @@
 
 ## Top priority: seamless Home across reboot
 
-The physical Home route works during a supervised bridge session, based on owner testing. The bridge does not automatically start after a full reboot. Establish a compatible on-device startup mechanism; if privileged access is necessary, investigate exact-firmware compatibility and recovery before attempting a device-specific root method. There is no verified root method for this TV in this repository.
+The physical Home route works during a supervised bridge session, based on owner testing. The Home bridge and Fire OS dream-route supervisor do not automatically start after a full reboot. Establish a compatible on-device startup mechanism; if privileged access is necessary, investigate exact-firmware compatibility and recovery before attempting a device-specific root method. There is no verified root method for this TV in this repository.
 
 The tested device is Panasonic W95A / AFTLAS01, lassen, Fire OS 8.1.8.0 RS8180.3742N, kernel 5.15.180-android13-8-gaaffd2df87b5-dirty. Root tools for another model, even on the same Fire OS major version, are not interchangeable. No bootloader unlock, downgrade, factory reset, core-package disable, or partition flash was performed.
 
@@ -20,4 +20,8 @@ The tested device is Panasonic W95A / AFTLAS01, lassen, Fire OS 8.1.8.0 RS8180.3
 - Verified service-specific progress sources for Continue Watching, respecting app/profile access. The standard provider was empty; all-platform coverage remains unimplemented.
 - Pixel Autumn, Cincinnati day/night lighting, and October Halloween accents are implemented. Winter artwork remains future work; no automatic season-art switch or scheduled task has been configured.
 - User-selectable reduced motion and accessibility refinements.
-- Personal photos and optional local information/room integrations; not implemented in the current dashboard.
+- Personal photos and optional room integrations remain unimplemented. Live local information cards are implemented in 0.5.
+- Validate Explore with an owner-supplied TMDB credential. No real authorized catalog query has yet been demonstrated. Availability and private streaming sign-ins are different data.
+- Physically verify Spotify content-link behavior and transport controls with an actual local Spotify session; content links do not guarantee autoplay.
+- Expand Cincinnati source coverage beyond the current parks, Memorial Hall, team schedules and WCPO reporting. This is not a comprehensive city events index.
+- Observe the complete 60-minute idle sleep cycle and long-running standby/re-entry behavior; setting readback alone does not prove them.

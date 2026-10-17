@@ -1,13 +1,21 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="5" android:versionName="0.4.1">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="6" android:versionName="0.5.0">
   <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="28"/>
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA"/>
   <uses-feature android:name="android.software.leanback" android:required="false"/>
   <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
-  <application android:label="Sol Home" android:icon="@drawable/icon" android:banner="@drawable/banner" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false" android:usesCleartextTraffic="false">
+  <application android:label="Vista" android:icon="@drawable/icon" android:banner="@drawable/banner" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false" android:usesCleartextTraffic="false">
     <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape" android:launchMode="singleTask">
       <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/><category android:name="android.intent.category.LEANBACK_LAUNCHER"/></intent-filter>
       <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.HOME"/><category android:name="android.intent.category.DEFAULT"/></intent-filter>
     </activity>
+    <activity android:name=".StreamingActivity" android:exported="false" android:screenOrientation="landscape"/>
+    <service android:name=".SpotifyMediaListener" android:label="Vista — Spotify controls" android:exported="true" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+      <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>
+    </service>
+    <service android:name=".SolDreamService" android:label="Vista — Pixel Autumn" android:exported="true" android:permission="android.permission.BIND_DREAM_SERVICE">
+      <intent-filter><action android:name="android.service.dreams.DreamService"/></intent-filter>
+      <meta-data android:name="android.service.dream" android:resource="@xml/dream"/>
+    </service>
   </application>
 </manifest>

@@ -1,50 +1,58 @@
-# Sol Home
+# Vista
 
-[![Build](https://github.com/Griff2325/sol-home/actions/workflows/build.yml/badge.svg)](https://github.com/Griff2325/sol-home/actions/workflows/build.yml)
+[![Build](https://github.com/Griff2325/vista/actions/workflows/build.yml/badge.svg)](https://github.com/Griff2325/vista/actions/workflows/build.yml)
 
 A native Android TV dashboard and experimental direct-Home input bridge, built and tested on a Panasonic Fire TV.
 
-![Sol Home dashboard: app-logo tiles in a quiet left pane beside an autumn forest window](docs/images/dashboard.png)
+![Vista dashboard: app-logo tiles in a quiet left pane beside an autumn forest window](docs/images/dashboard.png)
 
-Sol Home explores two practical problems: making a custom television interface feel responsive on limited hardware, and getting the physical Home button back to that interface without briefly showing Fire TV Home. The project combines native Android rendering, lifecycle-aware ambient effects, on-device performance measurement, and a small Linux input bridge.
+Vista explores two practical problems: making a custom television interface feel responsive on limited hardware, and getting the physical Home button back to that interface without briefly showing Fire TV Home. The project combines native Android rendering, lifecycle-aware ambient effects, on-device performance measurement, and a small Linux input bridge.
 
 **Status:** working device-specific prototype. Physical remote Home and tested navigation buttons work through the bridge. **Automatic bridge startup after a full TV reboot is still unresolved.** This is not a universal Fire TV replacement, an alternative TV firmware, or a demonstrated root method.
 
 ## What it does
 
-- Six remote-navigable logo tiles: YouTube, Netflix, Hulu, Disney+, Spotify, and Apple TV. Logos come from installed app banners/icons at runtime.
-- All-apps picker, TV input picker, ambient scene mode, and a direct route to existing system Settings.
-- Native Canvas pixel-art lake viewed through one open window, with swaying foreground trees, drifting clouds, moving water, and occasional leaves. A smooth recessed app rail and bottom console form the surrounding room.
-- Reusable textures (about 2.63 MiB decoded), a retained static interior/interface, and vsync-paced motion at about 30 fps that stops when the Activity pauses. Cincinnati solar lighting is calculated offline; October adds pumpkins and a roaming, blinking ghost.
-- Clock/date and cached National Weather Service forecasts. Cincinnati city-center coordinates are the current fixed example location; this is not GPS or automatic location detection.
-- Read-only Android Watch Next integration. No installed app shared progress in the tested setup, so cross-platform Continue Watching remains unavailable.
-- An optional ADB-shell input bridge that intercepts physical Home before Android launches Amazon Home, while forwarding the other mapped remote keys.
+- Eight remote-navigable Home tiles: YouTube, Netflix, Hulu, Disney+, Spotify, Apple TV, Explore and Spotify vibes. Installed app banners supply the service logos.
+- Native pixel-art lake viewed through one open window, with a smooth room surround and bottom utility console. After two minutes idle it expands into a fullscreen scene with a clock, winter countdown and information cards; TV sleep is configured to 60 minutes.
+- Swaying trees, flowing water, five cloud silhouettes, and sparse weather effects driven by Cincinnati NWS observations. Offline Cincinnati solar lighting handles the day/night cycle. October adds three wandering/fading ghosts, a sparkling witch flyby, a hanging spider, pumpkins, and a cat.
+- Readable MIT News/BBC publisher briefs, one next-seven-days Cincinnati list combining shows, markets, sports and recent food reporting, detailed Cincinnati weather, plus 24–72-hour snow estimates for editable resort points. Default points are Perfect North, Breckenridge and Alyeska.
+- Explore combines optional TMDB movie/TV search with US JustWatch availability and selected-service/genre discovery. A personal API credential is required for catalog results; installed-app shortcuts work without it. Sign-ins, entitlement, YouTube's catalog and private viewing histories are not aggregated.
+- Spotify vibes opens default playlists or saved Spotify content links, with an optional compact player using actual Spotify sessions on the TV. Playback controls require explicit Android notification access; playlist links do not guarantee autoplay.
+- Reusable scene textures, approximately 30 fps vsync pacing, and paused-when-hidden animation. No WebView or fullscreen video player.
+- All-apps picker, TV input picker and existing TV Settings. Read-only Android Watch Next integration is present, but no installed app shared progress in the tested setup.
+- Optional local ADB-shell supervisors for direct physical Home interception and the device-specific system screensaver route. Both need bootstrapping after a full TV reboot.
 
 ## Measured on the TV
 
-| Short navigation sample | WebView prototype | Current Pixel Autumn dashboard |
+| Historical short navigation sample | WebView prototype | Pixel Autumn 0.4 |
 |---|---:|---:|
 | Janky frames | 62.12% | 0% |
 | p90 frame time | 42 ms | 5 ms |
 | Main-process PSS | 163,333 KiB | 63,270 KiB |
 
-The current main process uses about 61% less PSS in these samples. The old separate WebView renderer is excluded. Frame populations differ because the implementations animate differently; these are short samples on one device, not a whole-TV benchmark. During a three-second hidden-scene check, Sol rendered no additional frames. See [validation and methods](docs/validation.md) and the [measurement summaries](docs/evidence/measurements.json).
+The 0.4 main process used about 61% less PSS in these samples. The old separate WebView renderer is excluded. Frame populations differ because the implementations animate differently; these are short samples on one device, not a whole-TV benchmark. During a three-second hidden-scene check, Vista rendered no additional frames. Version 0.5 measured zero jank across 834 navigation frames (p90 6 ms), with a higher cold Home PSS snapshot of 92,669 KiB after adding sharper scene caches and live/media features. See [validation and methods](docs/validation.md) and the [measurement summaries](docs/evidence/measurements.json).
 
 ## Architecture
 
 ```mermaid
 flowchart LR
     Remote[Physical remote] --> Bridge[ADB-shell evdev bridge]
-    Bridge -->|Home release| Sol[Native Sol Home Activity]
+    Bridge -->|Home release| Vista[Native Vista Activity]
     Bridge -->|Other mapped keys| Virtual[uinput virtual remote]
     Virtual --> Android[Android input dispatch]
-    Sol --> Apps[Installed streaming apps]
-    Sol --> Settings[Existing system Settings]
-    Sol --> NWS[NWS forecast cache]
-    Sol --> Scene[Cached art and paused-when-hidden motion]
+    Vista --> Apps[Installed streaming apps]
+    Vista --> Settings[Existing system Settings]
+    Vista --> Widgets[Shared public-data cache]
+    Vista --> Explore[Optional TMDB and JustWatch discovery]
+    Vista --> Spotify[Optional Spotify session controls]
+    Dream[System DreamService] --> Scene
+    Dream --> Widgets
+    Vista --> Scene[Cached art and paused-when-hidden motion]
 ```
 
 The bridge runs locally on the TV; the laptop is not in the per-button path. It uses permissions available to the already authorized ADB shell on the tested firmware. Ordinary apps do not have these permissions. Amazon's launcher and privileged TV settings components remain installed and enabled. [Bridge design, compatibility, startup, and recovery](bridge/README.md).
+
+[Prism](https://github.com/Griff2325/prism) is the separate reusable lighting harness. It currently accepts synthetic or piped zone colors and controls selected compatible Govee LAN lights; Vista frame input and physical room calibration are not yet integrated.
 
 ## Build
 
@@ -73,8 +81,12 @@ Declaring HOME in the manifest does not override Amazon's Home resolver on the t
 
 CI builds and verifies the development APK and compiles the bridge. It does not connect to a TV or prove real remote behavior.
 
+The existing `com.griffin.solhome` package, component names, bridge virtual-device name and build filenames are retained from the original installation for compatibility. User-facing branding is Vista.
+
 ## Project notes
 
+- [Screensaver setup, live data and recovery](docs/screensaver.md)
+- [Explore and Spotify setup](docs/media.md)
 - [Architecture and implementation decisions](docs/architecture.md)
 - [Validation and performance evidence](docs/validation.md)
 - [Known limitations and next priorities](docs/roadmap.md)

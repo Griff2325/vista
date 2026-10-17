@@ -1,6 +1,6 @@
 # Project working instructions
 
-Treat this repository as the canonical source for Sol Home. Commit and push completed, verified changes when the user authorizes continued project work; keep commits descriptive and do not fabricate earlier history. Do not force-push shared history.
+Treat this repository as the canonical source for Vista. Commit and push completed, verified changes when the user authorizes continued project work; keep commits descriptive and do not fabricate earlier history. Do not force-push shared history.
 
 Keep device addresses, account/profile data, private handoffs, ADB identities, signing keys, and signing passwords out of tracked files. Development signing keys belong in ignored .local/. Public build artifacts use a disposable development identity, not the installed TV's private key.
 

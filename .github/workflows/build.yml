@@ -23,8 +23,9 @@ jobs:
         run: |
           for script in scripts/*.sh; do bash -n "$script"; done
           sh -n bridge/supervisor.sh
-          python3 -X pycache_prefix=build/pycache -m py_compile bridge/pack-arm.py scripts/measure.py
-      - name: Test Cincinnati lighting and calendar boundaries
+          sh -n bridge/screensaver-supervisor.sh
+          python3 -X pycache_prefix=build/pycache -m py_compile bridge/pack-arm.py scripts/measure.py scripts/configure-screensaver.py
+      - name: Test lighting, weather, widgets, media links and policies
         run: bash scripts/test-sky.sh
       - name: Build and verify development APK
         run: bash scripts/build-app.sh
@@ -33,7 +34,7 @@ jobs:
       - name: Store development build outputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: sol-home-development
+          name: vista-development
           path: |
             build/sol-home-debug.apk
             build/bridge/sol-home-bridge
