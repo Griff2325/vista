@@ -14,12 +14,7 @@ cleanup() {
 trap 'exit 0' TERM INT
 trap cleanup EXIT
 while true; do
-  device=$(getevent -lp 2>/dev/null | while IFS= read -r line; do
-    case "$line" in
-      "add device "*": "*) current=${line##*: } ;;
-      *name:*'"Amazon Fire TV Remote"'*) printf '%s\n' "$current"; break ;;
-    esac
-  done)
+  device=$(getevent -lp 2>/dev/null | sed -n '/^add device /{s/.*: //;h;}; /name:.*"Amazon Fire TV Remote"/{g;p;q;}')
   if [ -n "$device" ]; then
     "$ROOT/sol-home-bridge" "$device" &
     child=$!
