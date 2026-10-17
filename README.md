@@ -77,6 +77,7 @@ CI builds and verifies the development APK and compiles the bridge. It does not 
 - [Architecture and implementation decisions](docs/architecture.md)
 - [Validation and performance evidence](docs/validation.md)
 - [Known limitations and next priorities](docs/roadmap.md)
+- [Illustrated scene concepts awaiting selection](docs/design-concepts/2026-10-17/README.md)
 - [Preserved prototype snapshots](prototypes/README.md)
 - [Changelog](CHANGELOG.md)
 - [Asset and third-party acknowledgments](THIRD_PARTY_NOTICES.md)

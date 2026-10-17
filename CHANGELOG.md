@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## Unreleased design exploration
+
+- Four generated full-screen concepts: bold shapes, pixel autumn, paper world, and cel-style cartoon forest. Awaiting owner selection before making animation layers. No runtime changes.
+
 ## 0.3.0 — October 17, 2026
 
 - Native left-pane2x3 app-logo tiles and an approved autumn forest window.
