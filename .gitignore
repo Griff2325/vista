@@ -1,0 +1,26 @@
+# Generated files and machine-local configuration
+/build/
+/.local/
+/local.properties
+.env
+.env.*
+!.env.example
+.DS_Store
+__pycache__/
+*.pyc
+*.o
+*.class
+*.dex
+*.apk
+*.apk.idsig
+*.aab
+# Signing / debugging identities
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+adbkey*
+# Never import device dumps or private handoff notes
+/private/
+/work/

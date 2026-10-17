@@ -1,0 +1,8 @@
+Built-in image_gen generation. Approved and installed on October 17, 2026.
+
+Use case: photorealistic-natural
+Asset type: approval preview and future panoramic scene behind a TV dashboard window
+Primary request: a quiet, immersive autumn forest viewed straight out through an enormous picture window. Generate the outdoor landscape only; the window frame and interface will be added separately in code.
+Scene: a temperate mountain forest in mid October, layered copper and muted amber deciduous trees mixed with dark evergreen firs, a few tall trunks close to the viewer, a small still lake visible through the trees, distant forested ridges dissolving into cool blue-gray morning mist. Soft overcast morning light with a restrained warm glow through the canopy. Natural, calm, believable, understated.
+Composition: cinematic wide 16:9 landscape, level horizon, great depth and readable silhouettes, intended to fill the right two thirds of a television screen while a dark app pane occupies the left. Keep the far left visually quiet. No interior, furniture, window frame, text, logos, interface, people, buildings or decorative houseplants.
+Style: high-end natural landscape photography, fine realistic textures, subtle atmospheric depth, restrained saturation, no fantasy or oversharpened HDR. Visually alive but restful. This is a still base scene; subtle motion will be implemented later after approval.
