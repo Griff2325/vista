@@ -2,6 +2,11 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.5.1 — October 17, 2026
+
+- Fixed water phase acceleration during changing wind: integrate a bounded wave phase instead of multiplying wind by elapsed uptime. Home and the system dream share the same phase.
+- Replaced lake texture deformation and sliding highlights with sparse, shallow expanding ripple arcs. The terrain and shoreline stay fixed. Four ripple systems on Home, six in fullscreen, two fading rings each; no new textures, resampling, or frame allocations.
+
 ## 0.5.0 — October 17, 2026
 
 - Renamed the dashboard and GitHub repository to Vista. Existing Android component identifiers are retained for in-place upgrades and bridge/permission compatibility.

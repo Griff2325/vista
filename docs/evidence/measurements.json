@@ -138,6 +138,27 @@
         "dream_capture_sha256": "e19e47ffe025854ff39d70003e26dde7a8028e70e63afd84990213846594045e",
         "notes": "Visual check after final weather/countdown/web polish. No new performance measurement claimed."
       }
+    },
+    "pixel_autumn_ripples_0_5_1": {
+      "home_idle": {
+        "frames": 93,
+        "janky_frames": 1,
+        "jank_percent": 1.08,
+        "p90_ms": 9,
+        "source_sha256": "96f369d7a31494c2cbfcec3513d31490c4e2a7b5cd73ff8018da8ea55fad8a87"
+      },
+      "activity_fullscreen_idle": {
+        "frames": 98,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 12,
+        "source_sha256": "b8df8a1a527baae705b1906fe24435a63425b6dd65996fe3f8d78a325ffafa64"
+      },
+      "main_process_pss_kib": 96311,
+      "memory_source_sha256": "2625f020f0f13cbb9fd85bc6a372af2ddf7038def603762009c84b9c882a7165",
+      "home_capture_sha256": "4dd875fb147273393ded824b8845c0f84e5b7dd12ec62dd6a922ee0d50f17575",
+      "fullscreen_capture_sha256": "8ad04d282dad54d9f8bdb1064f502d1d3bae55ba8cddb399503febd8ea7dbbe5",
+      "notes": "Three-second idle samples after the brighter ripple adjustment. Fullscreen was the Activity preview, not a new system DreamService/reboot test. Home had one janky frame; no claim of zero jank or whole-TV performance. No new decoded textures. Preview idle extra cleared by returning to a plain Home intent."
     }
   }
 }

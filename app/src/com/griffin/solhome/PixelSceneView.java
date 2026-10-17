@@ -16,7 +16,6 @@ import org.json.JSONObject;
 public final class PixelSceneView extends View {
     private static final int WIDTH = 480, HEIGHT = 336;
     static final float WINDOW_LEFT=694, WINDOW_TOP=88, WINDOW_RIGHT=1858, WINDOW_BOTTOM=900;
-    private static final int WATER_COLS = 12, WATER_ROWS = 24;
     private static final int TREE_COLS = 18, TREE_ROWS = 24;
     private static final int FOREST_COLS = 48, FOREST_ROWS = 42;
     private static Bitmap[] cachedAssets;
@@ -33,8 +32,11 @@ public final class PixelSceneView extends View {
     private final Paint paint = new Paint();
     private final RectF destination = new RectF();
     private final Path waterMask = new Path();
+    private static final WaterMotion waterMotion = new WaterMotion();
+    private static final float[] RIPPLE_CENTERS = {261,268, 302,266, 344,279, 389,274, 313,290, 369,296};
+    private final Paint ripplePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF rippleBounds = new RectF();
     private final Path silkWeb=makeSilkWeb();
-    private final float[] waterMesh = new float[(WATER_COLS + 1) * (WATER_ROWS + 1) * 2];
     private final float[] treeMesh = new float[(TREE_COLS + 1) * (TREE_ROWS + 1) * 2];
     private final float[] forestMesh = new float[(FOREST_COLS + 1) * (FOREST_ROWS + 1) * 2];
     private final float[] stars = new float[72];
@@ -75,12 +77,15 @@ public final class PixelSceneView extends View {
         paint.setFilterBitmap(false);
         paint.setAntiAlias(false);
         paint.setDither(false);
+        ripplePaint.setStyle(Paint.Style.STROKE);
+        ripplePaint.setStrokeWidth(.65f);
+        ripplePaint.setStrokeCap(Paint.Cap.ROUND);
         Random random = new Random(314159);
         for (int i = 0; i < stars.length; i += 2) {
             stars[i] = random.nextInt(WIDTH);
             stars[i + 1] = 8 + random.nextInt(100);
         }
-        // Keep a dry margin inside both banks; only the central lake is resampled.
+        // Keep ripple strokes inside the lake, with a dry margin at both banks.
         waterMask.moveTo(217, 254);
         waterMask.lineTo(326, 250);
         waterMask.lineTo(418, 261);
@@ -317,6 +322,7 @@ public final class PixelSceneView extends View {
         cloudCover+=(weather.clouds-cloudCover)*ease;wind+=(weather.wind-wind)*ease;
         windDrift+=(weather.drift-windDrift)*ease;rain+=(weather.rain-rain)*ease;
         snow+=(weather.snow-snow)*ease;haze+=(weather.haze-haze)*ease;
+        waterMotion.advance(monotonic, wind);
         // One shared phase keeps cloud positions continuous across Home and Dream views.
         if(weatherFrameAt==0){cloudTravel=(monotonic%86400000L)/1000f*.7f;leafTravel=(monotonic%86400000L)/1000f*.02f;}
         float travelDelta=Math.min(.1f,(monotonic-weatherFrameAt)/1000f);
@@ -340,7 +346,7 @@ public final class PixelSceneView extends View {
             destination.set(0, 0, WIDTH, HEIGHT);
             if(immersion>.01f) drawForest(canvas,time);
             else canvas.drawBitmap(terrain, null, destination, paint);
-            drawWater(canvas, time);
+            drawWater(canvas);
             drawHaze(canvas);
         }
         if (sky.halloween) {drawGhost(canvas, monotonic/1000.0);drawHauntings(canvas,time);}
@@ -461,29 +467,28 @@ public final class PixelSceneView extends View {
         }
     }
 
-    private void drawWater(Canvas canvas, float time) {
+    private void drawWater(Canvas canvas) {
         canvas.save(); canvas.clipPath(waterMask);
-        int at = 0;
-        for (int row = 0; row <= WATER_ROWS; row++) {
-            float y = row * HEIGHT / (float) WATER_ROWS;
-            float displacement = y > 235 ? (float) Math.sin(row*1.6-time*(.8f+wind))*(.8f+wind*2) : 0;
-            for (int column = 0; column <= WATER_COLS; column++) {
-                waterMesh[at++] = column*WIDTH/(float)WATER_COLS + displacement;
-                waterMesh[at++] = y;
+        // Stable artwork underneath: only shallow, broken rings expand and fade.
+        // Six systems / two rings maximum, no bitmap resampling or frame allocations.
+        for (int i = 0; i < RIPPLE_CENTERS.length/2; i++) {
+            float visibility = i<4 ? 1 : immersion;
+            if (visibility<.01f) continue;
+            float x=RIPPLE_CENTERS[i*2], y=RIPPLE_CENTERS[i*2+1];
+            float perspective=.7f+(y-260)/65;
+            for (int ring=0; ring<2; ring++) {
+                float progress=waterMotion.rippleProgress(i,ring);
+                int alpha=(int)(WaterMotion.rippleOpacity(progress)*visibility*(58+sky.daylight*74));
+                if(alpha<1) continue;
+                float radius=(4+progress*(18+i%3*5))*perspective;
+                float height=radius*.20f;
+                rippleBounds.set(x-radius,y-height,x+radius,y+height);
+                ripplePaint.setColor(Color.argb(alpha,212,228,219));
+                canvas.drawArc(rippleBounds,190+i*9,128,false,ripplePaint);
+                ripplePaint.setColor(Color.argb(alpha*2/3,114,156,170));
+                canvas.drawArc(rippleBounds,15+i*7,112,false,ripplePaint);
             }
         }
-        paint.setFilterBitmap(true);
-        canvas.drawBitmapMesh(terrain, WATER_COLS, WATER_ROWS, waterMesh, 0, null, 0, paint);
-        paint.setFilterBitmap(false);
-        paint.setColorFilter(null);
-        for (int i = 0; i < 32+(int)(20*immersion); i++) {
-            int y = 244 + (i*17)%79;
-            float x = 172 + (i*37 + time*(3+i%3))%310;
-            int length = 3 + i%6*2;
-            paint.setColor(Color.argb(40+(i%4)*12, 130, 170, 191));
-            canvas.drawRect(x, y, x+length, y+1, paint);
-        }
-        paint.setAlpha(255); paint.setColorFilter(terrainLight);
         canvas.restore();
     }
 
