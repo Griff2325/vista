@@ -1,6 +1,6 @@
 # Pixel Autumn — open-window scene
 
-The owner selected Pixel Autumn from the [four illustrated concepts](../design-concepts/2026-10-17/README.md). The implemented dashboard treats the landscape as a view outdoors: one uninterrupted opening, deep timber reveal/sill, a gathered linen edge, a smooth recessed app rail with no row dividers, and a shallow console for utilities and forecast. The curtain and surrounding surfaces use smooth, simple native Canvas drawing, retained separately from scene motion. No screenshot from the visual inspiration is bundled.
+The owner selected Pixel Autumn from the [four illustrated concepts](../design-concepts/2026-10-17/README.md). The implemented dashboard treats the landscape as a view outdoors: one uninterrupted opening, deep timber reveal/sill, a smooth recessed app rail with no row dividers, and a shallow console for utilities and forecast. The surrounding surfaces use smooth, simple native Canvas drawing, retained separately from scene motion. No screenshot from the visual inspiration is bundled.
 
 ![Installed open-window dashboard](../images/dashboard.png)
 

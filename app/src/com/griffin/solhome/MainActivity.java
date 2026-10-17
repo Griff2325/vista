@@ -106,7 +106,6 @@ public class MainActivity extends Activity {
     final float[] controlX={100,300,492,700,930};
     final Shader wallLight=new LinearGradient(0,0,1920,900,0xff192b2c,0xff30403c,Shader.TileMode.CLAMP);
     final Shader railLight=new LinearGradient(72,0,577,0,0xff152323,0xff1c2e2c,Shader.TileMode.CLAMP);
-    final Shader linenLight=new LinearGradient(620,0,682,0,new int[]{0xff3c514c,0xff7e8c7c,0xff566b60,0xff8d9886},null,Shader.TileMode.CLAMP);
     HomeView(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);setContentDescription("Sol Home. Use arrows to choose an app tile or bottom control, and OK to open.");}
     void text(Canvas c,String s,float x,float y,float size,int color,boolean bold){paint.setShader(null);paint.setColor(color);paint.setTextSize(size);paint.setTypeface(Typeface.create("sans-serif"+(bold?"-medium":"-light"),Typeface.NORMAL));c.drawText(s,x,y,paint);}
     void drawRoom(Canvas c){
@@ -123,10 +122,6 @@ public class MainActivity extends Activity {
       Path sill=new Path();sill.moveTo(l-22,b);sill.lineTo(r+22,b);sill.lineTo(r+38,b+23);sill.lineTo(l-38,b+23);sill.close();paint.setColor(0xff7f8066);c.drawPath(sill,paint);
       paint.setColor(0xffa3a083);c.drawRect(l-22,b,r+22,b+3,paint);paint.setColor(0xff414b40);c.drawRect(l-38,b+23,r+38,b+32,paint);
       paint.setColor(0x550b1517);c.drawRect(l-30,b+32,r+35,b+39,paint);
-      // A gathered linen edge sits entirely beside the opening, preserving the view.
-      Path curtain=new Path();curtain.moveTo(624,48);curtain.lineTo(681,48);curtain.cubicTo(683,220,662,440,660,578);curtain.cubicTo(657,700,665,840,674,914);curtain.cubicTo(654,923,635,910,617,914);curtain.cubicTo(630,735,625,648,628,568);curtain.cubicTo(633,338,620,178,624,48);curtain.close();paint.setShader(linenLight);c.drawPath(curtain,paint);paint.setShader(null);
-      paint.setColor(0x35708372);paint.setStrokeWidth(2);paint.setStyle(Paint.Style.STROKE);Path fold=new Path();fold.moveTo(651,50);fold.cubicTo(660,250,642,445,642,581);fold.cubicTo(640,728,644,847,650,914);c.drawPath(fold,paint);paint.setStyle(Paint.Style.FILL);
-      paint.setColor(0xff394c48);c.drawRoundRect(new RectF(621,40,686,48),4,4,paint);
       // The bottom controls belong to a continuous shallow console below the sill.
       paint.setColor(0xff101d1f);c.drawRect(0,944,1920,1080,paint);paint.setColor(0xff666a55);c.drawRect(0,942,1920,946,paint);
       paint.setColor(0xff8b8d70);c.drawRect(0,942,1920,943,paint);paint.setColor(0xff233631);c.drawRect(0,951,1920,953,paint);

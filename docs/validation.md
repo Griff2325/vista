@@ -27,9 +27,11 @@ Hidden-scene check: after opening YouTube and waiting for transition settling, P
 - Native scene textures report 2,757,040 retained decoded bytes (~2.63 MiB), including ghost sprites. Total process PSS includes much more than scene textures.
 - Owner confirmed trees/clouds felt smoother after replacing snapped 12 fps movement with floating-point, vsync-paced motion at about 30 fps. This is qualitative owner feedback, not a frame-perfect input latency measurement.
 - Actual TV captures inspected at day, dusk, night, and a November date. The latter removes ghost/pumpkins. Preview timestamps affect scene lighting only and were cleared afterward.
-- Current layout capture inspected: uninterrupted open aperture, smooth curtain/room surfaces, no app-row dividers, and a bottom utility console. Final live capture includes all six installed app logos.
+- Layout capture inspected: uninterrupted open aperture, smooth room surfaces, no app-row dividers, and a bottom utility console. Final live capture includes all six installed app logos.
 - Pure Java checks pass for seasonal solar elevation, midnight darkness, dawn/dusk, Cincinnati October/November boundary, device-timezone independence, and DST continuity. They validate the intended approximation, not astronomical certification.
 - Existing Home bridge process remained running after the app update. Physical remote Home behavior was verified earlier; this visual update does not establish full-reboot startup.
+
+The 0.4.1 visual cleanup removes the curtain and its rail entirely. The updated APK was installed and the live layout inspected; scene animation and input routing are unchanged.
 
 ## Device behavior
 

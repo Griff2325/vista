@@ -4,7 +4,7 @@
 
 The first dashboard used an Android WebView with layered HTML/CSS conservatory art. On the target TV it continuously rendered even while idle and produced poor frame timings. The maintained implementation is an Android Activity with a custom Canvas HomeView and a separate PixelSceneView clipped to the open-window aperture.
 
-HomeView draws the room, app rail, open-window reveal, sill, linen edge, and bottom console into Android's retained rendering pipeline. The opening has no sash or crossing dividers. App banners are loaded once from PackageManager into six 256x144 bitmaps. The contained window remains contained in Ambient mode.
+HomeView draws the room, app rail, open-window reveal, sill, and bottom console into Android's retained rendering pipeline. The opening has no sash or crossing dividers. App banners are loaded once from PackageManager into six 256x144 bitmaps. The contained window remains contained in Ambient mode.
 
 PixelSceneView keeps a 480x336 terrain texture, separate tree/cloud sprites, a small Halloween layer, and two tiny code-drawn ghost sprites. Total retained decoded scene bitmaps are 2,757,040 bytes. Tree/cloud sprites are first enlarged with nearest-neighbor scaling; filtered subpixel movement then avoids coarse position jumps. Rooted tree meshes deform continuously across a fine grid; cloud positions are floating point. Water reuses the terrain texture through a clipped mesh plus procedural ripples. This animates selected foreground layers, not every distant tree or physical fluid.
 

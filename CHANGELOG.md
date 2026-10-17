@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.4.1 — October 17, 2026
+
+- Removed the curtain, folds, and curtain rail from the room, leaving a clear open-window surround.
+
 ## 0.4.0 — October 17, 2026
 
 - Selected Pixel Autumn from four illustrated concepts; generated separate terrain, trees, cloud, and Halloween assets with recorded prompts.
