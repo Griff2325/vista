@@ -60,6 +60,31 @@
       "before": 174,
       "after": 174,
       "pass": true
+    },
+    "pixel_autumn_0_4": {
+      "navigation": {
+        "frames": 812,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 5,
+        "source_sha256": "b9900f4d930739335d797fa5472b4863e5aa61cd080a752bb183a251dc91ff9b"
+      },
+      "idle": {
+        "frames": 94,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 5,
+        "source_sha256": "ded7ae705601e2ff6dea669e1da7afbdb829b9a72643b9b9ba262773fe3a8735"
+      },
+      "main_process_pss_kib": 63270,
+      "memory_source_sha256": "4ff10bcaa9a0aee73857d14f253ce3db30d3ea03298db2c3be0c19af9f8f7093",
+      "decoded_scene_bytes": 2757040,
+      "hidden_animation_check": {
+        "before": 107,
+        "after": 107,
+        "pass": true
+      },
+      "notes": "Smooth room and open aperture, no app-row dividers; approximately 30 fps. Short development sample, not whole-TV performance."
     }
   }
 }

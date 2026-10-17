@@ -2,11 +2,15 @@
 
 ## Native rendering
 
-The first dashboard used an Android WebView with layered HTML/CSS conservatory art. On the target TV it continuously rendered even while idle and produced poor frame timings. The maintained implementation is an Android Activity with a custom Canvas HomeView and a separate transparent SceneMotion View.
+The first dashboard used an Android WebView with layered HTML/CSS conservatory art. On the target TV it continuously rendered even while idle and produced poor frame timings. The maintained implementation is an Android Activity with a custom Canvas HomeView and a separate PixelSceneView clipped to the open-window aperture.
 
-HomeView draws the static interface and background into Android's retained rendering pipeline. App banners are loaded once from PackageManager into six 256x144 bitmaps. The landscape is resized to 1536x864 and retained in RGB565. SceneMotion caches a 640x160 ARGB mist texture (~400 KiB), draws it at changing positions, and draws at most five small leaf paths during intermittent gust periods. It invalidates at approximately 12 fps while the Activity is resumed and removes its callback on pause. No WebView, frame-sequence cache, video player, or continuous bitmap decoding is used in the maintained dashboard.
+HomeView draws the room, app rail, open-window reveal, sill, linen edge, and bottom console into Android's retained rendering pipeline. The opening has no sash or crossing dividers. App banners are loaded once from PackageManager into six 256x144 bitmaps. The contained window remains contained in Ambient mode.
 
-The animation currently suggests weather and wind; it does not deform the trees or animate the baked-in photographic clouds. The image prompts and preserved old implementation make the design evolution inspectable.
+PixelSceneView keeps a 480x336 terrain texture, separate tree/cloud sprites, a small Halloween layer, and two tiny code-drawn ghost sprites. Total retained decoded scene bitmaps are 2,757,040 bytes. Tree/cloud sprites are first enlarged with nearest-neighbor scaling; filtered subpixel movement then avoids coarse position jumps. Rooted tree meshes deform continuously across a fine grid; cloud positions are floating point. Water reuses the terrain texture through a clipped mesh plus procedural ripples. This animates selected foreground layers, not every distant tree or physical fluid.
+
+Choreographer schedules approximately every other 60 Hz vsync (~30 fps). Only the scene View invalidates continuously. Activity pause removes the frame callback; no WebView, frame-sequence cache, video player, or per-frame bitmap decoding is used. The user confirmed the motion felt smoother after removing pixel snapping and increasing pacing from 12 fps.
+
+CincinnatiSky uses offline approximate NOAA solar equations at Cincinnati city-center coordinates, cached once per minute. UTC calculations and the America/New_York calendar handle daylight saving time; both clock/date and October decoration boundaries use that zone. Sky color and terrain lighting blend with solar elevation. Stars and the crescent moon are decorative, not an accurate lunar ephemeris. Correct scene timing depends on the device clock. Pumpkins, bats, and a ghost with continuous roaming/bobbing motion are October-only. See [assets and lighting details](pixel-autumn/README.md).
 
 ## App and system integration
 

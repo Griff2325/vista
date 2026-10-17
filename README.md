@@ -14,21 +14,21 @@ Sol Home explores two practical problems: making a custom television interface f
 
 - Six remote-navigable logo tiles: YouTube, Netflix, Hulu, Disney+, Spotify, and Apple TV. Logos come from installed app banners/icons at runtime.
 - All-apps picker, TV input picker, ambient scene mode, and a direct route to existing system Settings.
-- Native Canvas dashboard with a large autumn forest window, slow drifting mist/cloud overlays, and occasional leaves suggesting wind. This is a still base image with procedural overlays, not a video or fully simulated forest.
-- A small cached motion texture, a retained static interface, and a 12 fps transparent animation layer that stops when the Activity pauses.
+- Native Canvas pixel-art lake viewed through one open window, with swaying foreground trees, drifting clouds, moving water, and occasional leaves. A smooth recessed app rail and bottom console form the surrounding room.
+- Reusable textures (about 2.63 MiB decoded), a retained static interior/interface, and vsync-paced motion at about 30 fps that stops when the Activity pauses. Cincinnati solar lighting is calculated offline; October adds pumpkins and a roaming, blinking ghost.
 - Clock/date and cached National Weather Service forecasts. Cincinnati city-center coordinates are the current fixed example location; this is not GPS or automatic location detection.
 - Read-only Android Watch Next integration. No installed app shared progress in the tested setup, so cross-platform Continue Watching remains unavailable.
 - An optional ADB-shell input bridge that intercepts physical Home before Android launches Amazon Home, while forwarding the other mapped remote keys.
 
 ## Measured on the TV
 
-| Short navigation sample | WebView prototype | Current native fall dashboard |
+| Short navigation sample | WebView prototype | Current Pixel Autumn dashboard |
 |---|---:|---:|
-| Janky frames | 62.12% | 0.88% |
+| Janky frames | 62.12% | 0% |
 | p90 frame time | 42 ms | 5 ms |
-| Main-process PSS | 163,333 KiB | 57,570 KiB |
+| Main-process PSS | 163,333 KiB | 63,270 KiB |
 
-The current main process uses about 65% less PSS in these samples. The old separate WebView renderer is excluded. Frame populations differ because the implementations animate differently; these are short samples on one device, not a whole-TV benchmark. During a three-second hidden-scene check, Sol rendered no additional frames. See [validation and methods](docs/validation.md) and the [measurement summaries](docs/evidence/measurements.json).
+The current main process uses about 61% less PSS in these samples. The old separate WebView renderer is excluded. Frame populations differ because the implementations animate differently; these are short samples on one device, not a whole-TV benchmark. During a three-second hidden-scene check, Sol rendered no additional frames. See [validation and methods](docs/validation.md) and the [measurement summaries](docs/evidence/measurements.json).
 
 ## Architecture
 
@@ -54,6 +54,7 @@ Requirements: JDK 17+, Python 3, Android SDK platform 34 and build-tools 34.0.0;
 sdkmanager "platforms;android-34" "build-tools;34.0.0"
 export ANDROID_SDK_ROOT=/path/to/your/android-sdk
 bash scripts/build-app.sh
+bash scripts/test-sky.sh
 bash scripts/build-bridge.sh
 ```
 
@@ -77,7 +78,8 @@ CI builds and verifies the development APK and compiles the bridge. It does not 
 - [Architecture and implementation decisions](docs/architecture.md)
 - [Validation and performance evidence](docs/validation.md)
 - [Known limitations and next priorities](docs/roadmap.md)
-- [Illustrated scene concepts awaiting selection](docs/design-concepts/2026-10-17/README.md)
+- [Pixel Autumn implementation, assets, and prompts](docs/pixel-autumn/README.md)
+- [Original illustrated scene concepts](docs/design-concepts/2026-10-17/README.md)
 - [Preserved prototype snapshots](prototypes/README.md)
 - [Changelog](CHANGELOG.md)
 - [Asset and third-party acknowledgments](THIRD_PARTY_NOTICES.md)

@@ -1,8 +1,8 @@
 # Illustrated scene concepts — October 17, 2026
 
-Four unselected full-screen concepts for replacing the photographic forest. Each image shows the complete launcher composition: a left app pane, bottom controls, and a frameless illustrated autumn scene.
+Four original full-screen concepts for replacing the photographic forest. Each image shows the complete launcher composition: a left app pane, bottom controls, and a frameless illustrated autumn scene.
 
-These are generated approval previews, not screenshots of implemented software or animation assets. The owner will choose a direction before separate scene pieces are created. The deployed TV and native rendering code have not changed. Minor text/logo variations in generated concepts do not redefine app order or runtime behavior.
+These are generated approval previews, not screenshots of implemented software or animation assets. The owner selected **Pixel Autumn**. Separate runtime pieces, motion, and a later open-window room layout are now implemented; see [the current scene](../../pixel-autumn/README.md). Minor text/logo variations in generated concepts do not redefine app order or runtime behavior.
 
 ## 1. Bold shapes
 
@@ -30,6 +30,6 @@ A warm hand-drawn cartoon grove with bold contours, curved trunks, a stream and 
 
 ## Next step and constraints
 
-Wait for owner selection. Then create only the chosen scene's independent pieces and implement motion with reusable layers. Keep a static UI separate from moving art, pause work while the launcher is hidden, bound texture sizes, and measure memory/frame time on the actual TV. Simpler visual style alone does not prove lower memory or faster rendering; layer dimensions and rendering behavior determine the cost.
+Pixel Autumn was selected and its independent pieces now animate as reusable layers. The other three remain concepts. Keep a static UI separate from moving art, pause work while the launcher is hidden, bound texture sizes, and measure memory/frame time on the actual TV. Simpler visual style alone does not prove lower memory or faster rendering; layer dimensions and rendering behavior determine the cost.
 
 Generated using the built-in image_gen tool. Exact final prompts and the pixel option's layout reference are recorded in [prompts.json](prompts.json). The overly photographic first drafts of three directions were discarded in favor of these distinctly illustrated concepts.

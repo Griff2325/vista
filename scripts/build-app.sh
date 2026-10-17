@@ -17,7 +17,7 @@ find "$BUILD/classes" -name '*.class' -delete
   --manifest "$ROOT/app/AndroidManifest.xml" -R "$BUILD/resources.zip" \
   -A "$ROOT/app/assets" --java "$BUILD/gen"
 "${JAVABIN}javac" -source 8 -target 8 -classpath "$ANDROID" -d "$BUILD/classes" \
-  "$ROOT/app/src/com/griffin/solhome/MainActivity.java"
+  "$ROOT"/app/src/com/griffin/solhome/*.java
 "${JAVABIN}jar" cf "$BUILD/classes.jar" -C "$BUILD/classes" .
 "${JAVABIN}java" -cp "$TOOLS/lib/d8.jar" com.android.tools.r8.D8 \
   --lib "$ANDROID" --min-api 26 --output "$BUILD/dex" "$BUILD/classes.jar"

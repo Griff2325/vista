@@ -8,17 +8,28 @@ Measured on October 17, 2026 on one Panasonic W95A / AFTLAS01 running Fire OS 8.
 |---|---:|---:|---:|---:|---:|
 | WebView conservatory prototype | 1,634 | 1,015 | 62.12% | 42 ms | 163,333 KiB |
 | Static native Canvas redesign | 24 | 0 | 0% | 5 ms | 54,534 KiB |
-| Native fall scene with motion | 340 | 3 | 0.88% | 5 ms | 57,570 KiB |
+| Native photographic fall scene (0.3) | 340 | 3 | 0.88% | 5 ms | 57,570 KiB |
+| Pixel Autumn open window (0.4) | 812 | 0 | 0% | 5 ms | 63,270 KiB |
 
-Method: reset `dumpsys gfxinfo`, send 24 alternating left/right D-pad presses with 120 ms sleeps between ADB calls, read graphics statistics. ADB call latency contributes to total sample length. WebView and fall animation continue rendering between keys, so their frame counts differ from the static implementation. The final fall layout also has different focus geometry. Results describe these specific implementations under a similar input sequence, not equal-sized frame populations or a proof of universal latency.
+Method: reset `dumpsys gfxinfo`, send 24 alternating left/right D-pad presses with 120 ms sleeps between ADB calls, read graphics statistics. ADB call latency contributes to total sample length. WebView and fall animation continue rendering between keys, so their frame counts differ from the static implementation. The native layouts also have different focus geometry and animation rates. Results describe these specific implementations under a similar input sequence, not equal-sized frame populations or a proof of universal latency.
 
-The native-static main process used about 67% less PSS than the old main process. The current animated version uses about 65% less (~159.5 MiB to ~56.2 MiB). The old WebView renderer was a separate process and is excluded from that comparison; do not call this a total system-memory measurement.
+The native-static main process used about 67% less PSS than the old main process. The current Pixel Autumn version uses about 61% less (~159.5 MiB to ~61.8 MiB). The old WebView renderer was a separate process and is excluded from that comparison; do not call this a total system-memory measurement.
 
-Three-second idle samples: WebView rendered 186 frames; static native rendered 0; animated native rendered 37, with 0 janky frames in the final fall sample. A separate earlier fall sample recorded 1,420 frames and 0 jank; the final navigation result above is the more recent result.
+Three-second idle samples: WebView rendered 186 frames; static native rendered 0; animated native rendered 37, with 0 janky frames in the final fall sample. Pixel Autumn at approximately 30 fps rendered 94 frames with 0 jank in the three-second idle sample. A separate earlier photographic fall sample recorded 1,420 frames and 0 jank.
 
-Hidden-scene check: after opening YouTube and waiting for transition settling, Sol's frame count stayed 174 -> 174 over three seconds. This verifies that the overlay stops drawing while the launcher Activity is paused in that scenario.
+Hidden-scene check: after opening YouTube and waiting for transition settling, Pixel Autumn's frame count stayed 107 -> 107 over three seconds (the earlier photographic scene stayed 174 -> 174). This verifies that the overlay stops drawing while the launcher Activity is paused in that scenario.
 
 [Machine-readable summaries](evidence/measurements.json) include SHA-256 fingerprints of local source captures. Raw TV dumps are deliberately not published. The fingerprints identify the captures used; they do not independently authenticate the measurements. `scripts/measure.py` reproduces the input/idle sampling procedure against a selected ADB target.
+
+## Pixel Autumn checks
+
+- Built and installed 0.4.0 with the existing private installation identity; the public portable development build and signature check also passed.
+- Native scene textures report 2,757,040 retained decoded bytes (~2.63 MiB), including ghost sprites. Total process PSS includes much more than scene textures.
+- Owner confirmed trees/clouds felt smoother after replacing snapped 12 fps movement with floating-point, vsync-paced motion at about 30 fps. This is qualitative owner feedback, not a frame-perfect input latency measurement.
+- Actual TV captures inspected at day, dusk, night, and a November date. The latter removes ghost/pumpkins. Preview timestamps affect scene lighting only and were cleared afterward.
+- Current layout capture inspected: uninterrupted open aperture, smooth curtain/room surfaces, no app-row dividers, and a bottom utility console. Final live capture includes all six installed app logos.
+- Pure Java checks pass for seasonal solar elevation, midnight darkness, dawn/dusk, Cincinnati October/November boundary, device-timezone independence, and DST continuity. They validate the intended approximation, not astronomical certification.
+- Existing Home bridge process remained running after the app update. Physical remote Home behavior was verified earlier; this visual update does not establish full-reboot startup.
 
 ## Device behavior
 

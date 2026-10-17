@@ -18,6 +18,6 @@ The tested device is Panasonic W95A / AFTLAS01, lassen, Fire OS 8.1.8.0 RS8180.3
 
 - A user-selectable weather location and favorite apps.
 - Verified service-specific progress sources for Continue Watching, respecting app/profile access. The standard provider was empty; all-platform coverage remains unimplemented.
-- Winter artwork after the approved fall design; no automatic seasonal switch or scheduled task has been configured.
+- Pixel Autumn, Cincinnati day/night lighting, and October Halloween accents are implemented. Winter artwork remains future work; no automatic season-art switch or scheduled task has been configured.
 - User-selectable reduced motion and accessibility refinements.
 - Personal photos and optional local information/room integrations; not implemented in the current dashboard.

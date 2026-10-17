@@ -2,9 +2,13 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
-## Unreleased design exploration
+## 0.4.0 — October 17, 2026
 
-- Four generated full-screen concepts: bold shapes, pixel autumn, paper world, and cel-style cartoon forest. Awaiting owner selection before making animation layers. No runtime changes.
+- Selected Pixel Autumn from four illustrated concepts; generated separate terrain, trees, cloud, and Halloween assets with recorded prompts.
+- Continuous rooted tree sway, cloud drift, water mesh/ripples, falling leaves, and an October roaming/blinking ghost. Replaced coarse 12 fps snapped movement with floating-point, vsync-paced motion at about 30 fps.
+- Offline Cincinnati solar lighting and local calendar boundaries, with unit checks for seasonal elevation, midnight, and DST transitions.
+- One open-window aperture with no crossing dividers, a deep sill and linen edge, a smooth recessed app rail, and a continuous utility console. Ambient mode preserves the contained window.
+- Removed the unused photographic scene from the APK; retained historical design prompts and prototypes.
 
 ## 0.3.0 — October 17, 2026
 

@@ -24,6 +24,8 @@ jobs:
           for script in scripts/*.sh; do bash -n "$script"; done
           sh -n bridge/supervisor.sh
           python3 -X pycache_prefix=build/pycache -m py_compile bridge/pack-arm.py scripts/measure.py
+      - name: Test Cincinnati lighting and calendar boundaries
+        run: bash scripts/test-sky.sh
       - name: Build and verify development APK
         run: bash scripts/build-app.sh
       - name: Assemble static remote bridge
