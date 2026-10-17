@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-17",
+  "device": "Panasonic W95A / AFTLAS01 / Fire OS 8.1.8.0",
+  "samples": {
+    "webview": {
+      "navigation": {
+        "frames": 1634,
+        "janky_frames": 1015,
+        "jank_percent": 62.12,
+        "p90_ms": 42,
+        "source_sha256": "1f2f3282cc9131edce2a0af6f991f3a5a09830247516350fc5cbe1e7d1627458"
+      },
+      "idle": {
+        "frames": 186,
+        "janky_frames": 181,
+        "jank_percent": 97.31,
+        "p90_ms": 19,
+        "source_sha256": "24427e3f2f11dcfe95832eb673e5bcc5a34b3788a8ac93dddc257c76c1d50ef5"
+      },
+      "main_process_pss_kib": 163333,
+      "memory_source_sha256": "99e7630b0a0e7501797473fc00049b88121256f537a865b78c601b13de72d09e"
+    },
+    "native_static": {
+      "navigation": {
+        "frames": 24,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 5,
+        "source_sha256": "5ed5d4eaec4b0a583d7344a27dc2c48a8d14601813762df1fe743ce15521a038"
+      },
+      "idle": {
+        "frames": 0,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 4950,
+        "source_sha256": "2ae5e87c14b653f3c220f24761ceac96200b24637d75b99a039f3b16fb3a4ea5"
+      },
+      "main_process_pss_kib": 54534,
+      "memory_source_sha256": "1359c8af9a497b8b4f610dd59fabeddfdbb475a6486c7004c09753a928fd4654"
+    },
+    "native_fall": {
+      "navigation": {
+        "frames": 340,
+        "janky_frames": 3,
+        "jank_percent": 0.88,
+        "p90_ms": 5,
+        "source_sha256": "6ad43a111a696b7ef7c4fbb7e8d58eb07c6b9a6499f8810e97f6155aebdc0e7f"
+      },
+      "idle": {
+        "frames": 37,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 5,
+        "source_sha256": "56ee650ea62380699373fa720c5b739c01ccb956ceea13a6b057a2c21fdbcc54"
+      },
+      "main_process_pss_kib": 57570,
+      "memory_source_sha256": "d7b96a873e530c7e6839a75ecbc00966fd1f7b15b3b6de6344dacb21f5d3872a"
+    },
+    "hidden_animation_check": {
+      "before": 174,
+      "after": 174,
+      "pass": true
+    }
+  }
+}
