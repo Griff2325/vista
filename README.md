@@ -14,7 +14,8 @@ Vista explores two practical problems: making a custom television interface feel
 
 - Eight remote-navigable Home tiles: YouTube, Netflix, Hulu, Disney+, Spotify, Apple TV, Explore and Spotify vibes. Installed app banners supply the service logos.
 - Native pixel-art lake viewed through one open window, with a smooth room surround and bottom utility console. After two minutes idle it expands into a fullscreen scene with a clock, winter countdown and information cards; TV sleep is configured to 60 minutes.
-- Swaying trees, flowing water, five cloud silhouettes, and sparse weather effects driven by Cincinnati NWS observations. Offline Cincinnati solar lighting handles the day/night cycle. October adds three wandering/fading ghosts, a sparkling witch flyby, a hanging spider, pumpkins, and a cat.
+- Swaying trees, expanding lake ripples, five cloud silhouettes, and sparse weather effects driven by Cincinnati NWS observations. Offline Cincinnati solar lighting handles the day/night cycle.
+- Four [calendar seasons and holiday occasions](docs/seasons.md): spring blossoms/butterflies, summer greens/fireflies, original autumn leaves and snowy winter with a foreground snowboard. Automatic holiday accents include Halloween characters, harvest gourds, Christmas lights/gifts and small celebration fireworks. Settings provides previews, an accents toggle, upcoming dates and private annual events.
 - Readable MIT News/BBC publisher briefs, one next-seven-days Cincinnati list combining shows, markets, sports and recent food reporting, detailed Cincinnati weather, plus 24–72-hour snow estimates for editable resort points. Default points are Perfect North, Breckenridge and Alyeska.
 - Explore combines optional TMDB movie/TV search with US JustWatch availability and selected-service/genre discovery. A personal API credential is required for catalog results; installed-app shortcuts work without it. Sign-ins, entitlement, YouTube's catalog and private viewing histories are not aggregated.
 - Spotify vibes opens default playlists or saved Spotify content links, with an optional compact player using actual Spotify sessions on the TV. Playback controls require explicit Android notification access; playlist links do not guarantee autoplay.
@@ -90,7 +91,8 @@ The existing `com.griffin.solhome` package, component names, bridge virtual-devi
 - [Architecture and implementation decisions](docs/architecture.md)
 - [Validation and performance evidence](docs/validation.md)
 - [Known limitations and next priorities](docs/roadmap.md)
-- [Pixel Autumn implementation, assets, and prompts](docs/pixel-autumn/README.md)
+- [Seasonal scene implementation, assets, and prompts](docs/pixel-autumn/README.md)
+- [Seasons, holiday windows, previews and annual events](docs/seasons.md)
 - [Original illustrated scene concepts](docs/design-concepts/2026-10-17/README.md)
 - [Preserved prototype snapshots](prototypes/README.md)
 - [Changelog](CHANGELOG.md)

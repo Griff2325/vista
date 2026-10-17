@@ -159,6 +159,60 @@
       "home_capture_sha256": "4dd875fb147273393ded824b8845c0f84e5b7dd12ec62dd6a922ee0d50f17575",
       "fullscreen_capture_sha256": "8ad04d282dad54d9f8bdb1064f502d1d3bae55ba8cddb399503febd8ea7dbbe5",
       "notes": "Three-second idle samples after the brighter ripple adjustment. Fullscreen was the Activity preview, not a new system DreamService/reboot test. Home had one janky frame; no claim of zero jank or whole-TV performance. No new decoded textures. Preview idle extra cleared by returning to a plain Home intent."
+    },
+    "seasons_0_6_0": {
+      "home_idle": {
+        "frames": 95,
+        "janky_frames": 0,
+        "jank_percent": 0.0,
+        "p90_ms": 7,
+        "source_sha256": "ec1968bf1ac277f06941e144c71f3a43784d22e730b490f579fe334a4a88ad62"
+      },
+      "system_dream_idle": {
+        "frames": 95,
+        "janky_frames": 1,
+        "jank_percent": 1.05,
+        "p90_ms": 6,
+        "source_sha256": "0a67e5e2e61e35f4166bd1b5235ad865d9325aad6f572cd98846029506d9a721"
+      },
+      "decoded_active_scene_bytes": 8202040,
+      "decoded_all_seasons_bytes": 30444856,
+      "repeated_four_season_cycles": [
+        {
+          "pss_kib": 173516,
+          "source_sha256": "59a627ba8daf5ee1aa52054bdb69e048f24eb8f70d7178d689c5f63165a7d431"
+        },
+        {
+          "pss_kib": 171392,
+          "source_sha256": "746cbeda172e49a8d332af24a46d80bff08c4a0b0d85118b2bfd906b4cd4b7a3"
+        },
+        {
+          "pss_kib": 171380,
+          "source_sha256": "027ff0cba10f9e5e01972c95c8abe1553f04ae2c462e389214ebb277a7335fcd"
+        }
+      ],
+      "winter_system_dream": {
+        "normal_two_minute_route": true,
+        "test_dream": false,
+        "state_source_sha256": "ff021abf966500cee6fad417bb7fe69a647cc1cd3332fe73d0b6b1b12a9c554f",
+        "capture_sha256": "5944478bec47aab306920613c51ddfb63bb4689027dcb0c2f7612bfb6fbf2603",
+        "early_pss_kib": 161711,
+        "late_pss_kib": 160450,
+        "sample_separation_seconds": 30,
+        "early_source_sha256": "4eaa2de1639438e2ee24102daa8b7b150d0516342226eaf23c952123f4cadf8b",
+        "late_source_sha256": "4bdfafd18f6958e922330d9d8b331b17ccc3fd2abd2141d29c75e0cefba13cec"
+      },
+      "line_ripple_settled_home_pss_kib": [
+        102476,
+        102512,
+        102985
+      ],
+      "line_ripple_memory_sources_sha256": [
+        "6dbca194da5fccc2221eda067f19bd8fea2db3d82df22f86dd2bcb1367415811",
+        "4f86a4c0b99e9dc5323de6082bf2fcbd7d870440a22fac31bea3c10858fc4974",
+        "d15beed055d5c99fad9d6e7951a31894afca1383c91e9620ef1c501318f77cfb"
+      ],
+      "notes": "Short development checks on one TV. Four seasonal palettes, eight automatic occasion windows, private annual-event UI validation/save/remove. Original mesh tree/forest motion retained. Animated Canvas arcs replaced with precomputed line segments after memory A/B checks. Warm multi-season process PSS is higher than a single-season cold start. No new physical-Home/full-reboot or complete 60-minute sleep validation."
     }
   }
 }

@@ -93,7 +93,7 @@ public class MainActivity extends Activity {
     }).setNegativeButton("Close",null).show();
   }catch(Exception e){toast("Use the Input button on your TV remote.");}}
   private void tvSettings(){try{startActivity(new Intent().setClassName("com.amazon.tv.launcher","com.amazon.tv.launcher.ui.MainSettingsActivity"));}catch(Exception e){toast("Hold Home to open TV settings.");}}
-  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes"},(d,n)->{if(n==0)tvSettings();else if(n==1)snowLocations();else if(n==2)EventsPanel.interests(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
+  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Seasons & occasions","Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes"},(d,n)->{if(n==0)tvSettings();else if(n==1)ScenePanel.show(this,()->{scene.reloadTheme();home.invalidate();widgets.invalidate();});else if(n==2)snowLocations();else if(n==3)EventsPanel.interests(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
   private void snowLocations(){WidgetRepository repo=WidgetRepository.get(this);JSONArray locations=repo.locations();String[] labels=new String[locations.length()+2];for(int i=0;i<locations.length();i++)labels[i]=locations.optJSONObject(i).optString("name");labels[locations.length()]="Add location";labels[locations.length()+1]="Restore default resorts";
     new AlertDialog.Builder(this).setTitle("Snow forecast locations").setItems(labels,(d,n)->{if(n==locations.length()+1){repo.resetLocations();snowLocations();}else editSnowLocation(locations,n);}).setNegativeButton("Close",null).show();}
   private void editSnowLocation(JSONArray locations,int index){
@@ -170,6 +170,7 @@ public class MainActivity extends Activity {
       Date now=new Date();text(c,localTime("h:mm",now),103,207,99,white,false);
       text(c,localTime("a",now),368,204,19,muted,false);
       text(c,localTime("EEEE, MMMM d",now),108,252,23,muted,false);
+      String themeLabel=scene.themeLabel();paint.setTextSize(16);int count=paint.breakText(themeLabel,true,438,null);text(c,count<themeLabel.length()?themeLabel.substring(0,Math.max(0,count-1))+"…":themeLabel,108,274,16,0xffb7c9ab,false);
       for(int i=0;i<8;i++){
         int item=i<6?i:i+5;String label=i<6?names[i]:i==6?"Explore":"Spotify vibes";
         float x=108+(i%2)*233,y=286+(i/2)*150;boolean focus=selected==item;RectF tile=new RectF(x,y,x+200,y+113);

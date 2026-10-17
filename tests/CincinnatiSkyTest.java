@@ -22,8 +22,6 @@ public final class CincinnatiSkyTest {
         require(sky("2026-10-17T13:00:00Z").daylight > .9, "After autumn sunrise");
         require(sky("2026-10-17T22:00:00Z").daylight > .6, "Before autumn sunset");
         require(sky("2026-10-18T00:00:00Z").daylight == 0, "After autumn dusk");
-        require(sky("2026-11-01T03:30:00Z").halloween, "Still October in Cincinnati before local midnight");
-        require(!sky("2026-11-01T04:30:00Z").halloween, "Halloween off after Cincinnati November begins");
         long boundary = Instant.parse("2026-11-01T06:00:00Z").toEpochMilli();
         double before = CincinnatiSky.at(boundary-60000).elevation;
         double after = CincinnatiSky.at(boundary+60000).elevation;

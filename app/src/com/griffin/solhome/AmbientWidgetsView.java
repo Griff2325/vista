@@ -41,6 +41,7 @@ public final class AmbientWidgetsView extends View {
         long now=System.currentTimeMillis(),cycle=SystemClock.elapsedRealtime()/45000;
         text(c,date("h:mm",now),96,163,104,0xfff3f3eb,false);text(c,date("a",now),366,160,22,0xffdce2d4,false);text(c,date("EEEE, MMMM d",now),101,207,25,0xffdce2d4,false);
         text(c,WinterCountdown.label(now),101,253,23,0xffdce5ca,false);
+        lines(c,SceneSettings.theme(getContext(),now).label(),101,284,950,1,19,24,0xffc4ceba);
         drawWeather(c,now);
         drawNews(c,cycle,now);drawEvents(c,cycle,now);drawSnow(c,cycle,now);
         text(c,"Press a remote button to return · News briefs and This week on Home",96,1050,16,0xffc4ceca,false);c.restore();

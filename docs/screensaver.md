@@ -41,6 +41,6 @@ Cached data survives loss of connection and is marked saved/stale. Requests use 
 
 ## Winter counter
 
-The clock includes a Cincinnati-local calendar countdown to December 21, showing “Winter is here” during the Dec 21–Mar 19 winter period. December 21 is a fixed calendar target, not an annual astronomical ephemeris; the [US Naval Observatory 2026 seasons data](https://aa.usno.navy.mil/api/seasons?year=2026) confirms the 2026 December solstice falls on that date locally. The counter does not trigger a winter artwork switch.
+The clock includes a Cincinnati-local calendar countdown to December 21, showing “Winter is here” during the Dec 21–Mar 19 winter period. December 21 is a fixed calendar target, not an annual astronomical ephemeris; the [US Naval Observatory 2026 seasons data](https://aa.usno.navy.mil/api/seasons?year=2026) confirms the 2026 December solstice falls on that date locally. The separate scene calendar now switches the winter palette on the same fixed December 21 date; manual previews can override the artwork without changing this clock/countdown. [Seasons & occasions](seasons.md) describes the schedule and controls.
 
 Observation fields that NWS does not supply remain omitted/unavailable. The precipitation percentage and upcoming temperatures are forecast values, shown separately from the timestamped current observation. The scene and widgets share the same cache; more detailed weather adds no new per-frame network requests.

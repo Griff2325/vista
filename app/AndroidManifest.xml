@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="7" android:versionName="0.5.1">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="8" android:versionName="0.6.0">
   <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="28"/>
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA"/>
@@ -13,7 +13,7 @@
     <service android:name=".SpotifyMediaListener" android:label="Vista — Spotify controls" android:exported="true" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
       <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>
     </service>
-    <service android:name=".SolDreamService" android:label="Vista — Pixel Autumn" android:exported="true" android:permission="android.permission.BIND_DREAM_SERVICE">
+    <service android:name=".SolDreamService" android:label="Vista — Seasonal landscape" android:exported="true" android:permission="android.permission.BIND_DREAM_SERVICE">
       <intent-filter><action android:name="android.service.dreams.DreamService"/></intent-filter>
       <meta-data android:name="android.service.dream" android:resource="@xml/dream"/>
     </service>

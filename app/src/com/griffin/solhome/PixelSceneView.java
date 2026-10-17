@@ -12,13 +12,13 @@ import java.io.InputStream;
 import java.util.Random;
 import org.json.JSONObject;
 
-/** Small reusable textures and native mesh motion, with no decoded frame sequence. */
+/** Small reusable textures and rooted native motion, with no decoded frame sequence. */
 public final class PixelSceneView extends View {
     private static final int WIDTH = 480, HEIGHT = 336;
     static final float WINDOW_LEFT=694, WINDOW_TOP=88, WINDOW_RIGHT=1858, WINDOW_BOTTOM=900;
-    private static final int TREE_COLS = 18, TREE_ROWS = 24;
-    private static final int FOREST_COLS = 48, FOREST_ROWS = 42;
-    private static Bitmap[] cachedAssets;
+    private static final int TREE_COLS=18,TREE_ROWS=24,FOREST_COLS=48,FOREST_ROWS=42;
+    private static final Bitmap[][] seasonalCache=new Bitmap[SceneCalendar.Season.values().length][];
+    private static Bitmap sharedCloud,sharedPumpkins;
     private static Bitmap[] cloudVariants;
     private static float cloudTravel, leafTravel;
     private static long weatherFrameAt;
@@ -35,10 +35,12 @@ public final class PixelSceneView extends View {
     private static final WaterMotion waterMotion = new WaterMotion();
     private static final float[] RIPPLE_CENTERS = {261,268, 302,266, 344,279, 389,274, 313,290, 369,296};
     private final Paint ripplePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final RectF rippleBounds = new RectF();
+    private static final int RIPPLE_SEGMENTS=8;
+    private static final float[][][] RIPPLE_ARCS=makeRippleArcs();
+    private final float[] rippleLines=new float[RIPPLE_SEGMENTS*4];
     private final Path silkWeb=makeSilkWeb();
-    private final float[] treeMesh = new float[(TREE_COLS + 1) * (TREE_ROWS + 1) * 2];
-    private final float[] forestMesh = new float[(FOREST_COLS + 1) * (FOREST_ROWS + 1) * 2];
+    private final float[] treeMesh=new float[(TREE_COLS+1)*(TREE_ROWS+1)*2];
+    private final float[] forestMesh=new float[(FOREST_COLS+1)*(FOREST_ROWS+1)*2];
     private final float[] stars = new float[72];
     private Bitmap terrain, leftTree, rightTree, cloud, halloween;
     private static final Bitmap ghost = makeGhost(false);
@@ -55,6 +57,10 @@ public final class PixelSceneView extends View {
     private float immersion;
     private long skyMinute = Long.MIN_VALUE;
     private long previewTime;
+    private SceneSettings.Theme theme;
+    private final SceneDecor decor=new SceneDecor();
+    private SceneCalendar.Season requestedSeason;
+    private volatile int assetRequest;
 
     private final Choreographer.FrameCallback tick = new Choreographer.FrameCallback() {
         @Override public void doFrame(long frameTimeNanos) {
@@ -79,7 +85,7 @@ public final class PixelSceneView extends View {
         paint.setDither(false);
         ripplePaint.setStyle(Paint.Style.STROKE);
         ripplePaint.setStrokeWidth(.65f);
-        ripplePaint.setStrokeCap(Paint.Cap.ROUND);
+        ripplePaint.setStrokeCap(Paint.Cap.BUTT);
         Random random = new Random(314159);
         for (int i = 0; i < stars.length; i += 2) {
             stars[i] = random.nextInt(WIDTH);
@@ -96,7 +102,6 @@ public final class PixelSceneView extends View {
         waterMask.lineTo(238, 282);
         waterMask.close();
         refreshSky();
-        new Thread(this::loadAssets, "sol-pixel-art").start();
     }
 
     private Bitmap load(String name, int width, int height) throws Exception {
@@ -120,11 +125,19 @@ public final class PixelSceneView extends View {
     }
 
     private Bitmap movingSprite(String name, int width, int height) throws Exception {
+        Bitmap pixels=load(name,width,height);
+        Bitmap padded=Bitmap.createScaledBitmap(pixels,width*3,height*3,false);pixels.recycle();return padded;
+    }
+
+    private Bitmap seasonalPixels(String name,int width,int height,SceneCalendar.Season season)throws Exception {
         Bitmap pixels = load(name, width, height);
-        // Preserve chunky pixels first; bilinear filtering then only softens subpixel travel.
-        Bitmap padded = Bitmap.createScaledBitmap(pixels, width*3, height*3, false);
-        pixels.recycle();
-        return padded;
+        if(season!=SceneCalendar.Season.AUTUMN){
+            int[] colors=new int[width*height];pixels.getPixels(colors,0,width,0,0,width,height);
+            boolean ground=name.equals("terrain");
+            for(int i=0;i<colors.length;i++)colors[i]=ground?SeasonPalette.terrain(colors[i],i/width,season):SeasonPalette.map(colors[i],season);
+            Bitmap recolored=Bitmap.createBitmap(colors,width,height,Bitmap.Config.ARGB_8888);pixels.recycle();pixels=recolored;
+        }
+        return pixels;
     }
 
     private static Bitmap makeGhost(boolean blink) {
@@ -200,36 +213,52 @@ public final class PixelSceneView extends View {
         Bitmap result=Bitmap.createScaledBitmap(pixels,192,72,false);pixels.recycle();return result;
     }
 
-    private void loadAssets() {
+    private void requestAssets(SceneCalendar.Season season){
+        if(requestedSeason==season)return;
+        requestedSeason=season;final int request=++assetRequest;
+        new Thread(()->loadAssets(season,request),"vista-season-assets").start();
+    }
+
+    private Bitmap seasonalSprite(String name,int width,int height,SceneCalendar.Season season)throws Exception {
+        Bitmap logical=seasonalPixels(name,width,height,season);
+        Bitmap texture=Bitmap.createScaledBitmap(logical,width*3,height*3,false);logical.recycle();
+        return texture;
+    }
+
+    private void loadAssets(SceneCalendar.Season season,int request) {
         try {
             final Bitmap[] assets;
-            synchronized (PixelSceneView.class) {
-                if (cachedAssets == null) cachedAssets = new Bitmap[] {movingSprite("terrain", WIDTH, HEIGHT),
-                        movingSprite("tree-left", 144, 192), movingSprite("tree-right", 112, 152),
-                        movingSprite("cloud", 192, 64), load("halloween", 100, 67)};
+            synchronized(PixelSceneView.class){
+                if(request!=assetRequest)return;
+                if(sharedCloud==null)sharedCloud=movingSprite("cloud",192,64);
+                if(sharedPumpkins==null)sharedPumpkins=load("halloween",100,67);
                 if(cloudVariants==null)cloudVariants=new Bitmap[]{makeCloud(0),makeCloud(1),makeCloud(2),makeCloud(3)};
-                assets = cachedAssets;
+                // At most four texture sets, written only at creation. A preview reuses its
+                // existing bitmap identities, including the renderer's GPU resources.
+                if(seasonalCache[season.ordinal()]==null)seasonalCache[season.ordinal()]=new Bitmap[]{
+                    seasonalSprite("terrain",WIDTH,HEIGHT,season),seasonalSprite("tree-left",144,192,season),
+                    seasonalSprite("tree-right",112,152,season),sharedCloud,sharedPumpkins};
+                assets=seasonalCache[season.ordinal()];
             }
-            final Bitmap ground=assets[0], left=assets[1], right=assets[2], clouds=assets[3], pumpkins=assets[4];
-            handler.post(() -> {
-                if (released) return;
-                terrain = ground; leftTree = left; rightTree = right;
-                cloud = clouds; halloween = pumpkins;
-                long bytes = ground.getAllocationByteCount() + left.getAllocationByteCount()
-                        + right.getAllocationByteCount() + clouds.getAllocationByteCount()
-                        + pumpkins.getAllocationByteCount() + ghost.getAllocationByteCount()
-                        + ghostBlink.getAllocationByteCount()+witch.getAllocationByteCount()+cat.getAllocationByteCount();
-                for(Bitmap variant:cloudVariants)bytes+=variant.getAllocationByteCount();
-                Log.i("SolScene", "Pixel assets ready; decoded bytes=" + bytes);
-                invalidate();
-            });
-        } catch (Exception error) {
-            Log.e("SolScene", "Pixel art load failed", error);
+            handler.post(()->{if(active&&!released&&request==assetRequest)attachAssets(assets,season);});
+        }catch(Exception error){
+            handler.post(()->{if(request==assetRequest)requestedSeason=null;});
+            Log.e("SolScene","Pixel art load failed",error);
         }
+    }
+
+    private void attachAssets(Bitmap[] assets,SceneCalendar.Season season){
+        terrain=assets[0];leftTree=assets[1];rightTree=assets[2];cloud=assets[3];halloween=assets[4];
+        long bytes=ghost.getAllocationByteCount()+ghostBlink.getAllocationByteCount()+witch.getAllocationByteCount()+cat.getAllocationByteCount();
+        for(Bitmap asset:assets)bytes+=asset.getAllocationByteCount();for(Bitmap variant:cloudVariants)bytes+=variant.getAllocationByteCount();
+        long cached=bytes-assets[0].getAllocationByteCount()-assets[1].getAllocationByteCount()-assets[2].getAllocationByteCount();
+        synchronized(PixelSceneView.class){for(Bitmap[] set:seasonalCache)if(set!=null)for(int i=0;i<3;i++)cached+=set[i].getAllocationByteCount();}
+        Log.i("SolScene","Pixel assets ready; season="+season+"; decoded bytes="+bytes+"; seasonal cache bytes="+cached);invalidate();
     }
 
     public void start() {
         active = true;
+        requestedSeason=null;
         skyMinute = Long.MIN_VALUE;
         lastFrameNanos = 0;
         Choreographer.getInstance().removeFrameCallback(tick);
@@ -238,12 +267,14 @@ public final class PixelSceneView extends View {
 
     public void stop() {
         active = false;
+        assetRequest++;requestedSeason=null;
         Choreographer.getInstance().removeFrameCallback(tick);
     }
 
     public void release() {
         stop();
         released = true;
+        assetRequest++;
         terrain = leftTree = rightTree = cloud = halloween = null;
     }
 
@@ -254,7 +285,7 @@ public final class PixelSceneView extends View {
     public float windowRight() { return WINDOW_RIGHT+(1920-WINDOW_RIGHT)*immersion; }
     public float windowBottom() { return WINDOW_BOTTOM+(1080-WINDOW_BOTTOM)*immersion; }
 
-    /** Developer preview changes scene lighting only; a normal Home intent clears it. */
+    /** Developer scene-date preview; never changes the TV clock or data feeds. */
     public void setPreviewTime(long value) {
         previewTime = Math.max(0, value);
         skyMinute = Long.MIN_VALUE;
@@ -262,12 +293,17 @@ public final class PixelSceneView extends View {
         invalidate();
     }
 
+    public void reloadTheme(){skyMinute=Long.MIN_VALUE;refreshSky();invalidate();}
+    public String themeLabel(){return theme==null?"":theme.label();}
+
     private void refreshSky() {
         long now = previewTime > 0 ? previewTime : System.currentTimeMillis();
         long minute = now / 60000;
         if (skyMinute == minute) return;
         skyMinute = minute;
         sky = CincinnatiSky.at(now);
+        theme=SceneSettings.theme(getContext(),now);
+        if(active)requestAssets(theme.season);
         // Consume the shared cache at most once/minute. This View performs no networking.
         long weatherMinute=System.currentTimeMillis()/60000;
         boolean firstWeather=weatherReadMinute==Long.MIN_VALUE;
@@ -302,7 +338,7 @@ public final class PixelSceneView extends View {
                 0, .47f+.53f*day, 0, 0, 0,
                 0, 0, .72f+.28f*day, 0, 0,
                 0, 0, 0, 1, 0 });
-        Log.i("SolScene", "Lighting=" + sky.phase + "; October accents=" + sky.halloween
+        Log.i("SolScene", "Lighting=" + sky.phase + "; season="+theme.season+"; occasion="+theme.occasion
                 + "; preview=" + (previewTime > 0)+"; weather="+weather.source+"; stale="+weather.stale);
     }
 
@@ -344,18 +380,20 @@ public final class PixelSceneView extends View {
         paint.setColorFilter(terrainLight);
         if (terrain != null) {
             destination.set(0, 0, WIDTH, HEIGHT);
-            if(immersion>.01f) drawForest(canvas,time);
-            else canvas.drawBitmap(terrain, null, destination, paint);
+            if(immersion>.01f)drawForest(canvas,time);else canvas.drawBitmap(terrain,null,destination,paint);
             drawWater(canvas);
             drawHaze(canvas);
         }
-        if (sky.halloween) {drawGhost(canvas, monotonic/1000.0);drawHauntings(canvas,time);}
+        boolean insectWeather=rain<.05f&&snow<.02f&&wind<.8f;
+        decor.drawSky(canvas,time,theme,sky.daylight,immersion,insectWeather);
+        if (theme.occasion==SceneCalendar.Occasion.HALLOWEEN) {drawGhost(canvas, monotonic/1000.0);drawHauntings(canvas,time);}
         drawTree(canvas, leftTree, -74, 1, 244, 330, time, 0);
         drawTree(canvas, rightTree, 387, 130, 140, 205, time, 2.3f);
         paint.setColorFilter(null);
-        drawLeaves(canvas, time);
-        if(immersion>.01f) drawFireflies(canvas,time);
-        if (sky.halloween && halloween != null) drawHalloween(canvas, time);
+        if(theme.season==SceneCalendar.Season.AUTUMN||theme.season==SceneCalendar.Season.SPRING)drawLeaves(canvas, time);
+        if(insectWeather&&(theme.season==SceneCalendar.Season.SUMMER||theme.occasion==SceneCalendar.Occasion.EARTH_DAY)) drawFireflies(canvas,time);
+        decor.drawForeground(canvas,time,theme,sky.daylight,immersion);
+        if (theme.occasion==SceneCalendar.Occasion.HALLOWEEN && halloween != null) drawHalloween(canvas, time);
         drawPrecipitation(canvas,time);
         paint.setColorFilter(null); paint.setAlpha(255);
         canvas.restore();
@@ -415,7 +453,7 @@ public final class PixelSceneView extends View {
         for(int i=0;i<12;i++) {
             float x=30+i*37+(float)Math.sin(time*.35+i)*9;
             float y=258+(i*23)%65+(float)Math.sin(time*.48+i*2)*5;
-            int alpha=(int)(Math.max(0,Math.sin(time*.8+i*1.7))*130*dark*immersion);
+            int alpha=(int)(Math.max(0,Math.sin(time*.8+i*1.7))*130*dark*(.35f+.65f*immersion));
             paint.setColor(Color.argb(alpha,227,221,141));canvas.drawRect(x,y,x+1,y+1,paint);
         }
         paint.setAlpha(255);
@@ -482,14 +520,33 @@ public final class PixelSceneView extends View {
                 if(alpha<1) continue;
                 float radius=(4+progress*(18+i%3*5))*perspective;
                 float height=radius*.20f;
-                rippleBounds.set(x-radius,y-height,x+radius,y+height);
                 ripplePaint.setColor(Color.argb(alpha,212,228,219));
-                canvas.drawArc(rippleBounds,190+i*9,128,false,ripplePaint);
+                drawRippleArc(canvas,RIPPLE_ARCS[i][0],x,y,radius,height);
                 ripplePaint.setColor(Color.argb(alpha*2/3,114,156,170));
-                canvas.drawArc(rippleBounds,15+i*7,112,false,ripplePaint);
+                drawRippleArc(canvas,RIPPLE_ARCS[i][1],x,y,radius,height);
             }
         }
         canvas.restore();
+    }
+
+    private static float[][][] makeRippleArcs(){
+        float[][][] arcs=new float[6][2][(RIPPLE_SEGMENTS+1)*2];
+        for(int system=0;system<6;system++)for(int arc=0;arc<2;arc++)for(int point=0;point<=RIPPLE_SEGMENTS;point++){
+            double angle=Math.toRadians((arc==0?190+system*9:15+system*7)+(arc==0?128:112)*point/(double)RIPPLE_SEGMENTS);
+            arcs[system][arc][point*2]=(float)Math.cos(angle);arcs[system][arc][point*2+1]=(float)Math.sin(angle);
+        }
+        return arcs;
+    }
+
+    private void drawRippleArc(Canvas canvas,float[] points,float x,float y,float width,float height){
+        for(int segment=0;segment<RIPPLE_SEGMENTS;segment++){
+            int at=segment*4,point=segment*2;
+            rippleLines[at]=x+points[point]*width;rippleLines[at+1]=y+points[point+1]*height;
+            rippleLines[at+2]=x+points[point+2]*width;rippleLines[at+3]=y+points[point+3]*height;
+        }
+        // Animated drawArc accumulated native/GPU memory in the device A/B check.
+        // Line segments keep the shallow ellipse with fixed, reusable buffers.
+        canvas.drawLines(rippleLines,ripplePaint);
     }
 
     private void drawTree(Canvas canvas, Bitmap bitmap, float x, float y, float width,
@@ -524,7 +581,7 @@ public final class PixelSceneView extends View {
             float life=wrap(leafTravel+i*.143f,1),edge=Math.min(1,Math.min(life/.08f,(1-life)/.12f));
             float x=(25+i*71)%WIDTH+life*70*windDrift+(float)Math.sin(life*12+i)*(4+wind*8);
             float y=-12+life*360+(float)Math.sin(time*.7+i)*1.2f;
-            paint.setColor(i%2==0?0xffc8792e:0xffb94d27);paint.setAlpha((int)((.45f+.55f*sky.daylight)*200*edge));
+            paint.setColor(theme.season==SceneCalendar.Season.SPRING?(i%2==0?0xfff2c7d4:0xffe6debd):(i%2==0?0xffc8792e:0xffb94d27));paint.setAlpha((int)((.45f+.55f*sky.daylight)*200*edge));
             canvas.save();canvas.translate(x,y);canvas.rotate((float)Math.sin(time*1.1+i*2)*28+i*41);
             canvas.drawRect(-1.5f,-.5f,1.5f,.5f,paint);canvas.drawRect(-.5f,-1,1,1,paint);canvas.restore();
         }

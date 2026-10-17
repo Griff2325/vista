@@ -2,6 +2,15 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.6.0 — October 17, 2026
+
+- Four Cincinnati calendar seasons: spring blossoms/petals/butterflies, summer greens and nighttime fireflies, the original autumn colors/leaves, and snowy winter foliage with a foreground snowboard and visible bindings.
+- Holiday windows for Halloween, Thanksgiving, Christmas, New Year, Valentine’s Day, St. Patrick’s Day, Earth Day and July Fourth. Sparse native accents include tree lights/gifts, harvest gourds, hearts, clover and intermittent small fireworks; Halloween characters stay confined to their occasion.
+- Settings → Seasons & occasions provides persistent, clearly labeled season/holiday previews, an accents toggle, upcoming calendar dates and up to 20 private annual events. Personal events trigger a celebration on their Cincinnati date. Restore Automatic returns both Home and the system screensaver to live calendar selection.
+- Palette conversion runs on the first visit to a season. A bounded lazy cache shares at most four read-only seasonal texture sets, avoiding repeated CPU/GPU image creation during previews, with no video, new raster assets or per-frame recoloring. Weather and clocks remain live during user previews; precipitation still follows Cincinnati weather.
+
+- Ripple curves use precomputed short line segments instead of animated Canvas arcs after on-device A/B checks exposed native/GPU memory growth in the curved drawing path. Original rooted tree and distant-forest sway are preserved.
+
 ## 0.5.1 — October 17, 2026
 
 - Fixed water phase acceleration during changing wind: integrate a bounded wave phase instead of multiplying wind by elapsed uptime. Home and the system dream share the same phase.

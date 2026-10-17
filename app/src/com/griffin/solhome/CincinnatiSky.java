@@ -17,15 +17,13 @@ public final class CincinnatiSky {
         public final double hourAngle;
         public final float daylight;
         public final float twilight;
-        public final boolean halloween;
         public final String phase;
 
-        private State(double elevation, double hourAngle, boolean halloween) {
+        private State(double elevation, double hourAngle) {
             this.elevation = elevation;
             this.hourAngle = hourAngle;
             this.daylight = smooth(-7, 8, elevation);
             this.twilight = (float) Math.max(0, 1 - Math.abs(elevation - 1) / 11);
-            this.halloween = halloween;
             this.phase = elevation < -6 ? "Night" : elevation < 6
                     ? (hourAngle < 0 ? "Dawn" : "Dusk") : "Day";
         }
@@ -54,9 +52,7 @@ public final class CincinnatiSky {
         double cosineZenith = Math.sin(latitude) * Math.sin(declination)
                 + Math.cos(latitude) * Math.cos(declination) * Math.cos(Math.toRadians(hourAngle));
         double elevation = Math.toDegrees(Math.asin(Math.max(-1, Math.min(1, cosineZenith))));
-        Calendar local = new GregorianCalendar(TimeZone.getTimeZone(ZONE_ID));
-        local.setTimeInMillis(epochMillis);
-        return new State(elevation, hourAngle, local.get(Calendar.MONTH) == Calendar.OCTOBER);
+        return new State(elevation, hourAngle);
     }
 
     private static float smooth(double low, double high, double value) {
