@@ -18,6 +18,10 @@ public final class CodingUsageTest {
         check(new CodingUsage.Provider(now+600000,false,Arrays.asList(week)).usable(now)==false,"future source time rejected");
         check(new CodingUsage.Provider(now,true,Arrays.asList(week)).stale(now),"failed refresh retains saved marker");
         check(CodingUsage.reset(shorter,now).startsWith("Resets "),"Cincinnati reset display");
+        CodingUsage.Tokens tokens=new CodingUsage.Tokens("2026-10-18",1234567,now);
+        check(tokens.usable(now)&&!tokens.usable(now+86400000),"token day expires at Cincinnati midnight");
+        check(!new CodingUsage.Tokens("2026-10-18",-1,now).usable(now),"negative token count rejected");
+        check(CodingUsage.tokens(new CodingUsage.Provider(0,true,Collections.emptyList(),tokens),now,false).contains("1.2M tokens"),"tokens remain separate from missing quota");
         System.out.println("Coding usage bounds, missing/reset/saved state and window selection passed");
     }
 }

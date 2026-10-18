@@ -2,6 +2,7 @@
 """Read quota observations locally; send only an allowlisted snapshot to Vista over ADB."""
 import argparse
 import base64
+from datetime import datetime, timedelta
 import json
 import math
 import os
@@ -12,11 +13,122 @@ import subprocess
 import sys
 import tempfile
 import time
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_STATE = ROOT / '.local' / 'coding-usage'
 TV_URI = 'content://com.griffin.solhome.coding-usage'
 MAX_BYTES = 16384
+LOCAL_ZONE = ZoneInfo('America/New_York')
+MAX_TOKENS = 10**12
+
+
+def token_integer(value):
+    return value if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= MAX_TOKENS else None
+
+
+def clean_tokens(raw, now):
+    if not isinstance(raw, dict):
+        return None
+    at, count = raw.get('at'), token_integer(raw.get('count'))
+    day = datetime.fromtimestamp(now / 1000, LOCAL_ZONE).date().isoformat()
+    if count is None or raw.get('day') != day or not isinstance(at, (int, float)) or isinstance(at, bool) or not 0 < at <= now + 300000 or now-at > 86400000:
+        return None
+    return {'day': day, 'count': count, 'at': int(at)}
+
+
+def record_time(value):
+    try:
+        at = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return at.timestamp() if at.tzinfo else None
+    except (ValueError, TypeError, AttributeError, OverflowError):
+        return None
+
+
+def usage_records(path, kind):
+    # Scan only candidate metadata records; never persist or print conversation content.
+    with path.open('rb') as stream:
+        while True:
+            line = stream.readline(1048577)
+            if not line:
+                return
+            if len(line) > 1048576:
+                while line and not line.endswith(b'\n'):
+                    line = stream.readline(1048577)
+                continue
+            if (b'token_count' if kind == 'codex' else b'"usage"') not in line:
+                continue
+            try:
+                value = json.loads(line)
+                if isinstance(value, dict):
+                    yield value
+            except (ValueError, UnicodeError):
+                continue
+
+
+def codex_tokens(records, start, end, seen):
+    previous, count = None, 0
+    for record in records:
+        payload = record.get('payload')
+        if record.get('type') != 'event_msg' or not isinstance(payload, dict) or payload.get('type') != 'token_count':
+            continue
+        info = payload.get('info')
+        if not isinstance(info, dict):
+            continue
+        cumulative, last = info.get('total_token_usage'), info.get('last_token_usage')
+        total = token_integer(cumulative.get('total_tokens')) if isinstance(cumulative, dict) else None
+        recent = token_integer(last.get('total_tokens')) if isinstance(last, dict) else None
+        if total is None:
+            continue
+        delta = total-previous if previous is not None and total >= previous else min(total, recent) if recent is not None else None
+        previous = total
+        at = record_time(record.get('timestamp'))
+        # Forked histories and repeated rate-limit events can contain identical observations.
+        fingerprint = (record.get('timestamp'), total, recent)
+        if at is not None and start <= at < end and fingerprint not in seen:
+            seen.add(fingerprint)
+            if delta is not None:
+                count += delta
+    return count
+
+
+def claude_tokens(records, start, end, messages):
+    for record in records:
+        message = record.get('message')
+        at = record_time(record.get('timestamp'))
+        if record.get('type') != 'assistant' or not isinstance(message, dict) or at is None or not start <= at < end:
+            continue
+        usage = message.get('usage')
+        if not isinstance(usage, dict) or not isinstance(message.get('id'), str):
+            continue
+        counts = [token_integer(usage.get(k, 0)) for k in ('input_tokens', 'output_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens')]
+        if any(v is None for v in counts):
+            continue
+        # Streaming content blocks repeat a message's usage. Keep its largest observation once.
+        key = (message['id'], str(record.get('requestId', '')))
+        messages[key] = max(messages.get(key, 0), sum(counts))
+
+
+def daily_tokens(root, kind, now):
+    if not root.is_dir():
+        return None
+    day = datetime.fromtimestamp(now / 1000, LOCAL_ZONE).replace(hour=0, minute=0, second=0, microsecond=0)
+    start, end = day.timestamp(), (day + timedelta(days=1)).timestamp()
+    count, seen, messages = 0, set(), {}
+    try:
+        for path in root.rglob('*.jsonl'):
+            if path.is_symlink() or path.stat().st_mtime < start:
+                continue
+            records = usage_records(path, kind)
+            if kind == 'codex':
+                count += codex_tokens(records, start, end, seen)
+            else:
+                claude_tokens(records, start, end, messages)
+        if kind == 'claude':
+            count = sum(messages.values())
+        return clean_tokens({'day': day.date().isoformat(), 'count': count, 'at': now}, now)
+    except OSError:
+        return None
 
 
 def load(path):
@@ -128,7 +240,7 @@ def read_codex(binary):
         raise RuntimeError('Codex usage timed out')
 
     try:
-        send({'id': 1, 'method': 'initialize', 'params': {'clientInfo': {'name': 'vista_usage', 'version': '0.8.0'}}})
+        send({'id': 1, 'method': 'initialize', 'params': {'clientInfo': {'name': 'vista_usage', 'version': '0.8.1'}}})
         receive(1)
         send({'method': 'initialized', 'params': {}})
         send({'id': 2, 'method': 'account/rateLimits/read', 'params': {}})
@@ -171,6 +283,11 @@ def collect(config, state):
     except (OSError, RuntimeError, ValueError, KeyError, subprocess.SubprocessError):
         codex = clean_saved(previous.get('codex') or {}, now, True)
     claude = clean_saved(load(state / 'claude.json'), now)
+    for name, data, root in [('codex', codex, Path.home()/'.codex/sessions'), ('claude', claude, Path.home()/'.claude/projects')]:
+        old = previous.get(name)
+        tokens = daily_tokens(root, name, now) or clean_tokens(old.get('tokens') if isinstance(old, dict) else None, now)
+        if tokens is not None:
+            data['tokens'] = tokens
     snapshot = {'schema': 1, 'generatedAt': now, 'providers': {'codex': codex, 'claude': claude}}
     save(state / 'snapshot.json', snapshot)
     adb = config.get('adb')

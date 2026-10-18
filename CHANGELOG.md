@@ -2,6 +2,11 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.8.1 — October 18, 2026
+
+- Moved screensaver coding limits into a horizontal footer beneath the existing news, Cincinnati events and snow cards, clearing the landscape below the clock.
+- Added separately labeled Mac-today token totals on Home, the screensaver and usage details. Local metadata aggregation includes cached input, deduplicates Codex cumulative/fork observations and Claude streaming blocks, and follows Cincinnati midnight/DST. Account allowance percentages remain independent; this is not a billing or cross-device token total.
+
 ## 0.8.0 — October 18, 2026
 
 - Native Codex and Claude Code allowance meters in Home's utility console and beneath the screensaver clock, with a remote-accessible detail panel and Cincinnati-local reset times. Each provider's reported window duration determines its label; missing limits are never assumed to be zero.
