@@ -2,6 +2,13 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.7.0 — October 17, 2026
+
+- Lightweight wildlife sightings: a fox that pauses on the dry bank, passing birds and a winter snowboarder on the far ridge. Independent periods, daylight/weather gating, shared Home/Dream timing and a wildlife toggle. No new scene bitmaps or extra animation loop.
+- Native SwiftUI iPhone companion project with camera QR scanning, manual address entry, memory-only credentials and local-network endpoint restrictions. Includes simulator build and client protocol tests; physical iPhone signing/install remains owner setup.
+- Local TV companion service and optional browser fallback: TV QR plus expiring single-use code, one revocable browser session, visible opt-in foreground service, fixed commands, bounded HTTP transport and idle/absolute expiry. Phone UI provides Vista navigation, typed Explore searches, app shortcuts, scene selection and Spotify transport. Uses trusted-network HTTP; no cloud account or boot listener.
+- Reports Fire OS background-launch restrictions explicitly: return from streaming apps and system dreams with the physical remote. Explore still needs its optional catalog credential; Spotify controls require an available session and existing notification access.
+
 ## 0.6.0 — October 17, 2026
 
 - Four Cincinnati calendar seasons: spring blossoms/petals/butterflies, summer greens and nighttime fireflies, the original autumn colors/leaves, and snowy winter foliage with a foreground snowboard and visible bindings.

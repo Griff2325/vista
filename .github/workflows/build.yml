@@ -39,3 +39,21 @@ jobs:
             build/sol-home-debug.apk
             build/bridge/sol-home-bridge
           retention-days: 7
+
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Build native iPhone companion without signing
+        run: |
+          xcodebuild -project companion/ios/VistaCompanion.xcodeproj \
+            -scheme VistaCompanion -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build
+      - name: Test native endpoint, form and session policy
+        run: |
+          xcrun swiftc -target "$(uname -m)-apple-macos14.0" \
+            companion/ios/VistaCompanion/CompanionModel.swift \
+            companion/ios/Tests/CompanionModelTest.swift -o build/companion-model-tests
+          build/companion-model-tests

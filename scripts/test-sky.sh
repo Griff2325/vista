@@ -13,7 +13,9 @@ mkdir -p "$ROOT/build/tests"
   "$ROOT/app/src/com/griffin/solhome/GhostMotion.java" "$ROOT/tests/GhostMotionTest.java" \
   "$ROOT/app/src/com/griffin/solhome/WeatherValues.java" "$ROOT/app/src/com/griffin/solhome/WinterCountdown.java" "$ROOT/tests/WeatherValuesTest.java" \
   "$ROOT/app/src/com/griffin/solhome/WaterMotion.java" "$ROOT/tests/WaterMotionTest.java" \
-  "$ROOT/app/src/com/griffin/solhome/SceneCalendar.java" "$ROOT/app/src/com/griffin/solhome/SeasonPalette.java" "$ROOT/tests/SceneCalendarTest.java"
+  "$ROOT/app/src/com/griffin/solhome/SceneCalendar.java" "$ROOT/app/src/com/griffin/solhome/SeasonPalette.java" "$ROOT/tests/SceneCalendarTest.java" \
+  "$ROOT/app/src/com/griffin/solhome/WorldMotion.java" "$ROOT/tests/WorldMotionTest.java" \
+  "$ROOT/app/src/com/griffin/solhome/CompanionServer.java" "$ROOT/tests/CompanionServerTest.java"
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.CincinnatiSkyTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WidgetDataTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WeatherSceneTest
@@ -24,3 +26,6 @@ mkdir -p "$ROOT/build/tests"
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WeatherValuesTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WaterMotionTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.SceneCalendarTest
+
+"${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WorldMotionTest
+"${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.CompanionServerTest

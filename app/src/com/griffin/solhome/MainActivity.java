@@ -45,8 +45,8 @@ public class MainActivity extends Activity {
       runOnUiThread(()->{home.logos=logos;home.invalidate();});
     },"sol-logos").start();
   }
-  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);SpotifyPanel.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));setAmbient(false,true);armIdle();}
-  @Override protected void onResume(){super.onResume();foreground=true;setAmbient(false,true);home.requestFocus();handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
+  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);SpotifyPanel.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(intent.getFloatExtra("sol.preview.world_seconds",-1));setAmbient(false,true);armIdle();}
+  @Override protected void onResume(){super.onResume();foreground=true;setAmbient(false,true);home.requestFocus();handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(getIntent().getFloatExtra("sol.preview.world_seconds",-1));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
   @Override protected void onPause(){foreground=false;handler.removeCallbacks(minuteTick);handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();scene.stop();widgets.stop();WidgetRepository.get(this).unlisten(widgetChanged);super.onPause();}
   @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);scene.release();super.onDestroy();}
   @Override public void onWindowFocusChanged(boolean focus){super.onWindowFocusChanged(focus);if(focus)armIdle();else handler.removeCallbacks(idle);}
@@ -93,7 +93,16 @@ public class MainActivity extends Activity {
     }).setNegativeButton("Close",null).show();
   }catch(Exception e){toast("Use the Input button on your TV remote.");}}
   private void tvSettings(){try{startActivity(new Intent().setClassName("com.amazon.tv.launcher","com.amazon.tv.launcher.ui.MainSettingsActivity"));}catch(Exception e){toast("Hold Home to open TV settings.");}}
-  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Seasons & occasions","Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes"},(d,n)->{if(n==0)tvSettings();else if(n==1)ScenePanel.show(this,()->{scene.reloadTheme();home.invalidate();widgets.invalidate();});else if(n==2)snowLocations();else if(n==3)EventsPanel.interests(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
+  void refreshCompanionScene(){scene.reloadTheme();home.invalidate();widgets.invalidate();}
+  CompanionServer.Reply companionPanel(String panel){
+    setAmbient(false,true);armIdle();
+    if(panel.equals("ambient"))setAmbient(true,true);
+    else if(panel.equals("spotify"))SpotifyPanel.show(this);
+    else if(panel.equals("explore"))startActivity(new Intent(this,StreamingActivity.class));
+    else return new CompanionServer.Reply(400,"Unknown panel");
+    return new CompanionServer.Reply(200,"Opened "+panel);
+  }
+  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Seasons & occasions","Phone companion","Wildlife · "+(SceneSettings.preferences(this).getBoolean("wildlife",true)?"On":"Off"),"Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes"},(d,n)->{if(n==0)tvSettings();else if(n==1)ScenePanel.show(this,this::refreshCompanionScene);else if(n==2)CompanionPanel.show(this);else if(n==3){android.content.SharedPreferences p=SceneSettings.preferences(this);p.edit().putBoolean("wildlife",!p.getBoolean("wildlife",true)).apply();refreshCompanionScene();}else if(n==4)snowLocations();else if(n==5)EventsPanel.interests(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
   private void snowLocations(){WidgetRepository repo=WidgetRepository.get(this);JSONArray locations=repo.locations();String[] labels=new String[locations.length()+2];for(int i=0;i<locations.length();i++)labels[i]=locations.optJSONObject(i).optString("name");labels[locations.length()]="Add location";labels[locations.length()+1]="Restore default resorts";
     new AlertDialog.Builder(this).setTitle("Snow forecast locations").setItems(labels,(d,n)->{if(n==locations.length()+1){repo.resetLocations();snowLocations();}else editSnowLocation(locations,n);}).setNegativeButton("Close",null).show();}
   private void editSnowLocation(JSONArray locations,int index){

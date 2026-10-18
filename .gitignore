@@ -24,3 +24,10 @@ adbkey*
 # Never import device dumps or private handoff notes
 /private/
 /work/
+# Xcode machine state / signing exports
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.ipa
+*.mobileprovision
+*.xcarchive/

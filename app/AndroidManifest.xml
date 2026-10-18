@@ -1,6 +1,7 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="8" android:versionName="0.6.0">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="9" android:versionName="0.7.0">
   <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="28"/>
   <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
   <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA"/>
   <uses-feature android:name="android.software.leanback" android:required="false"/>
   <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
@@ -10,6 +11,7 @@
       <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.HOME"/><category android:name="android.intent.category.DEFAULT"/></intent-filter>
     </activity>
     <activity android:name=".StreamingActivity" android:exported="false" android:screenOrientation="landscape"/>
+    <service android:name=".CompanionService" android:exported="false"/>
     <service android:name=".SpotifyMediaListener" android:label="Vista — Spotify controls" android:exported="true" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
       <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>
     </service>

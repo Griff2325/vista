@@ -24,7 +24,7 @@ The forecast period temperature is not a sensor reading. A fresh KLUK observatio
 
 Publisher RSS descriptions supply news briefs; Vista does not invent summaries from headlines. The AI feed also requires an explicit AI/ML subject in its headline or publisher brief, so loosely tagged general MIT stories do not fill the AI card. Structured Washington Park/Fountain Square instances and Memorial Hall show dates merge with home-game schedules and dated WCPO food reporting. Local calendar boundaries, expiry and editable interest filters apply at display time. Food articles are labeled reporting, never assigned fictional event times. Snowfall grid intervals are converted to inches and summed/prorated over 24–72 hours; incomplete coverage is unavailable rather than zero. See [data sources and timing](screensaver.md).
 
-Explore uses a separate, optional personal TMDB credential stored only in private app preferences. Spotify media-session callbacks exist only while the popout is open. See [media setup and limitations](media.md).
+Explore uses a separate, optional personal TMDB credential stored only in private app preferences. Spotify media-session callbacks exist while the popout is open, and after a control is requested during an explicitly enabled companion session. See [media setup and limitations](media.md).
 
 The optional Watch Next reader queries the standard Android TV provider and constrains resume intents to the publishing package. No rows were available on the tested TV. Reading Amazon's private provider was denied; the project does not bypass those permissions or claim universal viewing-history access.
 
@@ -39,3 +39,9 @@ The supervisor is a shell process, not an Android boot service. It remains local
 ## System dream routing
 
 SolDreamService shares cached scene textures with Home, renders fullscreen, and obeys DreamService start/stop callbacks. It does not launch over an actively playing app itself. Fire OS otherwise selects its proprietary Ambient service regardless of the normal dream preference. The reversible shell setup disables that vendor selector and invokes the framework's shell-authorized setDreamComponents path. A small local shell supervisor re-arms the transient legacy route every twenty seconds. Transaction discovery uses the device framework rather than a hard-coded binder ordinal. This is firmware-specific, requires already authorized ADB shell, and does not create reboot persistence. No privileged permission is requested for the ordinary app.
+
+## Companion and wildlife
+
+[CompanionService](companion.md) is a user-started non-sticky foreground service with one bounded local HTTP worker. It accepts paired, fixed commands and marshals them onto the Android main thread; it does not inject into other apps. Its optional notification-access use remains Spotify-only. The physical Home bridge is unchanged.
+
+[WorldOutside](world-outside.md) draws sparse bank/sky/ridge sightings using reusable native geometry and monotonic timing shared by Home and Dream. It uses the existing scene lifecycle and Cincinnati weather state.

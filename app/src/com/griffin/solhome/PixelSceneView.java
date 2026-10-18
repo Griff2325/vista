@@ -57,8 +57,12 @@ public final class PixelSceneView extends View {
     private float immersion;
     private long skyMinute = Long.MIN_VALUE;
     private long previewTime;
+    private float worldPreview=-1;
+    public void setWorldPreview(float seconds){worldPreview=previewTime>0?seconds:-1;invalidate();}
     private SceneSettings.Theme theme;
     private final SceneDecor decor=new SceneDecor();
+    private final WorldOutside outside=new WorldOutside();
+    private boolean wildlife=true;
     private SceneCalendar.Season requestedSeason;
     private volatile int assetRequest;
 
@@ -303,6 +307,7 @@ public final class PixelSceneView extends View {
         skyMinute = minute;
         sky = CincinnatiSky.at(now);
         theme=SceneSettings.theme(getContext(),now);
+        wildlife=SceneSettings.preferences(getContext()).getBoolean("wildlife",true);
         if(active)requestAssets(theme.season);
         // Consume the shared cache at most once/minute. This View performs no networking.
         long weatherMinute=System.currentTimeMillis()/60000;
@@ -385,6 +390,9 @@ public final class PixelSceneView extends View {
             drawHaze(canvas);
         }
         boolean insectWeather=rain<.05f&&snow<.02f&&wind<.8f;
+        boolean wildlifeWeather=WorldMotion.calm(rain,snow,wind);
+        double worldSeconds=worldPreview>=0?worldPreview:monotonic/1000.0;
+        if(wildlife){outside.sky(canvas,worldSeconds,sky.daylight,wildlifeWeather,theme.season==SceneCalendar.Season.WINTER);outside.distant(canvas,worldSeconds,theme.season==SceneCalendar.Season.WINTER,sky.daylight,wildlifeWeather);}
         decor.drawSky(canvas,time,theme,sky.daylight,immersion,insectWeather);
         if (theme.occasion==SceneCalendar.Occasion.HALLOWEEN) {drawGhost(canvas, monotonic/1000.0);drawHauntings(canvas,time);}
         drawTree(canvas, leftTree, -74, 1, 244, 330, time, 0);
@@ -393,6 +401,7 @@ public final class PixelSceneView extends View {
         if(theme.season==SceneCalendar.Season.AUTUMN||theme.season==SceneCalendar.Season.SPRING)drawLeaves(canvas, time);
         if(insectWeather&&(theme.season==SceneCalendar.Season.SUMMER||theme.occasion==SceneCalendar.Occasion.EARTH_DAY)) drawFireflies(canvas,time);
         decor.drawForeground(canvas,time,theme,sky.daylight,immersion);
+        if(wildlife)outside.foreground(canvas,worldSeconds,theme.season,sky.daylight,wildlifeWeather);
         if (theme.occasion==SceneCalendar.Occasion.HALLOWEEN && halloween != null) drawHalloween(canvas, time);
         drawPrecipitation(canvas,time);
         paint.setColorFilter(null); paint.setAlpha(255);

@@ -213,6 +213,49 @@
         "d15beed055d5c99fad9d6e7951a31894afca1383c91e9620ef1c501318f77cfb"
       ],
       "notes": "Short development checks on one TV. Four seasonal palettes, eight automatic occasion windows, private annual-event UI validation/save/remove. Original mesh tree/forest motion retained. Animated Canvas arcs replaced with precomputed line segments after memory A/B checks. Warm multi-season process PSS is higher than a single-season cold start. No new physical-Home/full-reboot or complete 60-minute sleep validation."
+    },
+    "wildlife_companion_0_7": {
+      "live_winter_observation": {
+        "frames": 5003,
+        "janky_frames": 20,
+        "p90_ms": 6,
+        "source_sha256": "246c2d1e0e7f8b5ea2d5ea9159e87b339d18eafcb70510c44cee776fce461634"
+      },
+      "observation_memory": [
+        {
+          "pss_kib": 135398,
+          "source_sha256": "27111aaaef6aad9219ab0b6753efd37e144bec9d5573d97b8d7b12d9f3853cae"
+        },
+        {
+          "pss_kib": 129865,
+          "source_sha256": "e3080a191d03afffe6030cc9e59190ebb4238e387413c42fcba0e4d814d60e2c"
+        }
+      ],
+      "release_home_3s": {
+        "frames": 93,
+        "janky_frames": 0,
+        "p90_ms": 7,
+        "source_sha256": "133ad7bf786f55d92feefb2d03a8906fa9e90c7a000bba1255ba9306049e5ac1"
+      },
+      "release_home_memory": {
+        "pss_kib": 153786,
+        "source_sha256": "fac0dd22296bc6cf7839d818cc0c88005a06a6abb296fb77eb7acd8a03858a00"
+      },
+      "hidden_behind_youtube_3s": {
+        "before_frames": 125,
+        "after_frames": 125,
+        "before_sha256": "5aebefb88f7432f534c319af7d5405f7c83d90b7f7b9f0e547029653fef959a2",
+        "after_sha256": "7ef83c8fef1645bde967950550458204a2a916d24e47e04375ed9afdec5f2c79"
+      },
+      "placement_capture_sha256": {
+        "rider-final": "93cccd464bb56eba2a7d6f9053389a89faddff7e3ef3a325531ac4f5c1c10043",
+        "fox-final": "cb30c52831b720ac7f3bc283a039345ff1238abed010743de940be5258a76741",
+        "birds-final": "56520a23bbc0caaad08ad76613faa250c0f2a7b663c3d28aa61d6ebe358f4cef",
+        "world-fullscreen-final": "aee401a564908a32c6025a1c9e00c80f8f680c01681fbeff3cfd73ec508de9c4"
+      },
+      "automatic_restored_capture_sha256": "e4dab41c01f6e88d9d3a06da2ee02f354883e607aef2c2d34d48a84a9c2c18fd",
+      "native_search_tv_capture_sha256": "72a15818ede1fa79a8a980c5479cf6f2abc5929aec649af72425571e2e927fd2",
+      "notes": "Native iPhone simulator paired with actual TV; not owner iPhone hardware. Live observation precedes minor rider-placement adjustment. Final placement uses temporary daylight and frozen wildlife phase; plain Home and Automatic restored. Short samples include ADB observer/input overhead; not whole-TV or endurance validation. No new decoded scene images."
     }
   }
 }

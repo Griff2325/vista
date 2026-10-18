@@ -52,8 +52,10 @@ public final class StreamingActivity extends Activity {
     content.addView(text("Catalog: TMDB · US streaming availability: JustWatch · Subscription, free and ad-supported offers only",12,MUTED));
     content.addView(text("Selected services are your preferences, not detected sign-ins. Availability can change; confirm in the provider app. YouTube is an app shortcut, outside the movie/TV catalog.",12,MUTED));
     content.addView(button("Sources and API attribution",v->about()));
-    load();
+    String incoming=getIntent().getStringExtra("vista.search");
+    if(incoming!=null&&incoming.length()<=120)companionSearch(incoming);else load();
   }
+  void companionSearch(String text){search.setText(text);runSearch();}
   private void runSearch(){query.text=search.getText().toString().trim();if(query.text.length()>120){search.setError("Use up to 120 characters");return;}query.page=1;savedMode=false;((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(search.getWindowToken(),0);load();}
   private void renderFilters(){
     filters.removeAllViews();filters.addView(button("Services ("+selected(query.services)+")",v->services()));
