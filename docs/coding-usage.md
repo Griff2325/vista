@@ -1,6 +1,6 @@
 # Coding usage
 
-Home's bottom console shows side-by-side allowance cards for Codex and Claude Code. Move right from a tile to select Codex, then right again for Claude and Cincinnati weather; left returns to the last selected tile. Open either coding card or Settings → Coding usage for all available windows, reset times and the age of each reading. The screensaver uses two balanced provider cards below the news, events and snow row. Each provider's reported windows fill its own card, without reserving an empty column for an unavailable window. Percentages mean **used**, not remaining. All reset times use America/New_York, the same Cincinnati timezone as the scene.
+Home's bottom console shows side-by-side allowance cards for Codex and Claude Code. Move right from a tile to select Codex, then right again for Claude and Cincinnati weather; left returns to the last selected tile. Open either coding card or Settings → Coding usage for all available windows, reset times and the age of each reading. The screensaver uses equal-width allowance cards aligned beneath the news/events row, with the same outer edges. Codex weekly and Claude's short/weekly windows currently form three equal cards; other reported-window combinations adapt without empty slots. Percentages mean **used**, not remaining. All reset times use America/New_York, the same Cincinnati timezone as the scene.
 
 ## Sources
 
