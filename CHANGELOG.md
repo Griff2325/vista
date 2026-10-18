@@ -2,6 +2,12 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.9.0 — October 18, 2026
+
+- Scrollable native Home tile grid includes All apps, Inputs, Ambient, Settings and Watching. Remote focus reveals new rows with a short interruptible scroll; touch swipes and scrolled hit testing share the same viewport. News and This week stay anchored below the grid.
+- Larger side-by-side Codex and Claude cards replace the former utility row. Single reported allowance windows fill their card; two-window providers split the space. Weather gains native condition glyphs, observed temperature when fresh, and the next reported daytime high/nighttime low.
+- Screensaver coding usage now uses two balanced provider cards below news/events/snow, each adapting its bar layout to one or two reported windows.
+
 ## 0.8.1 — October 18, 2026
 
 - Moved screensaver coding limits into a horizontal footer beneath the existing news, Cincinnati events and snow cards, clearing the landscape below the clock.

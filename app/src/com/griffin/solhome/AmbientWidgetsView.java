@@ -12,7 +12,7 @@ import java.util.*;
 public final class AmbientWidgetsView extends View {
     private final Paint paint=new Paint(3);
     private final WidgetRepository repository;
-    private final CodingUsageView codingView=new CodingUsageView();
+    private final ScreensaverUsageView codingView=new ScreensaverUsageView();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Typeface light=Typeface.create("sans-serif-light",0),medium=Typeface.create("sans-serif-medium",0);
     private final Shader top=new LinearGradient(0,0,0,445,0x99081319,0x00081319,Shader.TileMode.CLAMP);
@@ -45,7 +45,7 @@ public final class AmbientWidgetsView extends View {
         lines(c,SceneSettings.theme(getContext(),now).label(),101,284,950,1,19,24,0xffc4ceba);
         drawWeather(c,now);
         c.save();c.translate(0,-118);drawNews(c,cycle,now);drawEvents(c,cycle,now);drawSnow(c,cycle,now);c.restore();
-        codingView.ambient(c,repository.codingUsage(),now);
+        codingView.draw(c,repository.codingUsage(),now);
         text(c,"Press a remote button to return · News briefs and This week on Home",96,1061,16,0xffc4ceca,false);c.restore();
     }
     private void drawWeather(Canvas c,long now){

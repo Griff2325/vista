@@ -81,7 +81,13 @@ public final class WidgetRepository {
         request("weather",600000,()->{
             JSONObject point=json(nwsPoint(39.1031,-84.5120)).getJSONObject("properties");JSONArray periods=json(nws(point.getString("forecast"))).getJSONObject("properties").getJSONArray("periods");JSONObject first=periods.getJSONObject(0);
             JSONObject result=new JSONObject().put("temperature",first.getInt("temperature")).put("unit",first.getString("temperatureUnit")).put("summary",first.getString("shortForecast")).put("period",first.getString("name")).put("detail",first.getString("detailedForecast"));
-            JSONArray outlook=new JSONArray();for(int i=0;i<Math.min(4,periods.length());i++){JSONObject period=periods.getJSONObject(i),entry=new JSONObject().put("name",period.getString("name")).put("temperature",period.getInt("temperature")).put("unit",period.getString("temperatureUnit")).put("summary",period.getString("shortForecast"));JSONObject chance=period.optJSONObject("probabilityOfPrecipitation");if(chance!=null&&!chance.isNull("value"))entry.put("chance",chance.getInt("value"));outlook.put(entry);}result.put("forecast",outlook).put("weatherSchema",2);
+            JSONArray outlook=new JSONArray();for(int i=0;i<Math.min(4,periods.length());i++){JSONObject period=periods.getJSONObject(i),entry=new JSONObject().put("name",period.getString("name")).put("temperature",period.getInt("temperature")).put("unit",period.getString("temperatureUnit")).put("summary",period.getString("shortForecast"));JSONObject chance=period.optJSONObject("probabilityOfPrecipitation");if(chance!=null&&!chance.isNull("value"))entry.put("chance",chance.getInt("value"));outlook.put(entry);}result.put("forecast",outlook).put("weatherSchema",3);
+            for(int i=0;i<periods.length()&&(!result.has("nextHigh")||!result.has("nextLow"));i++){
+                JSONObject period=periods.optJSONObject(i);if(period==null||!(period.opt("isDaytime") instanceof Boolean))continue;
+                String key=period.optBoolean("isDaytime")?"nextHigh":"nextLow";
+                double value=WeatherValues.fahrenheit(period.optDouble("temperature",Double.NaN),"wmoUnit:deg"+period.optString("temperatureUnit"));
+                if(!result.has(key)&&Double.isFinite(value))result.put(key,Math.round(value));
+            }
             JSONObject chance=first.optJSONObject("probabilityOfPrecipitation");if(chance!=null&&!chance.isNull("value"))result.put("chance",chance.getInt("value"));
             result.put("sceneSummary",first.getString("shortForecast")).put("sceneSource","NWS Cincinnati forecast").put("sceneObservedAt",0).put("sceneStale",true);
             try {
@@ -119,7 +125,7 @@ public final class WidgetRepository {
     }
     private interface Fetch {JSONObject run() throws Exception;}
     private void request(String key,long ttl,Fetch fetch){
-        long now=System.currentTimeMillis();if((now-data(key).optLong("at")<ttl&&(!key.equals("weather")||data(key).optInt("weatherSchema")==2)&&(!key.startsWith("snow:")||data(key).optInt("schema")==4)&&(!(key.equals("ai")||key.equals("world")||key.equals("concerts")||key.equals("food"))||data(key).optInt("schema")==4))||loading.contains(key)||now-attempts.getOrDefault(key,0L)<300000)return;
+        long now=System.currentTimeMillis();if((now-data(key).optLong("at")<ttl&&(!key.equals("weather")||data(key).optInt("weatherSchema")==3)&&(!key.startsWith("snow:")||data(key).optInt("schema")==4)&&(!(key.equals("ai")||key.equals("world")||key.equals("concerts")||key.equals("food"))||data(key).optInt("schema")==4))||loading.contains(key)||now-attempts.getOrDefault(key,0L)<300000)return;
         loading.add(key);attempts.put(key,now);io.execute(()->{
             try{JSONObject value=fetch.run().put("at",System.currentTimeMillis());cache.edit().putString(key,value.toString()).apply();Log.i("SolWidgets",key.split(":")[0]+" refreshed");}
             catch(Exception e){Log.w("SolWidgets",key.split(":")[0]+" unavailable: "+e.getClass().getSimpleName());}

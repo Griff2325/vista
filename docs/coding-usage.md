@@ -1,6 +1,6 @@
 # Coding usage
 
-Home's bottom console shows a compact allowance meter for Codex and Claude Code. Move right from Watching to select it, or open Settings → Coding usage for all available windows, reset times and the age of each reading. The screensaver shows up to two windows per provider in a horizontal footer below the news, events and snow cards. Percentages mean **used**, not remaining. All reset times use America/New_York, the same Cincinnati timezone as the scene.
+Home's bottom console shows side-by-side allowance cards for Codex and Claude Code. Move right from a tile to select Codex, then right again for Claude and Cincinnati weather; left returns to the last selected tile. Open either coding card or Settings → Coding usage for all available windows, reset times and the age of each reading. The screensaver uses two balanced provider cards below the news, events and snow row. Each provider's reported windows fill its own card, without reserving an empty column for an unavailable window. Percentages mean **used**, not remaining. All reset times use America/New_York, the same Cincinnati timezone as the scene.
 
 ## Sources
 

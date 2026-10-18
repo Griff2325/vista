@@ -14,31 +14,23 @@ final class CodingUsageView {
         rect.set(x,y,x+width,y+height);paint.setColor(0xff344744);c.drawRoundRect(rect,height/2,height/2,paint);
         if(used<=0)return;rect.right=x+width*(float)(used/100);paint.setColor(saved?0xff8d9b90:used>=90?0xffdfaa83:0xffbfd0ad);c.drawRoundRect(rect,height/2,height/2,paint);
     }
-    void compact(Canvas c,CodingUsage data,long now,boolean focused){
-        if(focused){paint.setColor(0xffcfb684);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.5f);rect.set(950,961,1420,1070);c.drawRoundRect(rect,10,10,paint);paint.setStyle(Paint.Style.FILL);}
-        text(c,"CODING LIMITS",970,981,15,0xffb6c4ba,true);
-        small(c,"Codex",data.codex,now,1007);small(c,"Claude",data.claude,now,1047);
+    void home(Canvas c,CodingUsage data,long now,int selected){
+        homeProvider(c,"Codex",data.codex,now,96,selected==15);
+        homeProvider(c,"Claude Code",data.claude,now,744,selected==16);
     }
-    private void small(Canvas c,String name,CodingUsage.Provider p,long now,float y){
-        text(c,name,970,y,18,0xfff2f0e7,false);CodingUsage.Window w=p.current(now);
-        text(c,CodingUsage.tokens(p,now,true),1220,y+16,12,0xffadbbb5,false);
-        if(!p.usable(now)){text(c,p.unavailable(now),1050,y,17,0xffb0bfba,false);return;}
-        boolean saved=p.stale(now);text(c,w.label()+" · "+CodingUsage.percent(w)+(saved?" · saved":""),1050,y,17,0xffe2e6d7,false);
-        bar(c,1310,y-11,85,5,w.used,saved);
-        text(c,CodingUsage.reset(w,now),1050,y+16,13,0xffadbbb5,false);
-    }
-    void ambient(Canvas c,CodingUsage data,long now){
-        rect.set(96,914,1824,1037);paint.setColor(0xbd0d1e23);c.drawRoundRect(rect,16,16,paint);
-        text(c,"CODING LIMITS",120,944,17,0xffc7d0ba,true);
-        large(c,"Codex",data.codex,now,330);large(c,"Claude Code",data.claude,now,1050);
-    }
-    private void large(Canvas c,String name,CodingUsage.Provider p,long now,float start){
-        text(c,name,start,944,21,0xfff2f0e7,true);
-        text(c,CodingUsage.tokens(p,now,false),start+170,944,17,0xffbdc8bd,false);
-        if(!p.usable(now)){text(c,p.unavailable(now),start,978,20,0xffc0ccc6,false);text(c,p.at==0?"Sync from your coding Mac":CodingUsage.age(p,now),start,1013,16,0xffadbbb5,false);return;}
-        int column=0;for(CodingUsage.Window w:p.windows){if(w.reset<=now||column>=2)continue;float x=start+column*320;boolean saved=p.stale(now);
-            text(c,w.label()+" · "+CodingUsage.percent(w),x,976,19,0xffedf0df,false);bar(c,x,986,275,5,w.used,saved);
-            text(c,(saved?"Saved · ":"")+CodingUsage.reset(w,now),x,1013,15,0xffbdc8bd,false);column++;}
+    private void homeProvider(Canvas c,String name,CodingUsage.Provider p,long now,float x,boolean focused){
+        rect.set(x,958,x+604,1073);paint.setColor(0xff16272a);c.drawRoundRect(rect,12,12,paint);
+        if(focused){paint.setColor(0xffcfb684);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.5f);c.drawRoundRect(rect,12,12,paint);paint.setStyle(Paint.Style.FILL);}
+        text(c,name,x+24,985,22,0xfff2f0e7,true);
+        text(c,CodingUsage.tokens(p,now,false),x+195,984,15,0xffbdc8bd,false);
+        if(!p.usable(now)){text(c,p.unavailable(now),x+24,1022,20,0xffb0bfba,false);return;}
+        int count=0;for(CodingUsage.Window w:p.windows)if(w.reset>now&&count<2)count++;
+        float width=(556-(count-1)*28)/count;
+        int column=0;for(CodingUsage.Window w:p.windows){if(w.reset<=now||column>=2)continue;float start=x+24+column*(width+28);boolean saved=p.stale(now);
+            text(c,w.label(),start,1016,19,0xffc7d0c3,false);
+            String percent=CodingUsage.percent(w);paint.setTextSize(20);paint.setTypeface(face);text(c,percent,start+width-paint.measureText(percent),1016,20,0xffedf0df,false);
+            bar(c,start,1027,width,5,w.used,saved);
+            text(c,(saved?"Saved · ":"")+CodingUsage.reset(w,now),start,1055,15,0xffbdc8bd,false);column++;}
     }
     static void show(Activity a){CodingUsage data=WidgetRepository.get(a).codingUsage();long now=System.currentTimeMillis();StringBuilder message=new StringBuilder();
         detail(message,"Codex",data.codex,now);detail(message,"Claude Code",data.claude,now);
