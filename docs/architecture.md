@@ -45,3 +45,7 @@ SolDreamService shares cached scene textures with Home, renders fullscreen, and 
 [CompanionService](companion.md) is a user-started non-sticky foreground service with one bounded local HTTP worker. It accepts paired, fixed commands and marshals them onto the Android main thread; it does not inject into other apps. Its optional notification-access use remains Spotify-only. The physical Home bridge is unchanged.
 
 [WorldOutside](world-outside.md) draws sparse bank/sky/ridge sightings using reusable native geometry and monotonic timing shared by Home and Dream. It uses the existing scene lifecycle and Cincinnati weather state.
+
+## Optional Hulu muting
+
+[HuluAdMuteService](hulu-ad-muting.md) runs in a separate accessibility process, enabled explicitly through Android. It checks the foreground package before sampling a tiny Ad-badge crop; no screenshots or text are retained or transmitted. A pure Java badge classifier and mute-ownership policy control idempotent Android audio mute operations, with manual overrides, capture timeouts and normal shutdown restoration. Home input interception and the scene lifecycle are unchanged.

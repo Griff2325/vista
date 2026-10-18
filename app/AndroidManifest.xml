@@ -1,7 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="14" android:versionName="0.9.2">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.griffin.solhome" android:versionCode="15" android:versionName="0.9.3">
   <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="28"/>
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
   <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA"/>
   <uses-feature android:name="android.software.leanback" android:required="false"/>
   <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
@@ -16,6 +17,11 @@
     <service android:name=".SpotifyMediaListener" android:label="Vista — Spotify controls" android:exported="true" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
       <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>
     </service>
+    <service android:name=".HuluAdMuteService" android:label="Vista — Hulu ad muting" android:process=":hulu_mute" android:exported="true" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+      <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>
+      <meta-data android:name="android.accessibilityservice" android:resource="@xml/hulu_ad_mute"/>
+    </service>
+    <receiver android:name=".HuluAdMuteService$DisableReceiver" android:process=":hulu_mute" android:exported="false"/>
     <service android:name=".SolDreamService" android:label="Vista — Seasonal landscape" android:exported="true" android:permission="android.permission.BIND_DREAM_SERVICE">
       <intent-filter><action android:name="android.service.dreams.DreamService"/></intent-filter>
       <meta-data android:name="android.service.dream" android:resource="@xml/dream"/>

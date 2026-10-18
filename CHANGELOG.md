@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.9.3 — October 18, 2026
+
+- Optional Android 11+ Hulu ad muting, with explicit accessibility activation, local badge-only pixel matching and a separate service process. Preserves prior mute/volume choices, restores owned mutes after the badge disappears, and provides a settings off switch. Ad timing and protected playback remain unchanged.
+
 ## 0.9.2 — October 18, 2026
 
 - Equal-width screensaver allowance cards: Codex weekly and Claude's short/weekly windows share the available width, aligned with the outer edges of the news/events row above. Missing providers keep an explicit unavailable state; other reported-window combinations adapt without reserving empty slots.
