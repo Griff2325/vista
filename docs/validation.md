@@ -124,3 +124,8 @@ The bridge does not restart after full TV reboot. Local ADB bootstrap from an or
 
 - Public/private Android builds passed and the update installed in place. Inspected the real fullscreen TV capture with the actual Codex weekly and Claude short/weekly readings: three 356-pixel cards, each with a 308-pixel bar in the 1920-pixel reference layout. The group spans x684–1824, exactly the outer edges of the news/events row above, with 36-pixel gutters.
 - Window counts remain data-driven, missing providers retain an unavailable card, and long labels are bounded to the available column. Home layout, source observations, clock/weather/snow, scene motion and idle settings are unchanged. The temporary Activity idle preview was cleared after inspection; this is a layout check, not new performance or physical-remote evidence.
+
+## Physical iPhone installation — October 18, 2026
+
+- Built the existing native companion for iphoneos with machine-local automatic development signing; signature verification passed. Installed over Xcode's existing wireless pairing and launched on an actual iPhone 18 Pro running iOS 27. Device app metadata confirmed the expected Vista bundle/build. No signing team, profile, certificate, device identifier or signed device artifact is committed.
+- This establishes physical-device build/install/launch only. TV pairing, Local Network/camera permissions, live controls and long background behavior on that phone were not exercised; previous simulator/TV protocol checks remain separate evidence.
