@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { describeRequest } = require('./observe');
+const { describeRequest, publicAsset } = require('./observe');
 assert.equal(describeRequest('https://dynamic-manifest.hulustream.com/private/title/playlist.m3u8?token=secret'), 'HLS dynamic-manifest.hulustream.com');
 assert.equal(describeRequest('https://video.hulustream.com/file.MPD#secret'), 'DASH video.hulustream.com');
 assert.equal(describeRequest('https://auth.hulu.com/private/account?password=secret'), 'other auth.hulu.com');
@@ -10,6 +10,12 @@ assert.equal(describeRequest('https://hulu.com:443/file.mpd'), 'DASH hulu.com');
 assert.equal(describeRequest('file:///private/secret'), null);
 assert.equal(describeRequest(null), null);
 assert.equal(describeRequest('https://hulu.com/' + 'x'.repeat(32768)), null);
+assert.equal(publicAsset('https://firetv-neutron.app.hulu.com/semver/firetv-neutron/1.2.3/index.html?token=secret'), 'https://firetv-neutron.app.hulu.com/semver/firetv-neutron/1.2.3/index.html');
+assert.equal(publicAsset('https://firetv.app.hulu.com/build_files/firetv/17/abc.def/george.js'), 'https://firetv.app.hulu.com/build_files/firetv/17/abc.def/george.js');
+assert.equal(publicAsset('https://firetv.app.hulu.com/account/private.js'), null);
+assert.equal(publicAsset('https://firetv.app.hulu.com.evil.test/build_files/firetv/private.js'), null);
+assert.equal(publicAsset('https://auth.hulu.com/build_files/firetv/private.js'), null);
+assert.equal(publicAsset('https://firetv.app.hulu.com/build_files/firetv/../private.js'), null);
 
 // Exercise the native-hook boundary without Frida or real account traffic.
 const logs = [];

@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert/strict');
+const { isPlayerUrl, isPlayerRequest } = require('./player-route');
+const target = 'https://firetv-neutron.app.hulu.com/build_files/firetv-neutron/1/cb36f58029bb.0f69ce3983c2/george.js';
+assert(isPlayerUrl(target));
+assert(!isPlayerUrl(target + '?token=secret'));
+assert(!isPlayerUrl(target.replace('cb36f58029bb', 'different')));
+assert(!isPlayerUrl('https://auth.hulu.com/login'));
+assert(isPlayerRequest('GET /player.js HTTP/1.1\r\nHost: localhost\r\n\r\n'));
+assert(!isPlayerRequest('GET /player.js/private HTTP/1.1\r\n\r\n'));
+assert(!isPlayerRequest('GET /../private HTTP/1.1\r\n\r\n'));
+assert(!isPlayerRequest('POST /player.js HTTP/1.1\r\n\r\n'));
+assert(!isPlayerRequest('GET /player.js HTTP/1.1'));
+console.log('Hulu Lab route-boundary tests passed');

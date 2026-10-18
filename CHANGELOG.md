@@ -4,7 +4,7 @@ Repository established October 17, 2026. Earlier development stages below are su
 
 ## Development — October 18, 2026
 
-- Separate private Hulu Lab startup experiment, with original request-classification diagnostics and redaction tests tracked here. Native instrumentation starts without root; signed-in playback and ad removal remain unverified. No Vista runtime change or proprietary app artifact is included.
+- Separate private Hulu Lab experiment, with version-pinned on-demand ad-entry patch generation, a self-contained loopback player loader, redacted native diagnostics and boundary/state-transition tests. Patched player startup works without root; signed-in playback and actual ad removal remain unverified. No Vista runtime change or proprietary app artifact is included.
 
 ## 0.9.3 — October 18, 2026
 

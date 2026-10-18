@@ -13,7 +13,14 @@ function describeRequest(value) {
   return type + ' ' + safeHost;
 }
 
-if (typeof module !== 'undefined') module.exports = { describeRequest };
+function publicAsset(value) {
+  if (typeof value !== 'string' || value.length > 32768) return null;
+  const match = /^https:\/\/(firetv(?:-neutron)?\.app\.hulu\.com)(\/(?:semver|build_files)\/firetv(?:-neutron)?\/[a-z0-9_./-]{1,200}\.(?:js|html))(?:\?[^#]*)?$/i.exec(value);
+  if (!match || match[2].split('/').some(part => part === '.' || part === '..')) return null;
+  return 'https://' + match[1].toLowerCase() + match[2];
+}
+
+if (typeof module !== 'undefined') module.exports = { describeRequest, publicAsset };
 
 if (typeof Process !== 'undefined' && typeof Interceptor !== 'undefined') {
   const seen = new Set();
@@ -46,7 +53,13 @@ if (typeof Process !== 'undefined' && typeof Interceptor !== 'undefined') {
           onEnter(args) {
             if (args[1].toInt32() !== 10002 || args[2].isNull()) return;
             try {
-              const description = describeRequest(args[2].readUtf8String());
+              const url = args[2].readUtf8String();
+              const asset = publicAsset(url);
+              if (asset && !seen.has(asset) && seen.size < 64) {
+                seen.add(asset);
+                report('public asset ' + asset);
+              }
+              const description = describeRequest(url);
               if (description && !seen.has(description) && seen.size < 64) {
                 seen.add(description);
                 report('request ' + description);
@@ -61,4 +74,8 @@ if (typeof Process !== 'undefined' && typeof Interceptor !== 'undefined') {
     }
   });
   report('observer loaded');
+  if (typeof installPlayerRoute === 'function') {
+    try { installPlayerRoute(report); }
+    catch (_) { report('local player install failed; original player retained'); }
+  }
 }
