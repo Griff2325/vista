@@ -28,7 +28,7 @@ public final class WidgetRepository {
     public JSONObject data(String key){try{return new JSONObject(cache.getString(key,"{}"));}catch(Exception e){return new JSONObject();}}
     public JSONObject weather(){JSONObject d=data("weather");try{d.put("stale",System.currentTimeMillis()-d.optLong("at")>3600000);}catch(Exception ignored){}return d.has("temperature")?d:null;}
     public JSONArray locations(){try{return new JSONArray(settings.getString("snow",defaults().toString()));}catch(Exception e){return defaults();}}
-    private JSONArray defaults(){JSONArray list=new JSONArray();list.put(location("Perfect North",39.1492,-84.8866));list.put(location("Breckenridge",39.4750,-106.0600));list.put(location("Alyeska",60.9703,-149.0982));return list;}
+    private JSONArray defaults(){JSONArray list=new JSONArray();list.put(location("Perfect North",39.1492,-84.8866));list.put(location("Timberline, WV",39.0425,-79.3990));return list;}
     public static JSONObject location(String name,double lat,double lon){JSONObject d=new JSONObject();try{d.put("name",name).put("lat",lat).put("lon",lon);}catch(Exception ignored){}return d;}
     public void saveLocations(JSONArray list){settings.edit().putString("snow",list.toString()).apply();refresh();notifyListeners();}
     public void resetLocations(){saveLocations(defaults());}

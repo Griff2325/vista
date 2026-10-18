@@ -43,8 +43,8 @@ public final class AmbientWidgetsView extends View {
         text(c,date("h:mm",now),96,163,104,0xfff3f3eb,false);text(c,date("a",now),366,160,22,0xffdce2d4,false);text(c,date("EEEE, MMMM d",now),101,207,25,0xffdce2d4,false);
         text(c,WinterCountdown.label(now),101,253,23,0xffdce5ca,false);
         lines(c,SceneSettings.theme(getContext(),now).label(),101,284,950,1,19,24,0xffc4ceba);
-        drawWeather(c,now);
-        c.save();c.translate(0,-118);drawNews(c,cycle,now);drawEvents(c,cycle,now);drawSnow(c,cycle,now);c.restore();
+        drawWeather(c,now);drawSnowOutlook(c,now);
+        c.save();c.translate(588,-118);drawNews(c,cycle,now);drawEvents(c,cycle,now);c.restore();
         codingView.draw(c,repository.codingUsage(),now);
         text(c,"Press a remote button to return · News briefs and This week on Home",96,1061,16,0xffc4ceca,false);c.restore();
     }
@@ -80,11 +80,17 @@ public final class AmbientWidgetsView extends View {
         lines(c,item.optString("detail"),708,943,504,1,21,25,0xffdce2df);
         String venue=item.optString("venue"),source=item.optString("source");lines(c,venue.equals(source)?venue:venue+" · "+source,708,991,504,1,16,20,0xffbcc7c8);
     }
-    private void drawSnow(Canvas c,long cycle,long now){card(c,1272,"SNOW FORECAST");JSONArray locations=repository.locations();int pages=Math.max(1,(locations.length()+2)/3),start=(int)(cycle%pages)*3;
-        boolean stale=false;for(int row=0;row<3&&start+row<locations.length();row++){JSONObject loc=locations.optJSONObject(start+row);if(loc==null)continue;JSONObject snow=repository.data(WidgetRepository.snowKey(loc));float y=851+row*49;
-            lines(c,loc.optString("name"),1296,y,320,1,23,28,0xfff2f2e9);String amount=snow.has("inches")?String.format(Locale.US,"~%.1f in / %dh",snow.optDouble("inches"),snow.optInt("hours",72)):"—";
-            text(c,amount,1643,y,20,0xffd2dcb9,false);if(now-snow.optLong("at")>2*3600000L)stale=true;
+    private void drawSnowOutlook(Canvas c,long now){
+        JSONArray locations=repository.locations();
+        for(int i=0;i<Math.min(2,locations.length());i++){
+            JSONObject loc=locations.optJSONObject(i);if(loc==null)continue;
+            JSONObject snow=repository.data(WidgetRepository.snowKey(loc));float x=1230+i*310;
+            lines(c,loc.optString("name").toUpperCase(Locale.US),x,453,285,1,18,22,0xffdce2d4);
+            boolean available=snow.has("inches");String amount=available?String.format(Locale.US,"~%.1f",snow.optDouble("inches")):"—";
+            text(c,amount,x-4,513,49,0xfff3f3eb,false);
+            text(c,available?"inches · next "+snow.optInt("hours",72)+" hours":"Snow forecast unavailable",x,543,17,0xffdce2df,false);
+            if(available)text(c,"Updated "+date("h:mm a",snow.optLong("at"))+(now-snow.optLong("at")>2*3600000L?" · saved":""),x,572,15,0xffc1cccd,false);
         }
-        text(c,"NWS grid · next 24–72h · — unavailable"+(stale?" / saved":""),1296,992,16,0xffbcc7c8,false);
+        text(c,"Forecast snowfall · NWS grid estimates",1230,605,15,0xffc1cccd,false);
     }
 }

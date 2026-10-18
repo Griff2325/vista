@@ -2,6 +2,11 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.9.1 — October 18, 2026
+
+- Moved snow forecasts into a text-only two-location outlook beneath the Cincinnati screensaver weather, matching its typography and large values. Removed the standalone Snow Forecast card and shifted news/events into the two right-hand card positions.
+- Default snow locations are Perfect North and Timberline Mountain, West Virginia. Settings supports replacing the two displayed points; saved older lists can adopt the new pair through Restore default resorts. Amounts retain explicit coverage horizons, unavailable states and saved-data labels.
+
 ## 0.9.0 — October 18, 2026
 
 - Scrollable native Home tile grid includes All apps, Inputs, Ambient, Settings and Watching. Remote focus reveals new rows with a short interruptible scroll; touch swipes and scrolled hit testing share the same viewport. News and This week stay anchored below the grid.
