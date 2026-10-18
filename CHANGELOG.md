@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## Development — October 18, 2026
+
+- Separate private Hulu Lab startup experiment, with original request-classification diagnostics and redaction tests tracked here. Native instrumentation starts without root; signed-in playback and ad removal remain unverified. No Vista runtime change or proprietary app artifact is included.
+
 ## 0.9.3 — October 18, 2026
 
 - Optional Android 11+ Hulu ad muting, with explicit accessibility activation, local badge-only pixel matching and a separate service process. Preserves prior mute/volume choices, restores owned mutes after the badge disappears, and provides a settings off switch. Ad timing and protected playback remain unchanged.
