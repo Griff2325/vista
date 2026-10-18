@@ -13,13 +13,16 @@ import java.util.concurrent.*;
 public final class WidgetRepository {
     private static WidgetRepository instance;
     private final SharedPreferences cache,settings;
+    private final CodingUsageStore coding;
     private final Handler main=new Handler(Looper.getMainLooper());
     private final ExecutorService io=Executors.newFixedThreadPool(2);
     private final Set<String> loading=new HashSet<>();
     private final Map<String,Long> attempts=new HashMap<>();
     private final Set<Runnable> listeners=new HashSet<>();
     public static synchronized WidgetRepository get(Context context){if(instance==null)instance=new WidgetRepository(context.getApplicationContext());return instance;}
-    private WidgetRepository(Context context){cache=context.getSharedPreferences("widgets",0);settings=context.getSharedPreferences("sol-settings",0);}
+    private WidgetRepository(Context context){cache=context.getSharedPreferences("widgets",0);settings=context.getSharedPreferences("sol-settings",0);coding=new CodingUsageStore(context);}
+    CodingUsage codingUsage(){return coding.get();}
+    void importCodingUsage(String json)throws JSONException{coding.importSnapshot(json);main.post(this::notifyListeners);}
     public void listen(Runnable listener){listeners.add(listener);}
     public void unlisten(Runnable listener){listeners.remove(listener);}
     public JSONObject data(String key){try{return new JSONObject(cache.getString(key,"{}"));}catch(Exception e){return new JSONObject();}}

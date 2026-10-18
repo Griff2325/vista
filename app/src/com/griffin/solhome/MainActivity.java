@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
     else return new CompanionServer.Reply(400,"Unknown panel");
     return new CompanionServer.Reply(200,"Opened "+panel);
   }
-  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Seasons & occasions","Phone companion","Wildlife · "+(SceneSettings.preferences(this).getBoolean("wildlife",true)?"On":"Off"),"Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes"},(d,n)->{if(n==0)tvSettings();else if(n==1)ScenePanel.show(this,this::refreshCompanionScene);else if(n==2)CompanionPanel.show(this);else if(n==3){android.content.SharedPreferences p=SceneSettings.preferences(this);p.edit().putBoolean("wildlife",!p.getBoolean("wildlife",true)).apply();refreshCompanionScene();}else if(n==4)snowLocations();else if(n==5)EventsPanel.interests(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
+  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Seasons & occasions","Phone companion","Wildlife · "+(SceneSettings.preferences(this).getBoolean("wildlife",true)?"On":"Off"),"Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes","Coding usage"},(d,n)->{if(n==0)tvSettings();else if(n==1)ScenePanel.show(this,this::refreshCompanionScene);else if(n==2)CompanionPanel.show(this);else if(n==3){android.content.SharedPreferences p=SceneSettings.preferences(this);p.edit().putBoolean("wildlife",!p.getBoolean("wildlife",true)).apply();refreshCompanionScene();}else if(n==4)snowLocations();else if(n==5)EventsPanel.interests(this);else if(n==7)CodingUsageView.show(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
   private void snowLocations(){WidgetRepository repo=WidgetRepository.get(this);JSONArray locations=repo.locations();String[] labels=new String[locations.length()+2];for(int i=0;i<locations.length();i++)labels[i]=locations.optJSONObject(i).optString("name");labels[locations.length()]="Add location";labels[locations.length()+1]="Restore default resorts";
     new AlertDialog.Builder(this).setTitle("Snow forecast locations").setItems(labels,(d,n)->{if(n==locations.length()+1){repo.resetLocations();snowLocations();}else editSnowLocation(locations,n);}).setNegativeButton("Close",null).show();}
   private void editSnowLocation(JSONArray locations,int index){
@@ -134,7 +134,8 @@ public class MainActivity extends Activity {
     Bitmap[] logos=new Bitmap[6];int selected=0,lastApp=0;
     final Paint paint=new Paint(3);final int white=Color.rgb(242,240,231),muted=Color.rgb(168,174,173),gold=Color.rgb(207,182,132);
     final String[] controls={"All apps","Inputs","Ambient","Settings","Watching"};
-    final float[] controlX={100,300,492,700,930};
+    final float[] controlX={92,258,414,590,776};
+    final CodingUsageView codingView=new CodingUsageView();
     final Shader wallLight=new LinearGradient(0,0,1920,900,0xff192b2c,0xff30403c,Shader.TileMode.CLAMP);
     final Shader railLight=new LinearGradient(72,0,577,0,0xff152323,0xff1c2e2c,Shader.TileMode.CLAMP);
     HomeView(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);setContentDescription("Vista. Use arrows to choose an app tile or bottom control, and OK to open.");}
@@ -156,7 +157,7 @@ public class MainActivity extends Activity {
       // The bottom controls belong to a continuous shallow console below the sill.
       paint.setColor(0xff101d1f);c.drawRect(0,944,1920,1080,paint);paint.setColor(0xff666a55);c.drawRect(0,942,1920,946,paint);
       paint.setColor(0xff8b8d70);c.drawRect(0,942,1920,943,paint);paint.setColor(0xff233631);c.drawRect(0,951,1920,953,paint);
-      paint.setColor(0xff30413a);c.drawRect(1204,970,1206,1044,paint);
+      paint.setColor(0xff30413a);c.drawRect(940,970,942,1060,paint);c.drawRect(1438,970,1440,1060,paint);
     }
     void drawAppNiche(Canvas c){
       paint.setShader(null);paint.setColor(0x30081113);c.drawRoundRect(new RectF(74,46,584,938),18,18,paint);
@@ -206,27 +207,29 @@ public class MainActivity extends Activity {
       for(int i=0;i<shortcuts.length;i++){float x=108+i*233;boolean focus=selected==13+i;paint.setColor(focus?0xff405549:0xff223832);c.drawRoundRect(new RectF(x,896,x+200,926),8,8,paint);text(c,shortcuts[i],x+16,918,18,focus?white:muted,focus);}
       for(int i=0;i<controls.length;i++){
         boolean focus=selected==6+i;float x=controlX[i];String label=controls[i]+(i==4&&!watching.isEmpty()?" · "+watching.size():"");
-        utilityIcon(c,i,x,986,focus?gold:muted);text(c,label,x+34,1010,22,focus?white:muted,focus);
+        utilityIcon(c,i,x,986,focus?gold:muted);text(c,label,x+34,1010,20,focus?white:muted,focus);
         if(focus){paint.setColor(gold);c.drawRect(x,1024,x+34+paint.measureText(label),1026,paint);}
       }
-      String summary=weather==null?"Forecast unavailable":weather.optString("summary");if(summary.length()>32)summary=summary.substring(0,29)+"…";
+      codingView.compact(c,WidgetRepository.get(MainActivity.this).codingUsage(),System.currentTimeMillis(),selected==15);
+      String summary=weather==null?"Forecast unavailable":weather.optString("summary");if(summary.length()>23)summary=summary.substring(0,20)+"…";
       String temp=weather==null?"—":weather.optInt("temperature")+"°";
-      text(c,"CINCINNATI",1244,982,16,muted,true);text(c,temp,1240,1036,46,white,false);
-      text(c,summary,1403,1001,21,white,false);
+      text(c,"CINCINNATI",1464,982,15,muted,true);text(c,temp,1460,1036,44,white,false);
+      text(c,summary,1570,1001,18,white,false);
       String detail=weather==null?"NWS forecast":weather.optString("period")+" · NWS"+(weather.optBoolean("stale")?" · saved":"");
-      text(c,detail,1403,1031,16,muted,false);
+      if(detail.length()>30)detail=detail.substring(0,27)+"…";
+      text(c,detail,1570,1031,14,muted,false);
       c.restore();
     }
     void activate(){
       if(selected<6){lastApp=selected;openApp(favorites[selected]);}
-      else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;}
+      else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;case 15:CodingUsageView.show(MainActivity.this);break;}
     }
     @Override public boolean onKeyDown(int key,KeyEvent e){
       switch(key){
-        case KeyEvent.KEYCODE_DPAD_UP:if(selected>=13)selected-=2;else if(selected>=11)selected=selected==11?4:5;else if(selected>=6)selected=lastApp;else selected=Math.max(selected%2,selected-2);break;
+        case KeyEvent.KEYCODE_DPAD_UP:if(selected==15)selected=14;else if(selected>=13)selected-=2;else if(selected>=11)selected=selected==11?4:5;else if(selected>=6)selected=lastApp;else selected=Math.max(selected%2,selected-2);break;
         case KeyEvent.KEYCODE_DPAD_DOWN:if(selected<4)selected+=2;else if(selected<6){lastApp=selected;selected=selected==4?11:12;}else if(selected==11||selected==12)selected+=2;else if(selected>=13)selected=6;break;
-        case KeyEvent.KEYCODE_DPAD_RIGHT:if(selected==11||selected==13)selected++;else if(selected==12||selected==14)selected=6;else if(selected<6){if(selected%2==0)selected++;else{lastApp=selected;selected=6;}}else selected=Math.min(10,selected+1);break;
-        case KeyEvent.KEYCODE_DPAD_LEFT:if(selected==12||selected==14)selected--;else if(selected>=11){}else if(selected>6)selected--;else if(selected==6)selected=lastApp;else if(selected%2==1)selected--;break;
+        case KeyEvent.KEYCODE_DPAD_RIGHT:if(selected==10)selected=15;else if(selected==15){}else if(selected==11||selected==13)selected++;else if(selected==12||selected==14)selected=6;else if(selected<6){if(selected%2==0)selected++;else{lastApp=selected;selected=6;}}else selected=Math.min(10,selected+1);break;
+        case KeyEvent.KEYCODE_DPAD_LEFT:if(selected==15)selected=10;else if(selected==12||selected==14)selected--;else if(selected>=11){}else if(selected>6)selected--;else if(selected==6)selected=lastApp;else if(selected%2==1)selected--;break;
         case KeyEvent.KEYCODE_DPAD_CENTER:case KeyEvent.KEYCODE_ENTER:if(e.getRepeatCount()==0)activate();return true;
         default:return super.onKeyDown(key,e);
       }
@@ -236,8 +239,9 @@ public class MainActivity extends Activity {
       float x=e.getX()*1920/getWidth(),y=e.getY()*1080/getHeight();
       if(x>=88&&x<570&&y>=280&&y<882){int row=Math.min(3,Math.max(0,(int)((y-286)/150))),col=x>=328?1:0;selected=row<3?row*2+col:11+col;activate();}
       else if(y>=896&&y<934&&x>=100&&x<573){selected=x<328?13:14;activate();}
-      else if(y>954&&x<1180){for(int i=controls.length-1;i>=0;i--)if(x>=controlX[i]-20){selected=6+i;activate();break;}}
-      else if(y>954&&x>1220){new AlertDialog.Builder(MainActivity.this).setTitle("Cincinnati forecast").setMessage(weather==null?"Forecast unavailable":weather.optString("detail")+"\n\nNational Weather Service · Cincinnati city center").setPositiveButton("Close",null).show();}
+      else if(y>954&&x<930){for(int i=controls.length-1;i>=0;i--)if(x>=controlX[i]-20){selected=6+i;activate();break;}}
+      else if(y>954&&x>=950&&x<1425){selected=15;activate();}
+      else if(y>954&&x>1450){new AlertDialog.Builder(MainActivity.this).setTitle("Cincinnati forecast").setMessage(weather==null?"Forecast unavailable":weather.optString("detail")+"\n\nNational Weather Service · Cincinnati city center").setPositiveButton("Close",null).show();}
       invalidate();return true;
     }
   }

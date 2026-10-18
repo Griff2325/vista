@@ -2,6 +2,12 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.8.0 — October 18, 2026
+
+- Native Codex and Claude Code allowance meters in Home's utility console and beneath the screensaver clock, with a remote-accessible detail panel and Cincinnati-local reset times. Each provider's reported window duration determines its label; missing limits are never assumed to be zero.
+- Optional per-user macOS collector reads Codex's account-limit RPC and Claude Code's documented status-line quota fields. Five-minute ADB sync sends only normalized percentages, window durations and timestamps. Credentials stay in the providers' existing Mac stores; no new TV listener or account API is introduced.
+- Saved readings retain their source timestamp, show a saved marker after 15 minutes, and disappear after their reset or 24 hours. Claude readings require a normal Claude Code response after sign-in and status-line setup. No model request is made by the collector.
+
 ## 0.7.0 — October 17, 2026
 
 - Lightweight wildlife sightings: a fox that pauses on the dry bank, passing birds and a winter snowboarder on the far ridge. Independent periods, daylight/weather gating, shared Home/Dream timing and a wildlife toggle. No new scene bitmaps or extra animation loop.

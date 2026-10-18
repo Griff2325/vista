@@ -24,7 +24,7 @@ jobs:
           for script in scripts/*.sh; do bash -n "$script"; done
           sh -n bridge/supervisor.sh
           sh -n bridge/screensaver-supervisor.sh
-          python3 -X pycache_prefix=build/pycache -m py_compile bridge/pack-arm.py scripts/measure.py scripts/configure-screensaver.py
+          python3 -X pycache_prefix=build/pycache -m py_compile bridge/pack-arm.py scripts/measure.py scripts/configure-screensaver.py scripts/coding-usage.py scripts/install-usage-sync.py
       - name: Test lighting, weather, widgets, media links and policies
         run: bash scripts/test-sky.sh
       - name: Build and verify development APK

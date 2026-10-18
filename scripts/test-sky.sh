@@ -15,7 +15,8 @@ mkdir -p "$ROOT/build/tests"
   "$ROOT/app/src/com/griffin/solhome/WaterMotion.java" "$ROOT/tests/WaterMotionTest.java" \
   "$ROOT/app/src/com/griffin/solhome/SceneCalendar.java" "$ROOT/app/src/com/griffin/solhome/SeasonPalette.java" "$ROOT/tests/SceneCalendarTest.java" \
   "$ROOT/app/src/com/griffin/solhome/WorldMotion.java" "$ROOT/tests/WorldMotionTest.java" \
-  "$ROOT/app/src/com/griffin/solhome/CompanionServer.java" "$ROOT/tests/CompanionServerTest.java"
+  "$ROOT/app/src/com/griffin/solhome/CompanionServer.java" "$ROOT/tests/CompanionServerTest.java" \
+  "$ROOT/app/src/com/griffin/solhome/CodingUsage.java" "$ROOT/app/src/com/griffin/solhome/UsageImportPolicy.java" "$ROOT/tests/CodingUsageTest.java"
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.CincinnatiSkyTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WidgetDataTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WeatherSceneTest
@@ -29,3 +30,6 @@ mkdir -p "$ROOT/build/tests"
 
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.WorldMotionTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.CompanionServerTest
+
+"${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.CodingUsageTest
+python3 "$ROOT/tests/test_coding_usage.py"

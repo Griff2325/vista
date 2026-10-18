@@ -12,6 +12,7 @@ import java.util.*;
 public final class AmbientWidgetsView extends View {
     private final Paint paint=new Paint(3);
     private final WidgetRepository repository;
+    private final CodingUsageView codingView=new CodingUsageView();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Typeface light=Typeface.create("sans-serif-light",0),medium=Typeface.create("sans-serif-medium",0);
     private final Shader top=new LinearGradient(0,0,0,445,0x99081319,0x00081319,Shader.TileMode.CLAMP);
@@ -42,6 +43,7 @@ public final class AmbientWidgetsView extends View {
         text(c,date("h:mm",now),96,163,104,0xfff3f3eb,false);text(c,date("a",now),366,160,22,0xffdce2d4,false);text(c,date("EEEE, MMMM d",now),101,207,25,0xffdce2d4,false);
         text(c,WinterCountdown.label(now),101,253,23,0xffdce5ca,false);
         lines(c,SceneSettings.theme(getContext(),now).label(),101,284,950,1,19,24,0xffc4ceba);
+        codingView.ambient(c,repository.codingUsage(),now);
         drawWeather(c,now);
         drawNews(c,cycle,now);drawEvents(c,cycle,now);drawSnow(c,cycle,now);
         text(c,"Press a remote button to return · News briefs and This week on Home",96,1050,16,0xffc4ceca,false);c.restore();

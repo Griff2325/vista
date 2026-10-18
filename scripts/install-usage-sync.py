@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Install Vista's credential-free TV quota collector as a per-user macOS LaunchAgent."""
+import argparse
+import json
+import os
+from pathlib import Path
+import plistlib
+import shlex
+import shutil
+import subprocess
+import sys
+
+LABEL = 'com.griffin.vista.usage'
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--adb', required=True)
+    parser.add_argument('--serial', required=True, help='Already authorized TV ADB target')
+    parser.add_argument('--codex', default=shutil.which('codex'))
+    parser.add_argument('--state-dir', type=Path, default=Path.home() / 'Library/Application Support/VistaUsage')
+    args = parser.parse_args()
+    if not args.codex:
+        parser.error('Codex CLI is required')
+    state = args.state_dir.expanduser().resolve();state.mkdir(parents=True, exist_ok=True);state.chmod(0o700)
+    source = Path(__file__).resolve().with_name('coding-usage.py')
+    installed = state / 'coding-usage.py'
+    settings_path = Path.home() / '.claude/settings.json'
+    settings = json.loads(settings_path.read_text()) if settings_path.exists() else {}
+    command = shlex.join([sys.executable, str(installed), 'claude-status', '--state-dir', str(state)])
+    expected = {'type': 'command', 'command': command}
+    original = settings.get('statusLine')
+    if original and original != expected:
+        parser.error('A different Claude status line exists. Preserve it and chain the collector explicitly instead of replacing it.')
+    shutil.copyfile(source, installed);installed.chmod(0o700)
+    config = {'codex': str(Path(args.codex).resolve()), 'adb': str(Path(args.adb).resolve()), 'serial': args.serial}
+    (state / 'config.json').write_text(json.dumps(config));(state / 'config.json').chmod(0o600)
+    backup = state / 'original-statusline.json'
+    if not backup.exists():
+        backup.write_text(json.dumps({'present': 'statusLine' in settings, 'value': original}));backup.chmod(0o600)
+    settings['statusLine'] = expected
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    temp = settings_path.with_name('.vista-settings.tmp');temp.write_text(json.dumps(settings, indent=2)+'\n');temp.chmod(0o600);temp.replace(settings_path)
+    agent_path = Path.home() / 'Library/LaunchAgents' / (LABEL + '.plist');agent_path.parent.mkdir(parents=True, exist_ok=True)
+    agent = {'Label': LABEL, 'ProgramArguments': [sys.executable, str(installed), 'collect', '--state-dir', str(state)], 'WorkingDirectory': str(state), 'RunAtLoad': True, 'StartInterval': 300, 'ProcessType': 'Background', 'LowPriorityIO': True, 'StandardOutPath': '/dev/null', 'StandardErrorPath': '/dev/null', 'EnvironmentVariables': {'PATH': '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'}}
+    agent_path.write_bytes(plistlib.dumps(agent));agent_path.chmod(0o600)
+    domain = 'gui/' + str(os.getuid())
+    subprocess.run(['launchctl', 'bootout', domain + '/' + LABEL], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(['launchctl', 'bootstrap', domain, str(agent_path)], check=True)
+    print('Vista usage sync installed: five-minute Mac refresh and Claude status-line capture. Provider credentials remain in their existing apps.')
+
+if __name__ == '__main__':
+    main()
