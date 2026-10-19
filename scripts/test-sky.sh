@@ -38,3 +38,6 @@ python3 "$ROOT/tests/test_coding_usage.py"
 
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.HomeNavigationTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.HuluMuteTest
+
+"${JAVABIN}javac" -d "$ROOT/build/tests" "$ROOT/app/src/com/griffin/solhome/PicturePolicy.java" "$ROOT/tests/PicturePolicyTest.java"
+"${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.PicturePolicyTest

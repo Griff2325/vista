@@ -3,7 +3,7 @@
 @ EVIOCGRAB prevents stock Home dispatch; uinput forwards mapped non-Home keys.
 @ Expose only actual keymap codes: advertising all keys misclassifies as stylus.
 @ Home release launches Vista; hold >800ms opens stock Settings.
-@ Settings/Picture: short release toggles Vista; hold >=800ms opens Panasonic.
+@ Settings/Picture: any matched release opens Panasonic; Vista controls stay optional.
 @ Process exit closes both descriptors and restores the original input route.
 @ MOVW+PC addresses avoid ADR's limited immediate encodings as the text grows.
 .syntax unified
@@ -157,12 +157,8 @@ picturedown:
  str r0,[sp,#20]
  b loop
 singlepicture:
- movw r6,#:lower16:(picture - . - 12)
- add r6,pc,r6
- movw r11,#:lower16:(startservice - . - 12)
- add r11,pc,r11
- mov r12,#0
- b forklaunch
+ @ Keep the tested native path as the default for a short press too.
+ b longpicture
 homekey:
  ldr r0,[sp,#12]
  cmp r0,#1

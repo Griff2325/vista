@@ -29,6 +29,8 @@ jobs:
         run: bash scripts/test-sky.sh
       - name: Build and verify development APK
         run: bash scripts/build-app.sh
+      - name: Build local picture bridge
+        run: bash scripts/build-picture-bridge.sh
       - name: Assemble static remote bridge
         run: bash scripts/build-bridge.sh
       - name: Test assembled remote routing
@@ -40,6 +42,7 @@ jobs:
           path: |
             build/sol-home-debug.apk
             build/bridge/sol-home-bridge
+            build/picture/vista-picture.jar
           retention-days: 7
 
   ios:

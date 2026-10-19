@@ -2,6 +2,12 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.10.2 — October 19, 2026
+
+- Restored the original Panasonic quick menu on a single Settings/Picture press at the owner’s request. Held Settings follows the same native path; Vista Home and held-Home settings behavior remain intact. Assembled-code tests now verify the native packet for short and held presses.
+- Retained optional live brightness, contrast and color controls using Panasonic’s native image-engine keys, an expiring shell-only provider queue and the installed TV API. The owner confirmed visible brightness changes/restoration and instant overlay behavior. Native preset selection, saved preferences and HDMI/HDR writes remain unsupported; contrast/color visual effects remain unverified.
+- Stopped the optional picture helper on the development TV when reverting the default menu. No root, vendor credential, network listener or core-package modification is required. Added a reproducible helper build, command-policy tests and CI build coverage.
+
 ## 0.10.1 — October 19, 2026
 
 - Replaced the failed double-press shortcut with held Settings/Picture: a short press opens Vista, while a hold of at least 800 ms opens the original Panasonic quick menu on release. Held Home keeps full native settings.

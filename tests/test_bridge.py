@@ -150,7 +150,12 @@ for code in [690, 645]:
         cpu, stop = route(code, picture_hold=duration)
         assert stop == 'forklaunch'
         assert cpu.read(cpu.r[13]+16) == 0
-        assert cpu.execute('launch') == ['/system/bin/cmd', 'activity', 'start-foreground-service', '-n', 'com.griffin.solhome/.PicturePanelService']
+        assert cpu.execute('launch') == ['/system/bin/cmd', 'activity', 'stop-service', '-n', 'com.griffin.solhome/.PicturePanelService']
+        native, _ = route(code, picture_hold=duration)
+        native.fork_return = 123
+        assert native.execute('launch') == ['exit', 0]
+        events = [struct.unpack_from('<llHHi', native.writes[0], i)[2:] for i in range(0, 64, 16)]
+        assert events == [(1,690,1),(0,0,0),(1,690,0),(0,0,0)]
         assert cpu.r[2] == 0xA0000
     for duration in [800_000, 950_000, 2_000_000, 2_200_000_000]:
         cpu, stop = route(code, now=20_000_000_000, picture_hold=duration)
@@ -177,4 +182,4 @@ cpu, _ = route(172, home_hold=100_000)
 assert cpu.execute('launch') == ['/system/bin/cmd', 'activity', 'start', '-n', 'com.griffin.solhome/.MainActivity']
 cpu, _ = route(172, home_hold=950_000)
 assert cpu.execute('launch')[-2:] == ['-a', 'android.settings.SETTINGS']
-print('Assembled ARM routing passed: Home/held Home, Settings/Picture, long-press boundaries, argv, key forwarding')
+print('Assembled ARM routing passed: Home/held Home, native Settings/Picture on short and long presses, argv, key forwarding')
