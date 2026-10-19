@@ -6,7 +6,8 @@ Repository established October 17, 2026. Earlier development stages below are su
 
 - Disabled the development TV's window, transition and property-animator scales, with a private rollback snapshot and verified live scales. Owner testing confirmed the stock picture panel's separate entrance still animates. Timing-only overlay installation and direct legacy picture-screen access were rejected by Fire OS; the remaining slide is unresolved.
 - Owner verified native Alexa-button YouTube voice search with the existing Home bridge. No new voice service, app patch or remote remapping was necessary.
-- Reviewed DumbTV's alarm-based Home fallback and configuration scripts against Vista's requirements. Read-only device probes confirmed that a sideloaded replacement settings panel and ADB shell lack the picture-control service permission. Documented the control boundary, standby/full-reboot distinction and remaining validation; no third-party installer or replacement panel was deployed.
+- Reviewed DumbTV's alarm-based Home fallback and configuration scripts against Vista's requirements. Read-only device probes confirmed that a sideloaded app and ADB shell lack the Amazon picture-control service permission. Documented that service boundary, standby/full-reboot distinction and remaining validation; no third-party installer or replacement panel was deployed.
+- Found a separate rootless vendor control path. Independently verified temporary Auto AI/Normal mode, brightness and contrast changes and restoration through hardware readback. Updating both native saved SDR/HDR mode fields still left the stock menu label stale; documented this failed synchronization check and the remaining source/unit/playback validation before a replacement panel can ship.
 
 ## 0.9.5 — October 18, 2026
 

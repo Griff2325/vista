@@ -25,6 +25,8 @@ A temporary, separate read-only probe requested `com.fireos.sdk.ftve.USE_SDK` an
 
 Redirecting the remote Settings/Picture keys and drawing an instant native panel are feasible with the existing bridge and app. The tested backend would still reject that panel's picture-control commands. No replacement panel or key remapping was deployed without a working control path.
 
+Follow-up device tests found a separate rootless MediaTek control interface: temporary picture-mode, brightness and contrast writes were independently confirmed through hardware readback and restored. Native saved-mode records were also writable, but the stock menu retained its old mode label. The SDK denial above applies to the Amazon service, not every vendor interface. See [rootless picture-control tests](device-settings.md#rootless-picture-control-tests) for the successful controls and unresolved synchronization. This alternate route was found through device inspection, not DumbTV's implementation.
+
 ## Compatibility cautions
 
 The repository's full pass disables voice settings, blocks Alexa endpoints and includes `com.amazon.firebat` in its removal list unless its keep configuration preserves Prime Video. Those defaults conflict with Vista's current streaming and voice-search setup. Its primary end-to-end test device uses Fire OS 7; it is not evidence of Panasonic Fire OS 8 compatibility.
