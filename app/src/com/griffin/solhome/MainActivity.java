@@ -45,8 +45,8 @@ public class MainActivity extends Activity {
       runOnUiThread(()->{home.logos=logos;home.invalidate();});
     },"sol-logos").start();
   }
-  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);SpotifyPanel.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(intent.getFloatExtra("sol.preview.world_seconds",-1));setAmbient(false,true);armIdle();}
-  @Override protected void onResume(){super.onResume();foreground=true;setAmbient(false,true);home.requestFocus();home.revealSelection(false);handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(getIntent().getFloatExtra("sol.preview.world_seconds",-1));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
+  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);PicturePanelService.dismiss(this);SpotifyPanel.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(intent.getFloatExtra("sol.preview.world_seconds",-1));setAmbient(false,true);armIdle();}
+  @Override protected void onResume(){super.onResume();PicturePanelService.dismiss(this);foreground=true;setAmbient(false,true);home.requestFocus();home.revealSelection(false);handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(getIntent().getFloatExtra("sol.preview.world_seconds",-1));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
   @Override protected void onPause(){foreground=false;home.stopScroll();handler.removeCallbacks(minuteTick);handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();scene.stop();widgets.stop();WidgetRepository.get(this).unlisten(widgetChanged);super.onPause();}
   @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);scene.release();super.onDestroy();}
   @Override public void onWindowFocusChanged(boolean focus){super.onWindowFocusChanged(focus);if(focus)armIdle();else handler.removeCallbacks(idle);}
@@ -92,7 +92,7 @@ public class MainActivity extends Activity {
       catch(Exception e){toast("Use the Input button on your TV remote.");}
     }).setNegativeButton("Close",null).show();
   }catch(Exception e){toast("Use the Input button on your TV remote.");}}
-  private void tvSettings(){try{startActivity(new Intent().setClassName("com.amazon.tv.launcher","com.amazon.tv.launcher.ui.MainSettingsActivity"));}catch(Exception e){toast("Hold Home to open TV settings.");}}
+  private void tvSettings(){try{if(android.provider.Settings.canDrawOverlays(this))PicturePanelService.show(this);else PicturePanelService.nativeSettings(this);}catch(Exception e){toast("Hold Home to open TV settings.");}}
   void refreshCompanionScene(){scene.reloadTheme();home.invalidate();widgets.invalidate();}
   CompanionServer.Reply companionPanel(String panel){
     setAmbient(false,true);armIdle();

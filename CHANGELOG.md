@@ -2,6 +2,12 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.10.0 — October 19, 2026
+
+- Added an instant native settings overlay and Settings/Picture interception in the shell input bridge. Single press opens Vista; a second press within 450 ms opens the original Panasonic quick menu. Home dismisses the overlay, and held Home opens full native settings. No stock package or animation resources are modified.
+- Owner confirmed the initial physical interception and held-Home escape. Experimental preset writes changed vendor readback but did not produce an owner-confirmed image change, so the mode buttons and write path were withdrawn. Real picture controls remain in the native menus pending image-engine integration.
+- Added installer checks for the panel component and overlay grant, and a bounded CPU test of the assembled ARM routing, launch arguments, double-press boundaries and key forwarding. The physical double-press shortcut and playback continuity across apps still need confirmation.
+
 ## Device configuration — October 19, 2026
 
 - Disabled the development TV's window, transition and property-animator scales, with a private rollback snapshot and verified live scales. Owner testing confirmed the stock picture panel's separate entrance still animates. Timing-only overlay installation and direct legacy picture-screen access were rejected by Fire OS; the remaining slide is unresolved.

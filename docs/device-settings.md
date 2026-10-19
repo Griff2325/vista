@@ -16,7 +16,7 @@ On the development TV, both settings readback and the window manager's live scal
 
 The installed panel defines a separate view-tween entrance with a 500 ms position animation and 166 ms delay. Its exit and submenu transitions also have explicit timings. A timing-only resource overlay was built and tested, but Fire OS rejected installation because the target has no overlayable declaration and the overlay lacks the target's signing certificate. No overlay was installed. Android documents this restriction for targets without an overlayable declaration in its [resource overlay documentation](https://source.android.com/docs/core/runtime/rros).
 
-Opening the legacy native `PictureSettings` activity directly was also rejected: the ADB shell lacks `com.amazon.tv.permission.LAUNCHER_SETTINGS`. Those initial animation/access checks changed no picture values or core packages. Removing the remaining slide requires a privileged system modification or a replacement panel with working access to the TV's picture controls; neither is implemented here.
+Opening the legacy native `PictureSettings` activity directly was also rejected: the ADB shell lacks `com.amazon.tv.permission.LAUNCHER_SETTINGS`. Those initial animation/access checks changed no picture values or core packages. Vista 0.10.0 instead supplies the limited replacement panel described below; the stock panel's animations are unchanged when opened deliberately.
 
 A separate read-only app probe confirmed that copying the UI does not supply the control permission: the app requested `com.fireos.sdk.ftve.USE_SDK`, but the permission remained denied and binding the hardware-settings service failed. A shell service-access check was also denied for the same permission. See the [DumbTV compatibility review](dumbtv-review.md) for the tested boundary and additional Home-fallback ideas.
 
@@ -40,7 +40,27 @@ The Panasonic provider `content://com.panasonic.dtv.shareddb2/Picture/ProtonView
 
 Each mutation had a private recovery record written first and an automatic restoration path. Final readbacks confirmed Auto AI, brightness 50 and contrast 50, and the temporary probe and hardware-query helper were removed. No root, reboot, reset, core-package disable, replacement panel or Settings-key remapping was used. Keep raw hardware output, native preference snapshots and vendor binaries outside the public repository.
 
-The tested interface makes a rootless panel plausible. Before deployment, resolve native-framework state synchronization and verify source/HDR context, slider mappings and playback behavior. Preserve a route to the complete native settings menu.
+### Vista quick settings panel
+
+Vista 0.10.0 adds a focusable `TYPE_APPLICATION_OVERLAY` window instead of launching an Activity over the player. Its window animation is zero and its controls have no state-list animation. A foreground service exists only while the panel is open; it closes on Back, a repeated single Settings/Picture press, screen-off or 45 seconds without panel interaction. Home dismisses it when returning to Vista. Holding Home explicitly dismisses the overlay and opens full native settings.
+
+The input bridge consumes remote scan codes 690 (Settings) and 645 (Picture) before Android dispatches them. A single release starts `PicturePanelService` through the authorized shell. A second release within 450 ms dismisses Vista's overlay and injects Android Settings key 176 through the shell, opening the original Panasonic quick menu. The service's exported entry requires Android's `DUMP` permission; ordinary third-party apps cannot invoke it. The panel also needs display-over-apps access:
+
+```sh
+adb shell appops get com.griffin.solhome SYSTEM_ALERT_WINDOW
+# Save the existing mode privately before granting access.
+adb shell appops set com.griffin.solhome SYSTEM_ALERT_WINDOW allow
+```
+
+Restore the saved app-op mode to revoke this grant. The bridge installer checks the service and overlay grant before replacing the current bridge. Stopping the bridge restores stock remote dispatch; see [bridge operation](../bridge/README.md).
+
+The owner confirmed that the first physical Settings press opened Vista and holding Home opened native settings. The experimental mode buttons changed the vendor state readback, but the owner reported no apparent picture change. Inspection then found identical generic preset parameters for `pAutoAI` and `pNormal`, apart from the mode identifier. This does not prove that the Panasonic image engine applied the requested preset. **The experimental write path and mode buttons were removed from the shipped panel.** Its current controls provide full TV settings and Close, with a hint for the double-press Panasonic picture shortcut. The vendor tests above establish writable state, not a working replacement picture backend.
+
+Before removal, overlay UI tests exercised Auto AI/Normal state writes and restoration, Back, repeated service entry and the full native-settings link. YouTube stayed the resumed Activity underneath, which does not establish uninterrupted moving-video/audio in every app. The native quick-menu command is independently testable through the authorized shell. The new physical double-press timing requires owner confirmation. Unit checks execute the assembled ARM routing and launch arguments, including the 450 ms boundary, Home/held Home and forwarding of navigation, volume and Alexa keys.
+
+The native Panasonic client also references a loopback viewing-mode API. An unauthenticated read did not yield a response. Authenticated access has not been tested; vendor authentication data is not bundled or published. A verified native-framework control path is required before adding working presets, sliders, HDMI or HDR controls to Vista.
+
+No root, system-package disable or stock-resource modification is required for the panel/shortcut. The bridge still needs external ADB startup after a full OS reboot.
 
 ## YouTube voice search
 

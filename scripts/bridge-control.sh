@@ -25,6 +25,8 @@ case "$ACTION" in
     fi
     test -f "$ROOT/build/bridge/sol-home-bridge" || { echo 'Run scripts/build-bridge.sh first.' >&2; exit 1; }
     "${ADB[@]}" shell pm path com.griffin.solhome | grep -q '^package:' || { echo 'Install Vista first.' >&2; exit 1; }
+    "${ADB[@]}" shell cmd package query-services --brief --components -n com.griffin.solhome/.PicturePanelService | grep -Fx 'com.griffin.solhome/.PicturePanelService' >/dev/null || { echo 'Install Vista 0.10.0 or newer before intercepting Settings.' >&2; exit 1; }
+    "${ADB[@]}" shell appops get com.griffin.solhome SYSTEM_ALERT_WINDOW | grep 'SYSTEM_ALERT_WINDOW: allow' >/dev/null || { echo 'Enable display-over-apps access for Vista before intercepting Settings.' >&2; exit 1; }
     stop_bridge
     "${ADB[@]}" push "$ROOT/build/bridge/sol-home-bridge" /data/local/tmp/sol-home-bridge
     "${ADB[@]}" push "$ROOT/bridge/supervisor.sh" /data/local/tmp/sol-bridge-supervisor.sh
