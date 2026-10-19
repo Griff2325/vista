@@ -8,7 +8,7 @@ Private experimental Hulu testing uses a separate application ID. The original i
 
 `player-route.js`, when bundled privately with `observe.js`, starts a loopback-only asset server inside the Lab process. It routes exactly the pinned public JavaScript URL to the APK's private patched copy. It serves only `/player.js`, accepts at most two concurrent connections, bounds request headers and times out idle transfers. No Mac server, proxy, system CA, TLS-verification bypass or root access is required. Other URLs retain their original destination and trust behavior. A new upstream bundle URL falls through to the original player. Unknown input hashes are rejected by the patch generator.
 
-This is a playback experiment, not verified ad removal. Actual protected playback requires official Hulu activation of the separate copy. Native hooks, server enforcement or client updates may prevent the skip from working. The original app is the fallback.
+Authenticated testing on one on-demand episode exercised three startup skip entries and four more when seeking across its first marked mid-episode break. The owner confirmed moving episode video and normal sound after both startup and the mid-episode seek; the visible playback clock also continued normally. These are limited successful playback observations, not full-episode or catalog-wide validation. Native hooks, server enforcement or client updates may prevent the skip from working. The original app is the fallback. The normal Hulu favorite still opens the original app; use Hulu Lab for this experiment.
 
 ## Diagnostic
 
