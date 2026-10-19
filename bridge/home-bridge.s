@@ -3,7 +3,7 @@
 @ EVIOCGRAB prevents stock Home dispatch; uinput forwards mapped non-Home keys.
 @ Expose only actual keymap codes: advertising all keys misclassifies as stylus.
 @ Home release launches Vista; hold >800ms opens stock Settings.
-@ Settings/Picture release toggles Vista's focusable overlay before stock dispatch.
+@ Settings/Picture: short release toggles Vista; hold >=800ms opens Panasonic.
 @ Process exit closes both descriptors and restores the original input route.
 @ MOVW+PC addresses avoid ADR's limited immediate encodings as the text grows.
 .syntax unified
@@ -11,6 +11,10 @@
 .global _start
 _start:
  ldr r0,[sp]
+ @ Preserve Android's environment for app_process-based commands such as input.
+ add r8,sp,#8
+ add r8,r8,r0,lsl #2
+environmentready:
  cmp r0,#2
  ldrge r10,[sp,#8]
  movwlt r10,#:lower16:(remote - . - 12)
@@ -60,6 +64,7 @@ keycaps_done:
  cmp r0,#0
  blt fail
  sub sp,sp,#32
+ str r8,[sp,#28]
  mov r0,#0
  str r0,[sp,#16]
  str r0,[sp,#20]
@@ -115,36 +120,42 @@ routeevent:
  bne forward
 picturekey:
  ldr r0,[sp,#12]
+ cmp r0,#1
+ beq picturedown
  cmp r0,#0
  bne loop
- @ Keep release timing in the unused event-stack slots; Home timing is separate.
- ldr r0,[sp]
  ldr r1,[sp,#16]
+ cmp r1,#0
+ beq loop
+ mov r0,#0
  str r0,[sp,#16]
+ ldr r0,[sp]
  sub r0,r0,r1
- ldr r2,[sp,#4]
- ldr r3,[sp,#20]
- str r2,[sp,#20]
  cmp r0,#1
- bgt singlepicture
+ bgt longpicture
  cmp r0,#0
  blt singlepicture
  movw r6,#0x4240
  movt r6,#0x000f
  mul r0,r0,r6
+ ldr r2,[sp,#4]
+ ldr r3,[sp,#20]
  add r0,r0,r2
  sub r0,r0,r3
- cmp r1,#0
- beq singlepicture
- movw r2,#0xddd0
- movt r2,#0x0006
+ movw r2,#0x3500
+ movt r2,#0x000c
  cmp r0,r2
- bge singlepicture
- mov r0,#0
- str r0,[sp,#16]
- movw r6,#:lower16:(quickcommand - . - 12)
+ blt singlepicture
+longpicture:
+ movw r6,#:lower16:(nativepacket - . - 12)
  add r6,pc,r6
  b forklaunch
+picturedown:
+ ldr r0,[sp]
+ str r0,[sp,#16]
+ ldr r0,[sp,#4]
+ str r0,[sp,#20]
+ b loop
 singlepicture:
  movw r6,#:lower16:(picture - . - 12)
  add r6,pc,r6
@@ -206,10 +217,11 @@ forward:
  bne fail
  b loop
 launch:
- movw r0,#:lower16:(quickcommand - . - 12)
+ movw r0,#:lower16:(nativepacket - . - 12)
  add r0,pc,r0
  cmp r6,r0
  beq quicklaunch
+ ldr r2,[sp,#28]
  mov r0,#0
  push {r0}
  cmp r12,#0
@@ -231,22 +243,59 @@ noaction:
  add r0,pc,r0
  push {r0}
  mov r1,sp
- mov r2,#0
  mov r7,#11
  svc #0
  b fail
 quicklaunch:
+ @ Only this child waits for overlay teardown; the remote-reading parent stays free.
+ mov r7,#2
+ svc #0
+ cmp r0,#0
+ beq stopquick
+ blt emitquick
+ add r1,sp,#24
+ mov r2,#0
+ mov r7,#114
+ svc #0
+emitquick:
+ mov r0,#0
+ str r0,[sp,#16]
+ movw r0,#0xa300
+ movt r0,#0x11e1
+ str r0,[sp,#20]
+ add r0,sp,#16
+ mov r1,#0
+ mov r7,#162
+ svc #0
+ mov r0,r5
+ movw r1,#:lower16:(nativepacket - . - 12)
+ add r1,pc,r1
+ mov r2,#64
+ mov r7,#4
+ svc #0
+ mov r0,#0
+ mov r7,#1
+ svc #0
+stopquick:
+ ldr r2,[sp,#28]
  mov r0,#0
  push {r0}
- push {r6}
- movw r0,#:lower16:(cflag - . - 12)
+ movw r0,#:lower16:(picture - . - 12)
  add r0,pc,r0
  push {r0}
- movw r0,#:lower16:(shell - . - 12)
+ movw r0,#:lower16:(nflag - . - 12)
+ add r0,pc,r0
+ push {r0}
+ movw r0,#:lower16:(stopservice - . - 12)
+ add r0,pc,r0
+ push {r0}
+ movw r0,#:lower16:(activity - . - 12)
+ add r0,pc,r0
+ push {r0}
+ movw r0,#:lower16:(cmd - . - 12)
  add r0,pc,r0
  push {r0}
  mov r1,sp
- mov r2,#0
  mov r7,#11
  svc #0
 fail:
@@ -281,11 +330,21 @@ nativeaction: .asciz "android.settings.SETTINGS"
 .balign 4
 picture: .asciz "com.griffin.solhome/.PicturePanelService"
 .balign 4
-shell: .asciz "/system/bin/sh"
+stopservice: .asciz "stop-service"
 .balign 4
-cflag: .asciz "-c"
-.balign 4
-quickcommand: .asciz "cmd activity stop-service -n com.griffin.solhome/.PicturePanelService >/dev/null 2>&1; sleep 0.08; input keyevent 176"
+nativepacket:
+ .word 0,0
+ .short 1,690
+ .word 1
+ .word 0,0
+ .short 0,0
+ .word 0
+ .word 0,0
+ .short 1,690
+ .word 0
+ .word 0,0
+ .short 0,0
+ .word 0
 .balign 4
 uinput: .asciz "/dev/uinput"
 .balign 4

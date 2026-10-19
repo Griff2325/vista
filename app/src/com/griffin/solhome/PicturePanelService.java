@@ -51,7 +51,7 @@ public final class PicturePanelService extends Service {
         panel.setOrientation(LinearLayout.VERTICAL);panel.setPadding(dp(24),dp(22),dp(24),dp(18));panel.setBackground(surface(0xfa182825,18));panel.setElevation(dp(12));
         panel.addView(text("VISTA  /  PICTURE",12,0xffb5c1b7));
         TextView title=text("TV settings",25,0xfff2f0e7);title.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL));title.setPadding(0,dp(8),0,dp(4));panel.addView(title);
-        TextView hint=text("Double-press Settings for Panasonic’s picture menu. Hold Home for full TV settings.",14,0xffb5c1b7);hint.setPadding(0,dp(14),0,dp(10));panel.addView(hint);
+        TextView hint=text("Hold Settings for Panasonic’s picture menu. Hold Home for full TV settings.",14,0xffb5c1b7);hint.setPadding(0,dp(14),0,dp(10));panel.addView(hint);
         panel.addView(button("All TV settings  ›",()->{stopSelf();try{nativeSettings(this);}catch(RuntimeException failed){Toast.makeText(this,"Hold Home for TV settings",Toast.LENGTH_SHORT).show();}}));
         panel.addView(button("Close",this::stopSelf));
         WindowManager.LayoutParams layout=new WindowManager.LayoutParams(dp(320),WindowManager.LayoutParams.WRAP_CONTENT,WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL|WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,PixelFormat.TRANSLUCENT);
