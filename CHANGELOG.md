@@ -2,6 +2,13 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.11.0 — October 19, 2026
+
+- Rebuilt Explore as a native, Apple TV-inspired experience with a dark sidebar, featured backdrop, horizontal movie/series shelves, artwork, remote focus outlines, installed-app banners and local saved titles.
+- Expanded title search to all reported US providers, preserving results through unavailable streaming offers or failed availability checks. Added All services discovery and Prime Video, Max, Peacock, Paramount+, Tubi and Pluto shortcuts/preferences while preserving existing service settings.
+- Added optional IMDb/Rotten Tomatoes scores via exact IMDb IDs and an owner-supplied OMDb free key. Missing scores and free-quota failures are explicit; ratings never block cards or substitute TMDB votes. Catalog access still needs a free personal TMDB key. No paid account or plan is created.
+- Added bounded memory-only artwork loading, cancellable rating work, offline catalog/rating fixtures, artwork URL checks and pinned test-only JSON runtime validation in CI. See media and validation docs for device checks and live-API limits.
+
 ## 0.10.5 — October 19, 2026
 
 - Doubled Felt tap’s measured RMS audio level (+6 dB) relative to 0.10.4 at the owner’s request. Offline soft limiting keeps peaks below full scale; no runtime processing, asset-duration or device-volume changes. Perceived loudness and the slightly denser tap still need soundbar verification.

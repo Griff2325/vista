@@ -27,6 +27,12 @@ jobs:
           python3 -X pycache_prefix=build/pycache -m py_compile bridge/pack-arm.py scripts/measure.py scripts/configure-screensaver.py scripts/coding-usage.py scripts/install-usage-sync.py
       - name: Test lighting, weather, widgets, media links and policies
         run: bash scripts/test-sky.sh
+      - name: Test catalog and rating fixtures
+        run: |
+          mkdir -p build/test-runtime
+          curl --fail --location --retry 2 https://repo.maven.apache.org/maven2/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar -o build/test-runtime/android-json.jar
+          echo 'dfb7bae2f404cfe0b72b4d23944698cb716b7665171812a0a4d0f5926c0fac79  build/test-runtime/android-json.jar' | sha256sum --check
+          JSON_JAR="$PWD/build/test-runtime/android-json.jar" ANDROID_JAR="$ANDROID_HOME/platforms/android-34/android.jar" bash scripts/test-streaming-catalog.sh
       - name: Build and verify development APK
         run: bash scripts/build-app.sh
       - name: Build local picture bridge

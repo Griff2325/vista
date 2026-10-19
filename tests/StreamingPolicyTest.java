@@ -16,6 +16,18 @@ public final class StreamingPolicyTest {
     check(!StreamingPolicy.credentialValid("short"),"Truncated credentials rejected");
     check(StreamingPolicy.safeWatchUrl("https://www.themoviedb.org/movie/123/watch?locale=US")!=null,"Provider attribution link allowed");
     for(String bad:new String[]{"http://www.themoviedb.org/movie/1","https://www.themoviedb.org.evil.test/","intent://app","https://evil.test/","https://x@www.themoviedb.org/","https://www.themoviedb.org:444/"})check(StreamingPolicy.safeWatchUrl(bad)==null,"Unsafe link rejected: "+bad);
+    check(StreamingPolicy.keepResult(true,false,false),"Search retains titles outside selected services");
+    check(StreamingPolicy.keepResult(false,true,false),"All services retains unlisted providers");
+    check(!StreamingPolicy.keepResult(false,false,false),"Service discovery uses selected offers");
+    check(StreamingPolicy.keepResult(false,false,true),"Selected offers retained");
+    check(StreamingPolicy.imdbIdValid("tt1234567"),"IMDb IDs accepted");
+    check(!StreamingPolicy.imdbIdValid("title"),"No ambiguous title lookup");
+    check(StreamingPolicy.omdbKeyValid("abc12345"),"Free key accepted");
+    check(!StreamingPolicy.omdbKeyValid("abc&apikey=bad"),"Key rejects URL injection");
+    for(String rating:new String[]{"0.0","8.2","10.0"})check(StreamingPolicy.imdbRatingValid(rating),"IMDb valid: "+rating);
+    for(String rating:new String[]{"N/A","NaN","-1","11.0","8.2/10","9.99"})check(!StreamingPolicy.imdbRatingValid(rating),"IMDb invalid: "+rating);
+    for(String rating:new String[]{"0%","95%","100%"})check(StreamingPolicy.rottenRatingValid(rating),"RT valid: "+rating);
+    for(String rating:new String[]{"N/A","101%","-2%","95","95.5%"})check(!StreamingPolicy.rottenRatingValid(rating),"RT invalid: "+rating);
     System.out.println("Streaming request policy checks passed");
   }
 }
