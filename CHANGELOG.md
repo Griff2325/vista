@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.9.5 — October 18, 2026
+
+- Added Prime Video with its installed app artwork to the scrolling Home tile grid. Updated D-pad focus, app selection and touch mapping for the additional tile; Settings and Watching now share the final row.
+
 ## 0.9.4 — October 18, 2026
 
 - The Home Hulu tile launches the installed Hulu Lab client while retaining the Hulu label and artwork. The original Hulu app remains installed.

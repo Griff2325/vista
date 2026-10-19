@@ -12,7 +12,7 @@ Vista explores two practical problems: making a custom television interface feel
 
 ## What it does
 
-- A scrollable remote-navigable Home grid: YouTube, Netflix, Hulu, Disney+, Spotify, Apple TV, Explore, Spotify vibes, All apps, Inputs, Ambient, Settings and Watching. Installed app banners supply service logos; reading shortcuts stay anchored beneath the grid.
+- A scrollable remote-navigable Home grid: YouTube, Netflix, Hulu, Disney+, Spotify, Apple TV, Prime Video, Explore, Spotify vibes, All apps, Inputs, Ambient, Settings and Watching. Installed app banners supply service logos; reading shortcuts stay anchored beneath the grid.
 - Native pixel-art lake viewed through one open window, with a smooth room surround and bottom utility console. After two minutes idle it expands into a fullscreen scene with a clock, winter countdown and information cards; TV sleep is configured to 60 minutes.
 - Swaying trees, expanding lake ripples, five cloud silhouettes, and sparse weather effects driven by Cincinnati NWS observations. Offline Cincinnati solar lighting handles the day/night cycle.
 - A sparse [world outside the window](docs/world-outside.md): passing birds, a visiting fox and a distant winter snowboarder. Sightings follow daylight and calm Cincinnati weather, with a settings toggle.

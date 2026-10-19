@@ -162,3 +162,9 @@ The bridge does not restart after full TV reboot. Local ADB bootstrap from an or
 
 - Public and private Android builds passed; the update installed in place using the existing TV installation identity. On the actual TV, selected the visible Hulu tile with D-pad input, inspected its unchanged label/artwork, activated it and verified the foreground package was Hulu Lab.
 - This changes the Home favorite's package target only. Original Hulu remains installed; Explore/catalog links and phone companion app controls retain their existing behavior. No root, app-account migration or full reboot was needed. This is an ADB-driven tile activation check, not new physical-remote or performance validation.
+
+## Prime Video Home tile — 0.9.5
+
+- Added the installed Prime Video TV client to the favorite app list and grid. App/logo arrays follow the favorite count; stable tile IDs keep the existing reading, coding and weather controls intact. The now-even grid uses two normal tiles in the final row.
+- Updated and passed HomeNavigationTest for Prime/Hulu favorite mapping, the complete D-pad route/reachability, final-row focus return, scroll reveal and separate Settings/Watching touch targets. Public/private Android builds passed and the private update installed in place.
+- On the TV, inspected Prime's installed banner in the selected tile, scrolled to the final control row, returned to Prime and activated it. Android foreground state and a real capture confirmed Prime Video's landing screen. Returned to Vista with the tile visible. This checks ADB-driven navigation, rendering and launch; Prime video playback, physical remote behavior and full reboot were not retested.

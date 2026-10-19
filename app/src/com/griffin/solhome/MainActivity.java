@@ -34,14 +34,14 @@ public class MainActivity extends Activity {
   private JSONObject weather;
   private final Runnable widgetChanged=()->{weather=WidgetRepository.get(this).weather();if(home!=null)home.invalidate();};
   private final ArrayList<JSONObject> watching=new ArrayList<>();
-  private final String[] favorites={"com.amazon.firetv.youtube","com.netflix.ninja","com.griffin.hululab","com.disney.disneyplus","com.spotify.tv.android","com.apple.atve.amazon.appletv"};
-  private final String[] names={"YouTube","Netflix","Hulu","Disney+","Spotify","Apple TV"};
+  private final String[] favorites={"com.amazon.firetv.youtube","com.netflix.ninja","com.griffin.hululab","com.disney.disneyplus","com.spotify.tv.android","com.apple.atve.amazon.appletv","com.amazon.firebat"};
+  private final String[] names={"YouTube","Netflix","Hulu","Disney+","Spotify","Apple TV","Prime Video"};
   private final Runnable minuteTick=new Runnable(){public void run(){if(foreground){home.invalidate();loadWeather();handler.postDelayed(this,60000);}}};
   @Override public void onCreate(Bundle state){
     super.onCreate(state);getWindow().getDecorView().setSystemUiVisibility(5894);
     home=new HomeView();scene=new PixelSceneView(this);FrameLayout root=new FrameLayout(this);root.setBackgroundColor(0xff17242a);root.addView(scene);root.addView(home);widgets=new AmbientWidgetsView(this);widgets.setAlpha(0);root.addView(widgets);setContentView(root);home.requestFocus();
     new Thread(()->{
-      Bitmap[] logos=new Bitmap[6];for(int n=0;n<6;n++){try{PackageManager pm=getPackageManager();Intent intent=pm.getLeanbackLaunchIntentForPackage(favorites[n]);Drawable d=intent!=null?pm.getActivityBanner(intent.getComponent()):null;if(d==null)d=pm.getApplicationBanner(favorites[n]);if(d==null)d=pm.getApplicationIcon(favorites[n]);Bitmap icon=Bitmap.createBitmap(256,144,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(icon);float ratio=Math.min(256f/Math.max(1,d.getIntrinsicWidth()),144f/Math.max(1,d.getIntrinsicHeight()));int w=Math.round(d.getIntrinsicWidth()*ratio),h=Math.round(d.getIntrinsicHeight()*ratio);d.setBounds((256-w)/2,(144-h)/2,(256+w)/2,(144+h)/2);d.draw(c);logos[n]=icon;}catch(Exception ignored){}}
+      Bitmap[] logos=new Bitmap[favorites.length];for(int n=0;n<logos.length;n++){try{PackageManager pm=getPackageManager();Intent intent=pm.getLeanbackLaunchIntentForPackage(favorites[n]);Drawable d=intent!=null?pm.getActivityBanner(intent.getComponent()):null;if(d==null)d=pm.getApplicationBanner(favorites[n]);if(d==null)d=pm.getApplicationIcon(favorites[n]);Bitmap icon=Bitmap.createBitmap(256,144,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(icon);float ratio=Math.min(256f/Math.max(1,d.getIntrinsicWidth()),144f/Math.max(1,d.getIntrinsicHeight()));int w=Math.round(d.getIntrinsicWidth()*ratio),h=Math.round(d.getIntrinsicHeight()*ratio);d.setBounds((256-w)/2,(144-h)/2,(256+w)/2,(144+h)/2);d.draw(c);logos[n]=icon;}catch(Exception ignored){}}
       runOnUiThread(()->{home.logos=logos;home.invalidate();});
     },"sol-logos").start();
   }
@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
   }
   private void loadWeather(){WidgetRepository.get(this).refresh();weather=WidgetRepository.get(this).weather();home.invalidate();}
   class HomeView extends View {
-    Bitmap[] logos=new Bitmap[6];int selected=0,lastApp=0,lastGrid=0,gridScroll=0;
+    Bitmap[] logos=new Bitmap[favorites.length];int selected=0,lastApp=0,lastGrid=0,gridScroll=0;
     final android.widget.OverScroller gridScroller=new android.widget.OverScroller(MainActivity.this);
     final Paint paint=new Paint(3);final int white=Color.rgb(242,240,231),muted=Color.rgb(168,174,173),gold=Color.rgb(207,182,132);
     final String[] controls={"All apps","Inputs","Ambient","Settings","Watching"};
@@ -184,13 +184,13 @@ public class MainActivity extends Activity {
       String themeLabel=scene.themeLabel();paint.setTextSize(16);int count=paint.breakText(themeLabel,true,438,null);text(c,count<themeLabel.length()?themeLabel.substring(0,Math.max(0,count-1))+"…":themeLabel,108,274,16,0xffb7c9ab,false);
       c.save();c.clipRect(88,280,552,884);
       for(int i=0;i<HomeNavigation.GRID.length;i++){
-        int item=HomeNavigation.GRID[i];String label=item<6?names[item]:item==11?"Explore":item==12?"Spotify vibes":controls[item-6]+(item==10&&!watching.isEmpty()?" · "+watching.size():"");
-        float x=108+(i%2)*233,y=286+(i/2)*150-gridScroll,width=i==12?433:200;
+        int item=HomeNavigation.GRID[i],favorite=HomeNavigation.favoriteIndex(item);String label=favorite>=0?names[favorite]:item==11?"Explore":item==12?"Spotify vibes":controls[item-6]+(item==10&&!watching.isEmpty()?" · "+watching.size():"");
+        float x=108+(i%2)*233,y=286+(i/2)*150-gridScroll,width=200;
         if(y+143<280||y>884)continue;
         boolean focus=selected==item;RectF tile=new RectF(x,y,x+width,y+113);
         paint.setColor(focus?0xffcfb684:0xff3c4c4b);c.drawRoundRect(new RectF(x-3,y-3,x+width+3,y+116),8,8,paint);
         paint.setColor(0xff192322);c.drawRoundRect(tile,6,6,paint);
-        Bitmap logo=item<6?logos[item]:null;
+        Bitmap logo=favorite>=0?logos[favorite]:null;
         if(item==11){
           paint.setColor(0xff405f54);c.drawRoundRect(new RectF(x+55,y+35,x+127,y+85),8,8,paint);
           paint.setColor(0xffb9d4a7);c.drawRoundRect(new RectF(x+73,y+23,x+145,y+73),8,8,paint);
@@ -218,7 +218,8 @@ public class MainActivity extends Activity {
       c.restore();
     }
     void activate(){
-      if(selected<6){lastApp=selected;openApp(favorites[selected]);}
+      int favorite=HomeNavigation.favoriteIndex(selected);
+      if(favorite>=0){lastApp=selected;openApp(favorites[favorite]);}
       else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;case 15:case 16:CodingUsageView.show(MainActivity.this);break;case 17:forecast();break;}
     }
     void forecast(){new AlertDialog.Builder(MainActivity.this).setTitle("Cincinnati forecast").setMessage(weather==null?"Forecast unavailable":weather.optString("detail")+"\n\nNational Weather Service · Cincinnati city center").setPositiveButton("Close",null).show();}
@@ -242,7 +243,7 @@ public class MainActivity extends Activity {
         default:return super.onKeyDown(key,e);
       }
       selected=HomeNavigation.move(selected,direction,lastGrid);
-      if(HomeNavigation.position(selected)>=0)lastGrid=selected;if(selected<6)lastApp=selected;
+      if(HomeNavigation.position(selected)>=0)lastGrid=selected;if(HomeNavigation.favoriteIndex(selected)>=0)lastApp=selected;
       revealSelection(true);invalidate();return true;
     }
     float dragStart;int dragScroll;boolean dragArea,dragged;
@@ -251,7 +252,7 @@ public class MainActivity extends Activity {
       if(e.getAction()==android.view.MotionEvent.ACTION_DOWN){dragArea=x>=88&&x<570&&y>=280&&y<884;dragStart=y;dragScroll=gridScroll;dragged=false;return true;}
       if(e.getAction()==android.view.MotionEvent.ACTION_MOVE&&dragArea&&Math.abs(y-dragStart)>18){dragged=true;gridScroller.forceFinished(true);gridScroll=Math.max(0,Math.min(HomeNavigation.MAX_SCROLL,dragScroll+Math.round(dragStart-y)));invalidate();return true;}
       if(e.getAction()!=android.view.MotionEvent.ACTION_UP)return true;
-      if(dragged){int row=Math.round(gridScroll/150f);selected=HomeNavigation.GRID[Math.min(12,row*2)];lastGrid=selected;return true;}
+      if(dragged){int row=Math.round(gridScroll/150f);selected=HomeNavigation.GRID[Math.min(HomeNavigation.GRID.length-1,row*2)];lastGrid=selected;return true;}
       int item=HomeNavigation.hit(x,y,gridScroll);
       if(item>=0){selected=item;lastGrid=item;activate();}
       else if(y>=896&&y<934&&x>=100&&x<573){selected=x<328?13:14;activate();}
