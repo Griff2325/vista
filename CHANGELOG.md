@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## Device configuration — October 19, 2026
+
+- Disabled the development TV's window, transition and property-animator scales for the stock picture/settings menu, with a private rollback snapshot. Documented the reversible device-wide configuration; readback verified, physical remote responsiveness pending.
+
 ## 0.9.5 — October 18, 2026
 
 - Added Prime Video with its installed app artwork to the scrolling Home tile grid. Updated D-pad focus, app selection and touch mapping for the additional tile; Settings and Watching now share the final row.
