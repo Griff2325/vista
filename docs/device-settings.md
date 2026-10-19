@@ -42,7 +42,7 @@ Each mutation had a private recovery record written first and an automatic resto
 
 ### Vista quick settings panel
 
-**Current default (0.10.2):** a single Settings/Picture press opens the original Panasonic quick menu. A held Settings/Picture press does the same; Home and held Home retain their existing behavior. The optional custom controls below are retained, with their shell helper stopped on the development TV. Earlier interception tests are recorded here for context.
+**Current default (0.10.2):** a single Settings/Picture press opens the original Panasonic quick menu. A held Settings/Picture press does the same; Home and held Home retain their existing behavior. The owner confirmed that the restored single press opens Panasonic’s menu. The optional custom controls below are retained, with their shell helper stopped on the development TV. Earlier interception tests are recorded here for context.
 
 Vista 0.10.0 adds a focusable `TYPE_APPLICATION_OVERLAY` window instead of launching an Activity over the player. Its window animation is zero and its controls have no state-list animation. A foreground service exists only while the panel is open; it closes on Back, a repeated single Settings/Picture press, screen-off or 45 seconds without panel interaction. Home dismisses it when returning to Vista. Holding Home explicitly dismisses the overlay and opens full native settings.
 
