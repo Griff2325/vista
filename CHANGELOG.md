@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.10.5 — October 19, 2026
+
+- Doubled Felt tap’s measured RMS audio level (+6 dB) relative to 0.10.4 at the owner’s request. Offline soft limiting keeps peaks below full scale; no runtime processing, asset-duration or device-volume changes. Perceived loudness and the slightly denser tap still need soundbar verification.
+
 ## 0.10.4 — October 19, 2026
 
 - Raised the selected Felt tap by approximately another 4 dB at the owner’s request, using 5× asset gain and full SoundPool gain. PCM remains below clipping; device volume and navigation timing are unchanged.

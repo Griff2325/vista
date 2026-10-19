@@ -42,6 +42,26 @@ def render(kind):
     assert abs(sum(pcm) / count / 32767) < .005
     return pcm
 
+def double_level(pcm):
+    samples = [value / 32767 for value in pcm]
+    rms = lambda values: math.sqrt(sum(value * value for value in values) / len(values))
+    target = 2 * rms(samples)
+    low, high = 0., 32.
+    limited = lambda drive: [.98 * math.tanh(drive * value / .98) for value in samples]
+    assert rms(limited(high)) > target
+    # Match twice the previous RMS while soft-limiting peaks below full scale.
+    for _ in range(44):
+        drive = (low + high) / 2
+        if rms(limited(drive)) < target:
+            low = drive
+        else:
+            high = drive
+    result = [round(value * 32767) for value in limited(high)]
+    assert abs(rms(result) / rms(pcm) - 2) < .001
+    assert result[0] == result[-1] == 0 and max(abs(value) for value in result) < 32767
+    return result
+
+
 def write(path, pcm):
     with wave.open(str(path), 'wb') as audio:
         audio.setparams((1, 2, RATE, 0, 'NONE', 'not compressed'))
@@ -57,7 +77,7 @@ def main():
         pcm = render(kind)
         write(OUT / (kind + '.wav'), pcm)
         if kind == 'felt-tap':
-            deployed = [round(value * 5) for value in pcm]
+            deployed = double_level([round(value * 5) for value in pcm])
             assert max(abs(value) for value in deployed) < 32767
             asset = ROOT / 'app/assets/audio/focus.wav'
             asset.parent.mkdir(parents=True, exist_ok=True)
