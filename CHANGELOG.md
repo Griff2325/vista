@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.10.4 — October 19, 2026
+
+- Raised the selected Felt tap by approximately another 4 dB at the owner’s request, using 5× asset gain and full SoundPool gain. PCM remains below clipping; device volume and navigation timing are unchanged.
+
 ## 0.10.3 — October 19, 2026
 
 - Added four original navigation-sound auditions. The owner selected Felt tap for Home focus changes; it uses one short native SoundPool voice, is silent at focus boundaries, limits repeated taps to 100 ms and releases audio resources while Home is paused. Initial sonification playback was inaudible on the development TV, so media output and +8 dB asset gain made it audible. The owner then requested a louder tap; the final asset uses +12 dB gain without changing device volume. Listening confirmation of that final level remains pending.

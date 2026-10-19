@@ -57,7 +57,7 @@ def main():
         pcm = render(kind)
         write(OUT / (kind + '.wav'), pcm)
         if kind == 'felt-tap':
-            deployed = [round(value * 4) for value in pcm]
+            deployed = [round(value * 5) for value in pcm]
             assert max(abs(value) for value in deployed) < 32767
             asset = ROOT / 'app/assets/audio/focus.wav'
             asset.parent.mkdir(parents=True, exist_ok=True)

@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
   private void menuMoved(int before,int after){
     long now=SystemClock.uptimeMillis();
     if(foreground&&!ambient&&menuSoundReady&&menuSound!=null&&HomeNavigation.sound(before,after,now,lastMenuSound)){
-      int stream=menuSound.play(menuSample,.8f,.8f,1,0,1);if(lastMenuSound<0)android.util.Log.i("VistaAudio","First focus sound stream="+stream);if(stream!=0)lastMenuSound=now;
+      int stream=menuSound.play(menuSample,1f,1f,1,0,1);if(lastMenuSound<0)android.util.Log.i("VistaAudio","First focus sound stream="+stream);if(stream!=0)lastMenuSound=now;
     }
   }
   private void releaseMenuSound(){menuSoundReady=false;if(menuSound!=null){menuSound.setOnLoadCompleteListener(null);menuSound.release();menuSound=null;}}
