@@ -5,7 +5,7 @@ Repository established October 17, 2026. Earlier development stages below are su
 ## 0.10.1 — October 19, 2026
 
 - Replaced the failed double-press shortcut with held Settings/Picture: a short press opens Vista, while a hold of at least 800 ms opens the original Panasonic quick menu on release. Held Home keeps full native settings.
-- Replaced unreliable Java input injection with a native Settings down/up packet through the existing virtual remote. A child closes Vista’s overlay and waits for teardown while the main bridge continues forwarding keys. Command launches retain Android’s environment. Added assembled-code checks for environment forwarding, hold boundaries, unmatched releases and the actual uinput packet. An on-device temporary virtual-remote test opened the original Panasonic menu and dismissed Vista; physical hold confirmation is pending.
+- Replaced unreliable Java input injection with a native Settings down/up packet through the existing virtual remote. A child closes Vista’s overlay and waits for teardown while the main bridge continues forwarding keys. Command launches retain Android’s environment. Added assembled-code checks for environment forwarding, hold boundaries, unmatched releases and the actual uinput packet. An on-device temporary virtual-remote test opened the original Panasonic menu and dismissed Vista; the owner subsequently confirmed the physical held-Settings shortcut works.
 - The owner-authorized authenticated, read-only local Panasonic API test could not connect; no listener was present on its configured port. No service was enabled, settings changed or authentication data published.
 
 ## 0.10.0 — October 19, 2026
