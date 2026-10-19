@@ -313,7 +313,7 @@ def collect(config, state):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['collect', 'claude-status', 'configure'])
+    parser.add_argument('command', choices=['collect', 'claude-status', 'claude-mod', 'configure'])
     parser.add_argument('--state-dir', type=Path, default=DEFAULT_STATE)
     parser.add_argument('--adb')
     parser.add_argument('--serial')
@@ -327,17 +327,22 @@ def main():
             parser.error('Provide Codex, ADB and the already authorized TV serial')
         save(state / 'config.json', config)
         print('Private collector configuration saved.')
-    elif args.command == 'claude-status':
+    elif args.command in ('claude-status', 'claude-mod'):
         try:
             raw = sys.stdin.buffer.read(1048577)
             if len(raw) > 1048576:
                 raise ValueError()
             result = claude_windows(json.loads(raw), int(time.time() * 1000))
+            if args.command == 'claude-mod' and (result is None or not result['windows']):
+                return 1
             if result is not None:
                 save(state / 'claude.json', result)
             # No prompt, transcript, path, account ID, model name or token counts are retained.
-            print('Claude Code · Vista usage sync')
+            if args.command == 'claude-status':
+                print('Claude Code · Vista usage sync')
         except (ValueError, TypeError, OSError):
+            if args.command == 'claude-mod':
+                return 1
             print('Claude Code')
     else:
         snapshot, published = collect(load(state / 'config.json'), state)

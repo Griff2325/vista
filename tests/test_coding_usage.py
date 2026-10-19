@@ -5,6 +5,8 @@ import json
 import tempfile
 from unittest.mock import patch
 import subprocess
+import io
+import sys
 spec = importlib.util.spec_from_file_location('usage', Path(__file__).parents[1] / 'scripts/coding-usage.py')
 usage = importlib.util.module_from_spec(spec);spec.loader.exec_module(usage)
 class UsageTests(unittest.TestCase):
@@ -60,6 +62,57 @@ class UsageTests(unittest.TestCase):
         for value in [12, {}, 'invalid']:
             self.assertEqual(usage.clean_saved({'at':self.now,'windows':value},self.now)['windows'],[])
         self.assertEqual(usage.clean_saved({'at':self.now,'windows':[{'resetAt':'invalid'}]},self.now)['windows'],[])
+    def test_plugin_stdin_reuses_private_atomic_status_capture(self):
+        raw={'rate_limits':{'five_hour':{'used_percentage':0,'resets_at':self.now//1000+3600,'secret':'never-forward'}},'prompt':'never-forward','tokens':123,'session_id':'never-forward'}
+        with tempfile.TemporaryDirectory() as directory:
+            state=Path(directory)
+            with patch.object(sys,'argv',['coding-usage.py','claude-status','--state-dir',directory]), patch.object(sys,'stdin',io.TextIOWrapper(io.BytesIO(json.dumps(raw).encode()))), patch.object(sys,'stdout',io.StringIO()), patch.object(usage.time,'time',return_value=self.now/1000):
+                self.assertEqual(usage.main(),0)
+            saved=usage.load(state/'claude.json')
+            self.assertEqual(saved,{'at':self.now,'status':'ok','windows':[{'usedPercent':0.0,'durationMins':300,'resetAt':self.now+3600000}]})
+            self.assertEqual((state/'claude.json').stat().st_mode & 0o777,0o600)
+            self.assertNotIn('never-forward',(state/'claude.json').read_text())
+    def test_mod_failure_does_not_replace_or_freshen_previous_observation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state=Path(directory);saved={'at':self.now-600000,'status':'ok','windows':[]};usage.save(state/'claude.json',saved)
+            for raw in [b'invalid json',b'{}',b'{"rate_limits":{}}',b'{"rate_limits":{"five_hour":{"used_percentage":101}}}']:
+                output=io.StringIO()
+                with patch.object(sys,'argv',['coding-usage.py','claude-mod','--state-dir',directory]), patch.object(sys,'stdin',io.TextIOWrapper(io.BytesIO(raw))), patch.object(sys,'stdout',output), patch.object(usage.time,'time',return_value=self.now/1000):
+                    self.assertEqual(usage.main(),1)
+                self.assertEqual(output.getvalue(),'')
+                self.assertEqual(usage.load(state/'claude.json'),saved)
+    def test_mod_reports_atomic_save_failure(self):
+        raw={'rate_limits':{'five_hour':{'used_percentage':10,'resets_at':self.now//1000+3600}}}
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(sys,'argv',['coding-usage.py','claude-mod','--state-dir',directory]), patch.object(sys,'stdin',io.TextIOWrapper(io.BytesIO(json.dumps(raw).encode()))), patch.object(sys,'stdout',io.StringIO()), patch.object(usage.time,'time',return_value=self.now/1000), patch.object(usage,'save',side_effect=OSError()):
+                self.assertEqual(usage.main(),1)
+
+class PluginInstallTests(unittest.TestCase):
+    def setUp(self):
+        spec=importlib.util.spec_from_file_location('installer',Path(__file__).parents[1]/'scripts/install-usage-sync.py')
+        self.installer=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.installer)
+    def test_opt_in_plugin_copy_is_private_and_repeatable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home=Path(directory);state=home/'private-state';state.mkdir()
+            with patch.object(self.installer.Path,'home',return_value=home):
+                self.installer.install_claude_plugin(state)
+                self.installer.install_claude_plugin(state)
+            target=home/'.claude/skills/vista-usage'
+            self.assertEqual(json.loads((target/'runtime.json').read_text()),{'python':sys.executable,'collector':str(state/'coding-usage.py'),'stateDir':str(state)})
+            self.assertEqual((target/'runtime.json').stat().st_mode & 0o777,0o600)
+            self.assertEqual((state/'coding-usage.py').stat().st_mode & 0o777,0o700)
+            self.assertEqual((state/'coding-usage.py').read_bytes(),(Path(__file__).parents[1]/'scripts/coding-usage.py').read_bytes())
+            self.assertTrue((target/'hooks/register.js').is_file())
+            self.assertFalse((target/'tests').exists())
+            self.assertFalse((home/'.claude/settings.json').exists())
+    def test_unrelated_skill_is_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home=Path(directory);target=home/'.claude/skills/vista-usage';target.mkdir(parents=True)
+            sentinel=target/'SKILL.md';sentinel.write_text('existing skill')
+            with patch.object(self.installer.Path,'home',return_value=home), self.assertRaises(ValueError):
+                self.installer.install_claude_plugin(home/'state')
+            self.assertEqual(sentinel.read_text(),'existing skill')
+
 class TokenTests(unittest.TestCase):
     def event(self, at, total, last):
         return {'type':'event_msg','timestamp':at,'payload':{'type':'token_count','info':{'total_token_usage':{'total_tokens':total},'last_token_usage':{'total_tokens':last}}}}

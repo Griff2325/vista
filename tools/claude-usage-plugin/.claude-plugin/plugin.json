@@ -1,0 +1,6 @@
+{
+  "name": "vista-usage",
+  "version": "0.1.1",
+  "author": {"name": "Vista contributors"},
+  "description": "Save allowlisted Claude quota observations for Vista without reading conversations or credentials."
+}

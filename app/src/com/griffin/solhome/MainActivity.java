@@ -22,6 +22,10 @@ import java.text.SimpleDateFormat;
 
 public class MainActivity extends Activity {
   private HomeView home;
+  private android.media.SoundPool menuSound;
+  private int menuSample;
+  private boolean menuSoundReady;
+  private long lastMenuSound=-100;
   private PixelSceneView scene;
   private AmbientWidgetsView widgets;
   private ValueAnimator immersionAnimator;
@@ -38,17 +42,30 @@ public class MainActivity extends Activity {
   private final String[] names={"YouTube","Netflix","Hulu","Disney+","Spotify","Apple TV","Prime Video"};
   private final Runnable minuteTick=new Runnable(){public void run(){if(foreground){home.invalidate();loadWeather();handler.postDelayed(this,60000);}}};
   @Override public void onCreate(Bundle state){
-    super.onCreate(state);getWindow().getDecorView().setSystemUiVisibility(5894);
+    super.onCreate(state);getWindow().getDecorView().setSystemUiVisibility(5894);loadMenuSound();
     home=new HomeView();scene=new PixelSceneView(this);FrameLayout root=new FrameLayout(this);root.setBackgroundColor(0xff17242a);root.addView(scene);root.addView(home);widgets=new AmbientWidgetsView(this);widgets.setAlpha(0);root.addView(widgets);setContentView(root);home.requestFocus();
     new Thread(()->{
       Bitmap[] logos=new Bitmap[favorites.length];for(int n=0;n<logos.length;n++){try{PackageManager pm=getPackageManager();Intent intent=pm.getLeanbackLaunchIntentForPackage(favorites[n]);Drawable d=intent!=null?pm.getActivityBanner(intent.getComponent()):null;if(d==null)d=pm.getApplicationBanner(favorites[n]);if(d==null)d=pm.getApplicationIcon(favorites[n]);Bitmap icon=Bitmap.createBitmap(256,144,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(icon);float ratio=Math.min(256f/Math.max(1,d.getIntrinsicWidth()),144f/Math.max(1,d.getIntrinsicHeight()));int w=Math.round(d.getIntrinsicWidth()*ratio),h=Math.round(d.getIntrinsicHeight()*ratio);d.setBounds((256-w)/2,(144-h)/2,(256+w)/2,(144+h)/2);d.draw(c);logos[n]=icon;}catch(Exception ignored){}}
       runOnUiThread(()->{home.logos=logos;home.invalidate();});
     },"sol-logos").start();
   }
+  private void loadMenuSound(){
+    try{menuSound=new android.media.SoundPool.Builder().setMaxStreams(1).setAudioAttributes(new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_MEDIA).setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()).build();
+    menuSound.setOnLoadCompleteListener((pool,id,status)->{if(pool==menuSound&&id==menuSample){menuSoundReady=status==0;android.util.Log.i("VistaAudio","Focus sample load status="+status);}});
+    try(android.content.res.AssetFileDescriptor asset=getAssets().openFd("audio/focus.wav")){menuSample=menuSound.load(asset,1);}catch(IOException unavailable){menuSoundReady=false;}
+    }catch(RuntimeException unavailable){menuSoundReady=false;if(menuSound!=null){menuSound.release();menuSound=null;}}
+  }
+  private void menuMoved(int before,int after){
+    long now=SystemClock.uptimeMillis();
+    if(foreground&&!ambient&&menuSoundReady&&menuSound!=null&&HomeNavigation.sound(before,after,now,lastMenuSound)){
+      int stream=menuSound.play(menuSample,.8f,.8f,1,0,1);if(lastMenuSound<0)android.util.Log.i("VistaAudio","First focus sound stream="+stream);if(stream!=0)lastMenuSound=now;
+    }
+  }
+  private void releaseMenuSound(){menuSoundReady=false;if(menuSound!=null){menuSound.setOnLoadCompleteListener(null);menuSound.release();menuSound=null;}}
   @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);PicturePanelService.dismiss(this);SpotifyPanel.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(intent.getFloatExtra("sol.preview.world_seconds",-1));setAmbient(false,true);armIdle();}
-  @Override protected void onResume(){super.onResume();PicturePanelService.dismiss(this);foreground=true;setAmbient(false,true);home.requestFocus();home.revealSelection(false);handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(getIntent().getFloatExtra("sol.preview.world_seconds",-1));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
-  @Override protected void onPause(){foreground=false;home.stopScroll();handler.removeCallbacks(minuteTick);handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();scene.stop();widgets.stop();WidgetRepository.get(this).unlisten(widgetChanged);super.onPause();}
-  @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);scene.release();super.onDestroy();}
+  @Override protected void onResume(){super.onResume();if(menuSound==null)loadMenuSound();PicturePanelService.dismiss(this);foreground=true;setAmbient(false,true);home.requestFocus();home.revealSelection(false);handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(getIntent().getFloatExtra("sol.preview.world_seconds",-1));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
+  @Override protected void onPause(){foreground=false;releaseMenuSound();home.stopScroll();handler.removeCallbacks(minuteTick);handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();scene.stop();widgets.stop();WidgetRepository.get(this).unlisten(widgetChanged);super.onPause();}
+  @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);scene.release();releaseMenuSound();super.onDestroy();}
   @Override public void onWindowFocusChanged(boolean focus){super.onWindowFocusChanged(focus);if(focus)armIdle();else handler.removeCallbacks(idle);}
   @Override public void onUserInteraction(){super.onUserInteraction();armIdle();}
   private void armIdle(){handler.removeCallbacks(idle);if(foreground&&!ambient){long delay=Math.max(1000,Math.min(IDLE_MS,getIntent().getLongExtra("sol.preview.idle_ms",IDLE_MS)));handler.postDelayed(idle,Math.max(0,delay-TRANSITION_MS));}}
@@ -242,7 +259,7 @@ public class MainActivity extends Activity {
         case KeyEvent.KEYCODE_DPAD_CENTER:case KeyEvent.KEYCODE_ENTER:if(e.getRepeatCount()==0)activate();return true;
         default:return super.onKeyDown(key,e);
       }
-      selected=HomeNavigation.move(selected,direction,lastGrid);
+      int previous=selected;selected=HomeNavigation.move(selected,direction,lastGrid);menuMoved(previous,selected);
       if(HomeNavigation.position(selected)>=0)lastGrid=selected;if(HomeNavigation.favoriteIndex(selected)>=0)lastApp=selected;
       revealSelection(true);invalidate();return true;
     }
@@ -252,7 +269,7 @@ public class MainActivity extends Activity {
       if(e.getAction()==android.view.MotionEvent.ACTION_DOWN){dragArea=x>=88&&x<570&&y>=280&&y<884;dragStart=y;dragScroll=gridScroll;dragged=false;return true;}
       if(e.getAction()==android.view.MotionEvent.ACTION_MOVE&&dragArea&&Math.abs(y-dragStart)>18){dragged=true;gridScroller.forceFinished(true);gridScroll=Math.max(0,Math.min(HomeNavigation.MAX_SCROLL,dragScroll+Math.round(dragStart-y)));invalidate();return true;}
       if(e.getAction()!=android.view.MotionEvent.ACTION_UP)return true;
-      if(dragged){int row=Math.round(gridScroll/150f);selected=HomeNavigation.GRID[Math.min(HomeNavigation.GRID.length-1,row*2)];lastGrid=selected;return true;}
+      if(dragged){int previous=selected,row=Math.round(gridScroll/150f);selected=HomeNavigation.GRID[Math.min(HomeNavigation.GRID.length-1,row*2)];menuMoved(previous,selected);lastGrid=selected;return true;}
       int item=HomeNavigation.hit(x,y,gridScroll);
       if(item>=0){selected=item;lastGrid=item;activate();}
       else if(y>=896&&y<934&&x>=100&&x<573){selected=x<328?13:14;activate();}

@@ -19,7 +19,7 @@ final class CodingUsage {
         Window current(long now){for(Window w:windows)if(w.reset>now)return w;return null;}
         boolean stale(long now){return saved||now-at>FRESH_MS;}
         boolean usable(long now){return at>0&&at<=now+300000&&now-at<=MAX_AGE_MS&&current(now)!=null;}
-        String unavailable(long now){return at==0?"Waiting for sync":windows.isEmpty()?"No limits reported":current(now)==null?"Reset passed · refresh needed":"Update needed";}
+        String unavailable(long now){return at==0?"Waiting for sync":now-at>MAX_AGE_MS?"Quota reading expired":windows.isEmpty()?"No limits reported":current(now)==null?"Reset passed · refresh needed":"Waiting for fresh limits";}
     }
     static final class Tokens {
         final String day;final long count,at;

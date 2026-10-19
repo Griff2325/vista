@@ -9,6 +9,9 @@ public final class CodingUsageTest {
         CodingUsage.Provider p=new CodingUsage.Provider(now,false,Arrays.asList(shorter,week));
         check(p.usable(now)&&!p.stale(now),"fresh reading");check(CodingUsage.percent(shorter).equals("0% used"),"reported zero is valid");
         check(p.stale(now+CodingUsage.FRESH_MS+1),"saved age");check(!p.usable(now+CodingUsage.MAX_AGE_MS+1),"old data hidden");
+        CodingUsage.Window laterWeek=new CodingUsage.Window(22,10080,now+4*86400000L);
+        check(new CodingUsage.Provider(now-CodingUsage.MAX_AGE_MS-1,false,Arrays.asList(laterWeek)).unavailable(now).equals("Quota reading expired"),"expired quota does not imply an app update");
+        check(new CodingUsage.Provider(now+600000,false,Arrays.asList(laterWeek)).unavailable(now).equals("Waiting for fresh limits"),"invalid observation time is not described as an app update");
         check(p.current(now+7200000)==week,"expired short window does not erase weekly window");
         check(p.current(now+2*86400000)==null,"expired window not inferred as zero");
         check(!CodingUsage.empty().usable(now)&&CodingUsage.empty().unavailable(now).equals("Waiting for sync"),"unknown not zero");

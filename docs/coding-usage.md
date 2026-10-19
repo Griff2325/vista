@@ -4,12 +4,13 @@ Home's bottom console shows side-by-side allowance cards for Codex and Claude Co
 
 ## Sources
 
-The optional Mac helper uses two documented local interfaces:
+The optional Mac helper uses documented Codex and Claude interfaces:
 
 - Codex [`account/rateLimits/read`](https://developers.openai.com/codex/app-server), through a short-lived `codex app-server --stdio` process using the existing CLI sign-in. It prefers the main `rateLimitsByLimitId.codex` allowance and falls back to `rateLimits`. Window duration determines whether a reading is labeled 5h, Weekly or another duration; primary/secondary ordering is not treated as a duration guarantee. Additional model-specific buckets are not combined.
-- Claude Code's official [`statusLine` input](https://code.claude.com/docs/en/statusline), using only `rate_limits.five_hour` and `rate_limits.seven_day`. These fields depend on account eligibility and appear after the first API response in a session. Sign in normally and send a normal Claude Code message; the helper never generates an inference request to obtain quota data. Accounts or windows that do not report these fields remain unavailable.
+- Claude Desktop Code sessions can use the optional [quota mod](../tools/claude-usage-plugin/README.md), through the official [`session.usage()` mods API](https://code.claude.com/docs/en/plugins/mods/reference#mods-api-methods). It observes each completed main-session API response, including during long multi-tool turns, and passes only short/weekly quota percentages and reset timestamps to the existing atomic Python collector. No startup, timer or response-free event can freshen a quota reading. Loading an enabled mod in the active Desktop session and receiving a real API response still require runtime verification.
+- Terminal Claude Code's official [`statusLine` input](https://code.claude.com/docs/en/statusline), using only `rate_limits.five_hour` and `rate_limits.seven_day`. These fields depend on account eligibility and appear after the first API response in a session. Sign in normally and send a normal Claude Code message; the helper never generates an inference request to obtain quota data. Accounts or windows that do not report these fields remain unavailable.
 
-These are provider quota observations, separate from token totals, billing estimates or a cross-provider usage budget.
+Daily tokens and quotas have independent sources and observation timestamps. Desktop can keep writing local token-usage logs while the terminal status-line hook never runs. That explains current daily tokens beside an expired quota reading; it does not mean Claude or Vista needs a software update. These are provider quota observations, separate from token totals, billing estimates or a cross-provider usage budget.
 
 ## Recorded tokens
 
@@ -32,6 +33,8 @@ python3 scripts/install-usage-sync.py \
 
 The installer copies the helper into `~/Library/Application Support/VistaUsage`, creates the per-user `com.griffin.vista.usage` LaunchAgent with a five-minute interval, and adds a Claude Code status-line command. Other Claude settings are preserved. An existing different status line is left untouched and causes installation to stop; chain the collector explicitly if you already use one. Its previous value is backed up in the private helper directory. Restart an existing Claude session if it does not reload the setting.
 
+For Desktop Code, add `--claude-desktop` to the installer command. The opt-in mod is copied into `~/.claude/skills/vista-usage` with private local runtime paths. It preserves the terminal hook and publisher. Reload plugins or start a new local Desktop Code session, then run `/vista-usage-check` to verify the mod and helper without inference or quota writes. A normal subsequent API response provides the first reading. The private `claude-plugin-health.json` stores only the latest bounded diagnostic stage, booleans, counters and an allowlisted error class; no conversation text, identifiers or credentials are logged. See the mod README for supported versions and loading checks.
+
 For one manual refresh:
 
 ```sh
@@ -49,7 +52,7 @@ ADB sends a base64-encoded, credential-free snapshot through Android's `content 
 
 The provider bounds decoded input to 16 KiB, validates numeric values and timestamps, and reserializes only the known provider/window fields into a private preferences cache on its Binder thread. It then notifies the visible native UI. The screensaver's existing 15-second widget tick updates freshness labels; no additional animation or polling loop is introduced.
 
-An unsuccessful refresh retains the previous source timestamp and marks Codex's fallback as saved. The TV labels readings older than 15 minutes as saved, hides individual reset-passed windows, and hides all numbers after 24 hours without a source observation. Unknown data is shown as Waiting for sync or No limits reported, never as zero. A reported 0% remains valid. There can be up to five minutes of collection latency; freshness labels follow the existing UI refresh cadence.
+An unsuccessful refresh retains the previous source timestamp and marks Codex's fallback as saved. The TV labels readings older than 15 minutes as saved, hides individual reset-passed windows, and hides quota percentages after 24 hours without a source observation, labeled **Quota reading expired**. Daily token totals remain independently eligible to display when their own reading is current. Unknown data is shown as Waiting for sync or No limits reported, never as zero. A reported 0% remains valid. There can be up to five minutes of collection latency; freshness labels follow the existing UI refresh cadence.
 
 ## Disable
 
@@ -59,5 +62,7 @@ Stop only this helper:
 launchctl bootout "gui/$(id -u)/com.griffin.vista.usage"
 rm "$HOME/Library/LaunchAgents/com.griffin.vista.usage.plist"
 ```
+
+If installed, remove `~/.claude/skills/vista-usage` and reload/use a new session to disable the Desktop mod.
 
 Remove Vista's `statusLine` entry from `~/.claude/settings.json`, or restore the value recorded in `~/Library/Application Support/VistaUsage/original-statusline.json`. Preserve any settings added since installation. The private helper directory can then be removed. The TV's last reading ages out automatically; no provider credentials need removal from the TV because none were sent.

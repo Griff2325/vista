@@ -2,6 +2,12 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.10.3 — October 19, 2026
+
+- Added four original navigation-sound auditions. The owner selected Felt tap for Home focus changes; it uses one short native SoundPool voice, is silent at focus boundaries, limits repeated taps to 100 ms and releases audio resources while Home is paused. Initial sonification playback was inaudible on the development TV, so media output and +8 dB asset gain made it audible. The owner then requested a louder tap; the final asset uses +12 dB gain without changing device volume. Listening confirmation of that final level remains pending.
+- Replaced the ambiguous “Update needed” quota message with “Quota reading expired” across Home and screensaver. Daily token totals remain independent of quota freshness.
+- Added an opt-in Claude Desktop quota mod through the official session usage API, capturing individual completed API responses during long tool loops. It forwards only validated quota/reset fields to the existing private collector and retains no conversation/credential data. Native plugin tests, parser/installer tests and a no-inference diagnostic cover the path; live Desktop loading and fresh quota delivery remain pending.
+
 ## 0.10.2 — October 19, 2026
 
 - Restored the original Panasonic quick menu on a single Settings/Picture press at the owner’s request. Held Settings follows the same native path; Vista Home and held-Home settings behavior remain intact. Assembled-code tests now verify the native packet for short and held presses.
