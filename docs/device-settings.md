@@ -18,6 +18,8 @@ The installed panel defines a separate view-tween entrance with a 500 ms positio
 
 Opening the legacy native `PictureSettings` activity directly was also rejected: the ADB shell lacks `com.amazon.tv.permission.LAUNCHER_SETTINGS`. No picture values or core packages were changed. Removing the remaining slide requires a privileged system modification or a replacement panel with working access to the TV's picture controls; neither is implemented here.
 
+A separate read-only app probe confirmed that copying the UI does not supply the control permission: the app requested `com.fireos.sdk.ftve.USE_SDK`, but the permission remained denied and binding the hardware-settings service failed. A shell service-access check was also denied for the same permission. See the [DumbTV compatibility review](dumbtv-review.md) for the tested boundary and additional Home-fallback ideas.
+
 ## YouTube voice search
 
 With YouTube open, hold the remote's Alexa button, speak a search such as “search for snowboarding videos on YouTube,” then release. The owner confirmed successful voice search on the installed client with the existing Home bridge active. No YouTube modification or new microphone service was needed.
