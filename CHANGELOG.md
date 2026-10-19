@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.9.4 — October 18, 2026
+
+- The Home Hulu tile launches the installed Hulu Lab client while retaining the Hulu label and artwork. The original Hulu app remains installed.
+
 ## Development — October 18, 2026
 
 - Separate private Hulu Lab experiment, with version-pinned on-demand ad-entry patch generation, a self-contained loopback player loader, redacted native diagnostics and boundary/state-transition tests. Authenticated on-demand testing exercised seven skip entries across startup and a seek across the first marked mid-episode break, with continuing episode playback. Full-episode/catalog coverage remains unverified. No Vista runtime change or proprietary app artifact is included.

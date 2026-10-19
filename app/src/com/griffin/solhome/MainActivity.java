@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
   private JSONObject weather;
   private final Runnable widgetChanged=()->{weather=WidgetRepository.get(this).weather();if(home!=null)home.invalidate();};
   private final ArrayList<JSONObject> watching=new ArrayList<>();
-  private final String[] favorites={"com.amazon.firetv.youtube","com.netflix.ninja","com.hulu.plus","com.disney.disneyplus","com.spotify.tv.android","com.apple.atve.amazon.appletv"};
+  private final String[] favorites={"com.amazon.firetv.youtube","com.netflix.ninja","com.griffin.hululab","com.disney.disneyplus","com.spotify.tv.android","com.apple.atve.amazon.appletv"};
   private final String[] names={"YouTube","Netflix","Hulu","Disney+","Spotify","Apple TV"};
   private final Runnable minuteTick=new Runnable(){public void run(){if(foreground){home.invalidate();loadWeather();handler.postDelayed(this,60000);}}};
   @Override public void onCreate(Bundle state){
