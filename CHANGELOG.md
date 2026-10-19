@@ -4,7 +4,8 @@ Repository established October 17, 2026. Earlier development stages below are su
 
 ## Device configuration — October 19, 2026
 
-- Disabled the development TV's window, transition and property-animator scales for the stock picture/settings menu, with a private rollback snapshot. Documented the reversible device-wide configuration; readback verified, physical remote responsiveness pending.
+- Disabled the development TV's window, transition and property-animator scales, with a private rollback snapshot and verified live scales. Owner testing confirmed the stock picture panel's separate entrance still animates. Timing-only overlay installation and direct legacy picture-screen access were rejected by Fire OS; the remaining slide is unresolved.
+- Owner verified native Alexa-button YouTube voice search with the existing Home bridge. No new voice service, app patch or remote remapping was necessary.
 
 ## 0.9.5 — October 18, 2026
 
