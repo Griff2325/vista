@@ -4,7 +4,9 @@
 
 A native Android TV dashboard and experimental direct-Home input bridge, built and tested on a Panasonic Fire TV.
 
-![Vista dashboard: app-logo tiles in a quiet left pane beside an autumn forest window](docs/images/dashboard.png)
+![Vista Home: scrollable app-logo tiles beside an autumn forest window at night](docs/images/gallery/home.png)
+
+[Screenshot gallery: current features, four seasons and holiday previews](docs/gallery.md). The Home image is cropped above the private coding-usage footer.
 
 Vista explores two practical problems: making a custom television interface feel responsive on limited hardware, and getting the physical Home button back to that interface without briefly showing Fire TV Home. The project combines native Android rendering, lifecycle-aware ambient effects, on-device performance measurement, and a small Linux input bridge.
 
@@ -26,6 +28,23 @@ Vista explores two practical problems: making a custom television interface feel
 - Reusable scene textures, approximately 30 fps vsync pacing, and paused-when-hidden animation. No WebView or fullscreen video player.
 - All-apps picker, TV input picker and existing TV Settings. Read-only Android Watch Next integration is present, but no installed app shared progress in the tested setup.
 - Optional local ADB-shell supervisors for direct physical Home interception and the device-specific system screensaver route. Both need bootstrapping after a full TV reboot.
+
+## In pictures
+
+| Explore | Fullscreen ambient preview |
+| --- | --- |
+| ![Explore sidebar, featured artwork and title grid](docs/images/gallery/explore.png) | ![Expanded autumn scene with clock, weather, snow outlook and news/event cards](docs/images/gallery/ambient.png) |
+| Cross-service catalog browsing, search, filters and optional ratings. | Clock, Cincinnati weather, mountain snow outlooks and readable information cards. Private usage footer omitted. |
+
+| Spring preview | Summer preview |
+| --- | --- |
+| ![Spring foliage and flowers](docs/images/gallery/spring.png) | ![Summer green forest](docs/images/gallery/summer.png) |
+
+| Autumn preview | Winter preview |
+| --- | --- |
+| ![Autumn gold and orange foliage](docs/images/gallery/autumn.png) | ![Snow-colored forest with a snowboard on the bank](docs/images/gallery/winter.png) |
+
+These are running-app captures using scene previews, with live weather left unchanged. The [full gallery](docs/gallery.md) also shows Halloween, Thanksgiving, Christmas, New Year, Valentine’s Day, St. Patrick’s Day, Earth Day, July Fourth, personal-event Celebration, Spotify vibes, the iPhone companion and scene controls. Still images do not demonstrate animation or performance.
 
 ## Measured on the TV
 
@@ -90,6 +109,7 @@ The existing `com.griffin.solhome` package, component names, bridge virtual-devi
 
 ## Project notes
 
+- [Current feature, season and holiday screenshot gallery](docs/gallery.md)
 - [Screensaver setup, live data and recovery](docs/screensaver.md)
 - [Explore and Spotify setup](docs/media.md)
 - [Coding usage sync and freshness](docs/coding-usage.md)

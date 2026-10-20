@@ -1,5 +1,7 @@
 # Explore and Spotify
 
+[Screenshots of Explore and Spotify vibes](gallery.md#explore).
+
 ## Explore
 
 The Home Explore tile opens a native, Apple TV-inspired browsing screen: dark sidebar, a featured backdrop, a continuously loading title grid, visible D-pad focus, a local My list and installed-app banners. It keeps Android rendering and does not embed a web player or autoplay video.

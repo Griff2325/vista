@@ -1,5 +1,7 @@
 # Seasons, occasions and annual events
 
+See the [TV screenshot gallery](gallery.md#four-seasons) for all four seasons and each implemented occasion.
+
 Open **Settings → Seasons & occasions** from Home. Automatic selection uses Cincinnati's `America/New_York` date, shared with the system screensaver. No online calendar, account, location permission or new background service is required. The existing Cincinnati events/news feeds remain separate live-data features.
 
 | Scene | Fixed start | Appearance and motion |
