@@ -2,6 +2,13 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.11.1 — October 19, 2026
+
+- Replaced Explore's Previous/Next navigation with automatic, deduplicated loading near the bottom of a native recycled title grid. Mixed movie/TV batches no longer discard half of their candidates. Appends preserve existing titles, cursor retries and focus; sparse filtered results pause after three empty batches rather than scanning the whole catalog in the background.
+- Added a single + Filter menu and removable chips for services, genres, content type, release year and minimum TMDB rating. Explicit filters now affect title search. Added Action and Sci-Fi & fantasy genres while preserving saved preference indices. Search retains source relevance; browsing keeps its sort options.
+- Hid the search bar until the sidebar Search action is used, collapsing it after submission or Close. Rounded artwork, app logos, focus outlines and controls. Artwork requests cancel when cards are recycled; ratings load as cards are bound.
+- Feed/catalog/policy/artwork tests and the existing regression suite pass. Live TV checks reached 160 titles and exercised filtered search using the owner's configured keys. Physical remote feel, source completeness and long-session memory behavior remain device-validation limits.
+
 ## 0.11.0 — October 19, 2026
 
 - Rebuilt Explore as a native, Apple TV-inspired experience with a dark sidebar, featured backdrop, horizontal movie/series shelves, artwork, remote focus outlines, installed-app banners and local saved titles.

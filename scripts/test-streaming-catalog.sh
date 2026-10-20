@@ -8,9 +8,11 @@ mkdir -p "$ROOT/build/catalog-tests"
 "${JAVABIN}javac" -cp "$JSON_JAR" -d "$ROOT/build/catalog-tests" \
   "$ROOT/app/src/com/griffin/solhome/StreamingCatalog.java" \
   "$ROOT/app/src/com/griffin/solhome/StreamingPolicy.java" \
-  "$ROOT/tests/StreamingCatalogTest.java" "$ROOT/tests/StreamingPolicyTest.java"
+  "$ROOT/tests/StreamingCatalogTest.java" "$ROOT/tests/StreamingPolicyTest.java" \
+  "$ROOT/app/src/com/griffin/solhome/StreamingFeed.java" "$ROOT/tests/StreamingFeedTest.java"
 "${JAVABIN}java" -cp "$ROOT/build/catalog-tests:$JSON_JAR" com.griffin.solhome.StreamingPolicyTest
 "${JAVABIN}java" -cp "$ROOT/build/catalog-tests:$JSON_JAR" com.griffin.solhome.StreamingCatalogTest
+"${JAVABIN}java" -cp "$ROOT/build/catalog-tests:$JSON_JAR" com.griffin.solhome.StreamingFeedTest
 
 if [[ -n "${ANDROID_JAR:-}" ]]; then
   "${JAVABIN}javac" -cp "$ANDROID_JAR" -d "$ROOT/build/catalog-tests" \

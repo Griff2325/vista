@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
+import java.util.*;
 
 /** Small memory-only artwork cache; no posters or credentials are stored on disk. */
 final class StreamingArtwork implements AutoCloseable {
@@ -15,14 +16,16 @@ final class StreamingArtwork implements AutoCloseable {
     protected int sizeOf(String key,Bitmap value){return value.getByteCount();}
   };
   private volatile boolean closed;
+  private final Map<ImageView,Future<?>> requests=new WeakHashMap<>();
   static String url(String path,boolean hero){
     return path!=null&&path.matches("/[A-Za-z0-9]+\\.(jpg|png|webp)")?"https://image.tmdb.org/t/p/"+(hero?"w780":"w500")+path:null;
   }
   void show(ImageView view,String path,boolean hero){
-    String url=url(path,hero);view.setTag(url);view.setImageDrawable(null);if(url==null||closed)return;
+    clear(view);String url=url(path,hero);view.setTag(url);if(url==null||closed)return;
     Bitmap hit=cache.get(url);if(hit!=null){view.setImageBitmap(hit);return;}
-    workers.submit(()->{
+    requests.put(view,workers.submit(()->{
       try{
+        if(closed||Thread.currentThread().isInterrupted())return;
         HttpURLConnection connection=(HttpURLConnection)new URL(url).openConnection();
         connection.setConnectTimeout(6000);connection.setReadTimeout(6000);connection.setInstanceFollowRedirects(false);
         Bitmap bitmap;
@@ -36,9 +39,10 @@ final class StreamingArtwork implements AutoCloseable {
           bitmap=BitmapFactory.decodeByteArray(bytes,0,bytes.length,options);
         }finally{connection.disconnect();}
         if(bitmap==null||closed)return;cache.put(url,bitmap);
-        view.post(()->{if(!closed&&url.equals(view.getTag()))view.setImageBitmap(bitmap);});
+        view.post(()->{if(!closed&&url.equals(view.getTag())){view.setImageBitmap(bitmap);requests.remove(view);}});
       }catch(IOException ignored){/* Artwork failure leaves the title and its controls available. */}
-    });
+    }));
   }
-  public void close(){closed=true;workers.shutdownNow();cache.evictAll();}
+  void clear(ImageView view){Future<?> request=requests.remove(view);if(request!=null)request.cancel(true);view.setTag(null);view.setImageDrawable(null);}
+  public void close(){closed=true;workers.shutdownNow();requests.clear();cache.evictAll();}
 }

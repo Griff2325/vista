@@ -12,18 +12,19 @@ final class StreamingCatalog implements AutoCloseable {
   static final String[] SERVICES={"Netflix","Hulu","Disney+","Apple TV+","Prime Video","Max","Peacock","Paramount+","Tubi","Pluto TV"};
   static final String[] PROVIDER_NAMES={"Netflix","Hulu","Disney Plus","Apple TV Plus","Amazon Prime Video","HBO Max","Peacock Premium","Paramount Plus","Tubi TV","Pluto TV"};
   static final String[] PACKAGES={"com.netflix.ninja","com.hulu.plus","com.disney.disneyplus","com.apple.atve.amazon.appletv","com.amazon.firebat","com.hbo.hbonow","com.peacock.peacockfiretv","com.cbs.ott","com.tubitv.ott","tv.pluto.android"};
-  static final String[] INTERESTS={"Comedy","Drama","Animation","Documentary","Crime","Family","Mystery","Adventure"};
+  static final String[] INTERESTS={"Comedy","Drama","Animation","Documentary","Crime","Family","Mystery","Adventure","Action","Sci-Fi & fantasy"};
   private final String token,omdbKey;
   private final ExecutorService providerPool=Executors.newFixedThreadPool(4);
   private final Map<String,JSONObject> availability=Collections.synchronizedMap(new LinkedHashMap<String,JSONObject>(128,.75f,true){protected boolean removeEldestEntry(Map.Entry<String,JSONObject> e){return size()>120;}});
   private JSONArray providerRows;
+  private final Map<String,Integer> pageCounts=Collections.synchronizedMap(new LinkedHashMap<String,Integer>(32,.75f,true){protected boolean removeEldestEntry(Map.Entry<String,Integer> e){return size()>120;}});
   private final Map<String,JSONObject> ratings=Collections.synchronizedMap(new LinkedHashMap<String,JSONObject>(128,.75f,true){protected boolean removeEldestEntry(Map.Entry<String,JSONObject> e){return size()>120;}});
   StreamingCatalog(String token){this(token,"");}
   StreamingCatalog(String token,String omdbKey){this.token=token==null?"":token.trim();this.omdbKey=omdbKey==null?"":omdbKey.trim();}
   static final class Query {
-    String text=""; int type=0,sort=0,page=1; // type: both / movie / TV
+    String text=""; int type=0,sort=0,page=1,year=0,minRating=0; // type: both / movie / TV
     boolean allServices=true;
-    boolean[] services=new boolean[SERVICES.length],interests=new boolean[8];
+    boolean[] services=new boolean[SERVICES.length],interests=new boolean[INTERESTS.length];
     Query(){Arrays.fill(services,true);}
   }
   static final class Page {final ArrayList<JSONObject> items=new ArrayList<>();int totalPages=1;int unavailable;}
@@ -60,26 +61,30 @@ final class StreamingCatalog implements AutoCloseable {
     if(!search&&!q.allServices)providers();
     if(search){
       String type=q.type==0?"multi":q.type==1?"movie":"tv";
-      JSONObject response=get("search/"+type+"?include_adult=false&language=en-US&page="+q.page+"&query="+encode(q.text));
-      page.totalPages=Math.max(1,response.optInt("total_pages",1));append(candidates,response,type.equals("multi")?null:type);
+      String path="search/"+type+"?include_adult=false&language=en-US&query="+encode(q.text);
+      if(q.year>0&&!type.equals("multi"))path+=(type.equals("movie")?"&primary_release_year=":"&first_air_date_year=")+q.year;
+      appendPage(page,candidates,path,type.equals("multi")?null:type,q.page);
     }else{
       for(String type:new String[]{"movie","tv"}){
         if((q.type==1&&!type.equals("movie"))||(q.type==2&&!type.equals("tv")))continue;
         String p=q.allServices?"":selectedProviders(q.services);if(!q.allServices&&p.isEmpty())continue;
-        String path="discover/"+type+"?include_adult=false&language=en-US&watch_region=US&with_watch_monetization_types=flatrate%7Cfree%7Cads"+(q.allServices?"":"&with_watch_providers="+encode(p))+"&page="+q.page+"&sort_by="+StreamingPolicy.sort(type,q.sort)+"&vote_count.gte="+(q.sort==1?100:0);
+        String path="discover/"+type+"?include_adult=false&language=en-US&watch_region=US&with_watch_monetization_types=flatrate%7Cfree%7Cads"+(q.allServices?"":"&with_watch_providers="+encode(p))+"&sort_by="+StreamingPolicy.sort(type,q.sort)+"&vote_count.gte="+(q.sort==1?100:0);
         String genres=StreamingPolicy.genres(q.interests,type);if(!genres.isEmpty())path+="&with_genres="+encode(genres);
         if(q.sort==2){String today=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US).format(new Date());path+=(type.equals("movie")?"&primary_release_date.lte=":"&first_air_date.lte=")+today;}
-        JSONObject response=get(path);page.totalPages=Math.max(page.totalPages,response.optInt("total_pages",1));append(candidates,response,type);
+        if(q.year>0)path+=(type.equals("movie")?"&primary_release_year=":"&first_air_date_year=")+q.year;
+        if(q.minRating>0)path+="&vote_average.gte="+q.minRating;
+        appendPage(page,candidates,path,type,q.page);
       }
       if(q.type==0){final int sort=q.sort;candidates.sort((a,b)->sort==2?date(b).compareTo(date(a)):Double.compare(b.optDouble(sort==1?"vote_average":"popularity"),a.optDouble(sort==1?"vote_average":"popularity")));}
     }
-    // Bound work: one catalog page, at most 20 titles; availability requests run four at a time.
+    // Keep both source pages intact; availability requests run four at a time.
     ArrayList<Future<JSONObject>> pending=new ArrayList<>();
     ArrayList<JSONObject> submitted=new ArrayList<>();
     try{
       for(JSONObject candidate:candidates){
-        if(pending.size()>=20)break;
-        if(!search&&!genreMatch(candidate,q))continue;
+        if(!genreMatch(candidate,q))continue;
+        if(q.year>0&&!date(candidate).startsWith(q.year+"-"))continue;
+        if(q.minRating>0&&!(candidate.optDouble("vote_average",0)>=q.minRating))continue;
         candidate.put("sol_ratings_status",omdbKey.isEmpty()?"Optional free OMDb key not configured":"Ratings not checked yet");
         submitted.add(candidate);pending.add(providerPool.submit(()->enrich(candidate)));
       }
@@ -88,7 +93,7 @@ final class StreamingCatalog implements AutoCloseable {
         JSONObject item=submitted.get(i);
         try{item=pending.get(i).get(Math.max(1,deadline-System.nanoTime()),TimeUnit.NANOSECONDS);}
         catch(ExecutionException|TimeoutException e){pending.get(i).cancel(true);page.unavailable++;item.put("sol_availability_status","US availability could not be checked");}
-        if(StreamingPolicy.keepResult(search,q.allServices,matches(item,q.services)||!item.has("sol_availability")))page.items.add(item);
+        if(StreamingPolicy.keepResult(q.allServices,matches(item,q.services)||!item.has("sol_availability")))page.items.add(item);
       }
     }finally{for(Future<JSONObject> f:pending)if(!f.isDone())f.cancel(true);}
     return page;
@@ -109,11 +114,21 @@ final class StreamingCatalog implements AutoCloseable {
     for(int i=0;i<PROVIDER_NAMES.length;i++)if(name.equals(PROVIDER_NAMES[i])||name.startsWith(PROVIDER_NAMES[i]+" "))return i;
     if(name.equals("Max")||name.startsWith("Max "))return 5;
     if(name.equals("Apple TV"))return 3;
+    if(name.equals("Tubi"))return 8;
+    if(name.equals("Peacock"))return 6;
     return -1;
+  }
+  private void appendPage(Page page,ArrayList<JSONObject> out,String path,String type,int requestedPage)throws Exception{
+    int number=Math.max(1,Math.min(500,requestedPage));Integer known=pageCounts.get(path);
+    if(known!=null&&number>known){page.totalPages=Math.max(page.totalPages,known);return;}
+    JSONObject response=get(path+"&page="+number);
+    int total=Math.max(1,Math.min(500,response.optInt("total_pages",1)));
+    pageCounts.put(path,total);page.totalPages=Math.max(page.totalPages,total);
+    append(out,response,type);
   }
   private void append(ArrayList<JSONObject> out,JSONObject response,String type)throws JSONException{
     JSONArray rows=response.optJSONArray("results");if(rows==null)return;
-    for(int i=0;i<rows.length();i++){JSONObject row=rows.optJSONObject(i);if(row==null)continue;String media=type==null?row.optString("media_type"):type;if(!media.equals("movie")&&!media.equals("tv"))continue;row.put("media_type",media);out.add(row);}
+    for(int i=0;i<Math.min(20,rows.length());i++){JSONObject row=rows.optJSONObject(i);if(row==null)continue;String media=type==null?row.optString("media_type"):type;if(!media.equals("movie")&&!media.equals("tv"))continue;row.put("media_type",media);out.add(row);}
   }
   private boolean genreMatch(JSONObject item,Query q){String genres=StreamingPolicy.genres(q.interests,item.optString("media_type"));if(genres.isEmpty())return true;JSONArray ids=item.optJSONArray("genre_ids");if(ids==null)return false;for(String g:genres.split("\\|"))for(int j=0;j<ids.length();j++)if(ids.optInt(j)==Integer.parseInt(g))return true;return false;}
   private JSONObject enrich(JSONObject item)throws Exception{
@@ -176,5 +191,5 @@ final class StreamingCatalog implements AutoCloseable {
   static String title(JSONObject item){return item.optString("title",item.optString("name","Untitled"));}
   static String date(JSONObject item){return item.optString("release_date",item.optString("first_air_date",""));}
   static String encode(String s){try{return URLEncoder.encode(s,"UTF-8");}catch(Exception e){throw new IllegalArgumentException(e);}}
-  public void close(){providerPool.shutdownNow();availability.clear();ratings.clear();}
+  public void close(){providerPool.shutdownNow();availability.clear();ratings.clear();pageCounts.clear();}
 }
