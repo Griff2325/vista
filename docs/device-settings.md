@@ -72,7 +72,7 @@ The retained overlay offers those three 0–100 controls, Left/Right steps of 5,
 
 An ordinary APK could not obtain the HIDL picture engine, while authorized ADB shell access worked. `bridge/picture/PictureBridge.java` therefore runs locally as the existing shell UID. It loads API classes from the installed Calman APK without bundling vendor code, credentials or binaries. Vista binds the read-only source-status interface and passes that Binder through its own `DUMP`-protected provider. The helper uses Android’s external-provider IPC; a shell process cannot bind an app service using a fabricated application context. No network listener is opened. The queue is single-request, expires writes after three seconds, matches replies to request IDs and checks shell UID as well as the manifest permission. Tests cover UID, source, range, key and expiry boundaries.
 
-The owner subsequently chose Panasonic’s complete native modes over this limited replacement. The helper is optional and is **stopped by default on the development TV**, so it consumes no ongoing background resources. Keep the implementation available for later work:
+The owner subsequently chose Panasonic’s complete native modes over this limited replacement. Before 0.11.2, the helper was stopped on the development TV after the owner chose the native menu. In 0.11.2 it also serves the Inputs tile and must run for that shortcut. Picture hardware initializes only when picture controls are requested; input requests do not change picture values. The experimental picture controls remain optional:
 
 ```sh
 bash scripts/build-picture-bridge.sh
@@ -89,3 +89,27 @@ Use the same Android SDK environment as `build-app.sh`. The helper is limited to
 With YouTube open, hold the remote's Alexa button, speak a search such as “search for snowboarding videos on YouTube,” then release. The owner confirmed successful voice search on the installed client with the existing Home bridge active. No YouTube modification or new microphone service was needed.
 
 The bridge already advertises and forwards the remote's Alexa scan code, 217, through the device-specific key layout. Preserve that capability when changing the bridge. Alexa handles recognition and the installed YouTube client handles the resulting search. YouTube documents the integration in [Control YouTube on TV with Amazon Alexa](https://support.google.com/youtube/answer/9394412?hl=en).
+
+## Native TV input menu
+
+Vista 0.11.2 replaces the generic Android passthrough picker, which this Fire TV routes to Live TV/Channel Scan, with a native Input-key request. The native player and selector reject direct app/shell launches behind system-only permissions. The launcher Inputs action is accessible but the existing Home on Fire fallback redirects its Home activity. Those permissions and fallback configuration are preserved.
+
+The Inputs tile sends a three-second request through the existing DUMP-protected, shell-UID-checked provider. The local control helper runs only `/data/local/tmp/sol-home-bridge --inputs`, waits at most 1.5 seconds, and terminates the child afterward. The native binary creates a temporary virtual remote, allows registration, sends Input down/up, then closes it. It does not grab the physical remote, map port numbers or implement an HDMI player. Native source selection and No signal feedback remain the TV's responsibility.
+
+Install a compatible APK using the existing installation identity, then update both helpers:
+
+```sh
+bash scripts/build-bridge.sh
+bash scripts/build-picture-bridge.sh
+bash scripts/bridge-control.sh YOUR_ADB_SERIAL install
+bash scripts/picture-control.sh YOUR_ADB_SERIAL install
+```
+
+After a full OS reboot, start both existing helpers over authorized ADB:
+
+```sh
+bash scripts/bridge-control.sh YOUR_ADB_SERIAL start
+bash scripts/picture-control.sh YOUR_ADB_SERIAL start
+```
+
+The control helper sleeps in a bounded provider wait while idle. If it is offline, Vista displays an unavailable message rather than opening Channel Scan. No new app permission, root operation or core-package modification is involved. A No signal screen establishes native input routing, not connected-device playback or ARC audio.

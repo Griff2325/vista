@@ -26,7 +26,7 @@ Vista explores two practical problems: making a custom television interface feel
 - Spotify vibes opens default playlists or saved Spotify content links, with an optional compact player using actual Spotify sessions on the TV. Playback controls require explicit Android notification access; playlist links do not guarantee autoplay.
 - Optional [Hulu ad muting](docs/hulu-ad-muting.md) detects its visible Ad badge locally using Android 11+ accessibility access. It mutes detected breaks and restores sound afterward; it does not skip the ad countdown. Starts disabled.
 - Reusable scene textures, approximately 30 fps vsync pacing, and paused-when-hidden animation. No WebView or fullscreen video player.
-- All-apps picker, TV input picker and existing TV Settings. Read-only Android Watch Next integration is present, but no installed app shared progress in the tested setup.
+- All-apps picker, the native TV input menu through the local control helper, and existing TV Settings. The Inputs tile requires the updated native bridge and running TV control helper; see [input setup](docs/device-settings.md#native-tv-input-menu). Read-only Android Watch Next integration is present, but no installed app shared progress in the tested setup.
 - Optional local ADB-shell supervisors for direct physical Home interception and the device-specific system screensaver route. Both need bootstrapping after a full TV reboot.
 
 ## In pictures

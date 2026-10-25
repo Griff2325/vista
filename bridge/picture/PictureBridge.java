@@ -35,6 +35,7 @@ public final class PictureBridge {
         Parcel q=Parcel.obtain(),r=Parcel.obtain();try{q.writeInterfaceToken(DESCRIPTOR);q.writeString(key);if(!remote.transact(1,q,r,0))throw new IOException("Source read failed");r.readException();return r.readString();}finally{q.recycle();r.recycle();}
     }
     private static JSONObject hardware()throws Exception{
+        if(engine==null){api=Class.forName("vendor.mediatek.hardware.pq.V1_0.IPq");engine=api.getMethod("getService").invoke(null);if(engine==null)throw new IOException("Picture engine unavailable");}
         Class<?> cb=Class.forName(api.getName()+"$getGlobalNonAwarePqSettingCallback");final String[] json={null};
         Object callback=Proxy.newProxyInstance(cb.getClassLoader(),new Class<?>[]{cb},(p,m,v)->{
             if(m.getName().equals("onValues")){if(((Number)v[0]).intValue()!=0)throw new IOException("Picture read failed");json[0]=(String)v[1];}return null;
@@ -53,6 +54,13 @@ public final class PictureBridge {
     }
     private static Bundle execute(Bundle command)throws Exception{
         cache=command.getBinder("source");String key=command.getString("key");
+        if("inputs".equals(key)){
+            if(!PicturePolicy.current(SystemClock.elapsedRealtime(),command.getLong("deadline")))throw new IOException("Expired input request");
+            java.lang.Process child=new ProcessBuilder("/data/local/tmp/sol-home-bridge","--inputs").start();
+            try{if(!child.waitFor(1500,java.util.concurrent.TimeUnit.MILLISECONDS)||child.exitValue()!=0)throw new IOException("Input key failed");}
+            finally{child.destroy();}
+            return new Bundle();
+        }
         if(!"read".equals(key)){
             int value=command.getInt("value",-1);PicturePolicy.validate(key,value);
             String mode=command.getString("mode");long deadline=command.getLong("deadline");context(mode,deadline);
@@ -74,12 +82,11 @@ public final class PictureBridge {
         if(!PicturePolicy.shell(android.os.Process.myUid()))throw new SecurityException("ADB shell required");
         if(!"lassen".equals(Build.DEVICE)||!Build.FINGERPRINT.contains("RS8180.3742N"))throw new IOException("Unsupported TV firmware");
         manager=Class.forName("android.app.ActivityManager").getMethod("getService").invoke(null);
-        api=Class.forName("vendor.mediatek.hardware.pq.V1_0.IPq");engine=api.getMethod("getService").invoke(null);if(engine==null)throw new IOException("Picture engine unavailable");
-        System.out.println("Vista picture bridge ready");
+        System.out.println("Vista TV control bridge ready");
         while(true){
             try{
                 Bundle command=call("next",null);if(command==null||!command.containsKey("id"))continue;
-                Bundle result;try{result=execute(command);}catch(Exception failed){result=new Bundle();result.putString("error","Picture operation failed; reopen or use Panasonic settings");}
+                Bundle result;try{result=execute(command);}catch(Exception failed){result=new Bundle();result.putString("error","inputs".equals(command.getString("key"))?"Input menu unavailable; use Panasonic settings":"Picture operation failed; reopen or use Panasonic settings");}
                 result.putString("id",command.getString("id"));call("reply",result);
             }catch(Exception unavailable){release();Thread.sleep(1000);}
         }

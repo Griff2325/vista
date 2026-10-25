@@ -11,7 +11,6 @@ import android.graphics.*;
 import android.graphics.drawable.Drawable;
 import android.widget.FrameLayout;
 import android.net.Uri;
-import android.media.tv.*;
 import android.view.*;
 import android.widget.Toast;
 import org.json.*;
@@ -101,14 +100,15 @@ public class MainActivity extends Activity {
     String[] labels=found.keySet().toArray(new String[0]),packages=found.values().toArray(new String[0]);
     new AlertDialog.Builder(this).setTitle("All apps").setItems(labels,(d,n)->openApp(packages[n])).setNegativeButton("Close",null).show();
   }
-  private void inputs(){try{
-    TvInputManager m=(TvInputManager)getSystemService(TV_INPUT_SERVICE);ArrayList<TvInputInfo> list=new ArrayList<>();ArrayList<String> labels=new ArrayList<>();
-    for(TvInputInfo i:m.getTvInputList())if(i.isPassthroughInput()){list.add(i);CharSequence custom=i.loadCustomLabel(this);labels.add((custom!=null?custom:i.loadLabel(this)).toString());}
-    new AlertDialog.Builder(this).setTitle("TV inputs").setItems(labels.toArray(new String[0]),(d,n)->{
-      try{startActivity(new Intent(Intent.ACTION_VIEW,TvContract.buildChannelUriForPassthroughInput(list.get(n).getId())).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
-      catch(Exception e){toast("Use the Input button on your TV remote.");}
-    }).setNegativeButton("Close",null).show();
-  }catch(Exception e){toast("Use the Input button on your TV remote.");}}
+  private boolean openingInputs;
+  private void inputs(){
+    if(openingInputs)return;openingInputs=true;
+    new Thread(()->{
+      try{PictureBridgeProvider.request("inputs",0,null,null);}
+      catch(Exception failed){toast("Input helper unavailable. Open Inputs from the TV's native settings menu.");}
+      finally{runOnUiThread(()->openingInputs=false);}
+    },"vista-inputs").start();
+  }
   private void tvSettings(){try{if(android.provider.Settings.canDrawOverlays(this))PicturePanelService.show(this);else PicturePanelService.nativeSettings(this);}catch(Exception e){toast("Hold Home to open TV settings.");}}
   void refreshCompanionScene(){scene.reloadTheme();home.invalidate();widgets.invalidate();}
   CompanionServer.Reply companionPanel(String panel){

@@ -2,6 +2,12 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.11.2 — October 25, 2026
+
+- Replaced the generic passthrough picker that opened Channel Scan on the tested Fire TV with the TV's native Input-key route. Source selection stays in the native player; no physical Input button is required.
+- Reused the shell-only control provider and added a bounded, fixed one-shot native command. It never grabs the physical remote; existing Home and Settings routing remains unchanged. Picture hardware now initializes only for picture requests. The APK and both local helpers must be updated together; full-reboot startup remains external.
+- Development/private-identity builds, remote-routing and existing policy/data checks pass. Installed in place with the existing identity; two Inputs-tile activations reached the native HDMI player and created HDMI sessions. The owner confirmed connected-device picture and sound. Other ports and ARC-specific behavior remain unverified.
+
 ## 0.11.1 — October 19, 2026
 
 - Replaced Explore's Previous/Next navigation with automatic, deduplicated loading near the bottom of a native recycled title grid. Mixed movie/TV batches no longer discard half of their candidates. Appends preserve existing titles, cursor retries and focus; sparse filtered results pause after three empty batches rather than scanning the whole catalog in the background.

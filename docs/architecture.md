@@ -16,7 +16,7 @@ SceneCalendar selects four seasonal palettes and occasion windows offline; Scene
 
 ## App and system integration
 
-Favorites resolve Leanback launch intents, falling back to standard launch intents. The all-apps list queries launchable installed activities. The input picker uses TvInputManager and passthrough intents. Settings launches the known working Fire TV MainSettingsActivity directly. These actions depend on the target firmware and installed apps.
+Favorites resolve Leanback launch intents, falling back to standard launch intents. The all-apps list queries launchable installed activities. The Inputs tile requests one native Input-key press through the existing shell-only control provider. The helper runs the fixed native bridge command `--inputs`; its temporary virtual remote emits scan code 641 without opening or grabbing the physical remote. The TV owns source selection and HDMI playback. Generic passthrough intents resolve to Live TV on the tested firmware and can open Channel Scan; direct native player/selector intents require system permissions. Settings launches the known working Fire TV MainSettingsActivity directly. These actions depend on the target firmware and installed apps.
 
 WidgetRepository shares bounded public-data caches between Home and the system dream. Two IO workers use response caps, ten-second timeouts and five-minute retry cooldowns. Cincinnati forecast/observation refreshes every ten minutes; news every thirty minutes; local sources every six hours; snow every hour. Old values stay labeled as saved instead of appearing live.
 

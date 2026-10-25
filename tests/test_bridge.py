@@ -102,7 +102,7 @@ class CPU:
                 base = self.get(rn, pc)
                 updated = base + (offset if ins & (1 << 23) else -offset)
                 addr = updated if ins & (1 << 24) else base
-                if ins & (1 << 20): self.r[rd] = self.read(addr)
+                if ins & (1 << 20): self.r[rd] = self.read(addr, 1 if ins & (1 << 22) else 4)
                 else: self.write(addr, self.r[rd])
                 if ins & (1 << 21) or not ins & (1 << 24): self.r[rn] = updated
             elif ins & 0x0C000000 == 0:
@@ -175,6 +175,17 @@ for code in [690, 645]:
     assert stop == 'picturedown'
     assert cpu.execute('picturedown', ('loop',)) == 'loop'
     assert cpu.read(cpu.r[13]+16) == 10 and cpu.read(cpu.r[13]+20) == 0
+for argument in ['--inputs', '--input', '--inputs-extra', '/dev/input/event6']:
+    cpu = CPU(); cpu.r[10] = 0xA1000; cpu.r[5] = 7
+    for i, byte in enumerate(argument.encode()+b'\0'): cpu.mem[cpu.r[10]+i] = byte
+    stop = cpu.execute('inputmode', ('emitinput', 'openremote'))
+    assert stop == ('emitinput' if argument == '--inputs' else 'openremote')
+    if stop == 'emitinput':
+        cpu.write(cpu.r[13], 0); cpu.write(cpu.r[13]+4, 200_000_000)
+        assert cpu.execute('emitinput') == ['exit', 0]
+        assert len(cpu.writes) == 1
+        events = [struct.unpack_from('<llHHi', cpu.writes[0], i)[2:] for i in range(0, 64, 16)]
+        assert events == [(1,641,1),(0,0,0),(1,641,0),(0,0,0)]
 for code in [103, 108, 105, 106, 158, 115, 114, 113, 217]:
     assert route(code)[1] == 'forward'
 assert route(172, 1)[1] == 'homedown'

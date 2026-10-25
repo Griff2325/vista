@@ -76,6 +76,47 @@ keycaps_done:
  mov r1,#0
  mov r7,#162
  svc #0
+inputmode:
+ ldr r0,[r10]
+ movw r1,#0x2d2d
+ movt r1,#0x6e69
+ cmp r0,r1
+ bne openremote
+ ldr r0,[r10,#4]
+ movw r1,#0x7570
+ movt r1,#0x7374
+ cmp r0,r1
+ bne openremote
+ ldrb r0,[r10,#8]
+ cmp r0,#0
+ bne openremote
+emitinput:
+ mov r0,#0
+ str r0,[sp]
+ movw r0,#0xa300
+ movt r0,#0x11e1
+ str r0,[sp,#4]
+ mov r0,sp
+ mov r1,#0
+ mov r7,#162
+ svc #0
+ @ One-shot native Input press; never open or grab the physical remote.
+ mov r0,r5
+ movw r1,#:lower16:(inputpacket - . - 12)
+ add r1,pc,r1
+ mov r2,#64
+ mov r7,#4
+ svc #0
+ cmp r0,#64
+ bne fail
+ mov r0,sp
+ mov r1,#0
+ mov r7,#162
+ svc #0
+ mov r0,#0
+ mov r7,#1
+ svc #0
+openremote:
  mov r0,r10
  mov r1,#0
  mov r2,#0
@@ -327,6 +368,20 @@ nativeaction: .asciz "android.settings.SETTINGS"
 picture: .asciz "com.griffin.solhome/.PicturePanelService"
 .balign 4
 stopservice: .asciz "stop-service"
+.balign 4
+inputpacket:
+ .word 0,0
+ .short 1,641
+ .word 1
+ .word 0,0
+ .short 0,0
+ .word 0
+ .word 0,0
+ .short 1,641
+ .word 0
+ .word 0,0
+ .short 0,0
+ .word 0
 .balign 4
 nativepacket:
  .word 0,0
