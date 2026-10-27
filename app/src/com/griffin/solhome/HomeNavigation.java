@@ -6,7 +6,6 @@ final class HomeNavigation {
     static final int PRIME_VIDEO=18,FIRE_TV_HOME=19;
     static final int[] GRID={0,1,2,3,4,5,PRIME_VIDEO,11,12,6,7,8,9,10,FIRE_TV_HOME};
     static final int STEP=150,MAX_SCROLL=Math.max(0,((GRID.length+1)/2-4)*STEP);
-    static boolean sound(int before,int after,long now,long last){return before!=after&&now-last>=100;}
     static int favoriteIndex(int id){return id==PRIME_VIDEO?6:id>=0&&id<6?id:-1;}
     static int position(int id){for(int i=0;i<GRID.length;i++)if(GRID[i]==id)return i;return -1;}
     static int move(int id,int direction,int lastGrid){

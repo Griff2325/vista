@@ -2,6 +2,11 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.11.5 — October 27, 2026
+
+- Removed Vista Home's navigation taps, audio pool and bundled focus sample at the owner's request. Focus, scrolling and shortcuts retain their existing behavior; TV and streaming-app volume is unchanged.
+- Retained the historical sound auditions as references and stopped their generator from recreating an app sound asset.
+
 ## 0.11.4 — October 27, 2026
 
 - Added a remote-navigable Fire TV Home tile at the bottom of the Home grid. It uses Home on Fire's explicit Amazon Home mapping through the existing bounded shell control queue; normal physical Home routing remains Vista.

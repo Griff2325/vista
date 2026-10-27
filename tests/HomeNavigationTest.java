@@ -5,9 +5,6 @@ public final class HomeNavigationTest {
     public static void main(String[] args){
         int id=0,scroll=0;int[] route={2,4,18,12,7,9,19,13,15};
         for(int next:route){id=HomeNavigation.move(id,HomeNavigation.DOWN,10);check(id==next,"down reaches every tile group then footer");scroll=HomeNavigation.reveal(id,scroll);}
-        check(!HomeNavigation.sound(0,HomeNavigation.move(0,HomeNavigation.UP,0),1000,0),"blocked navigation is silent");
-        check(HomeNavigation.sound(0,HomeNavigation.move(0,HomeNavigation.DOWN,0),1000,900),"changed focus sounds at the 100ms boundary");
-        check(!HomeNavigation.sound(0,2,999,900),"held-key repeats cannot overlap short samples");
         check(scroll==600,"final utility row is revealed");
         check(HomeNavigation.move(9,HomeNavigation.RIGHT,9)==10,"Watching shares the last row with Settings");
         check(HomeNavigation.move(13,HomeNavigation.UP,9)==19&&HomeNavigation.move(14,HomeNavigation.UP,10)==10,"shortcuts return to the matching last-row column");

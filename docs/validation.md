@@ -203,3 +203,9 @@ The bridge does not restart after full TV reboot. Local ADB bootstrap from an or
 - Installed final 0.11.4 in place with the existing private installation identity and both updated helpers. Inspected the full-size final grid tile and activated it through the installed UI to reach native Fire TV Home. The owner confirmed the intentional Home shortcut works on the remote; the small-shortcut layout was then replaced with the requested full tile.
 - Exercised Vista's Settings → TV settings through its actual menu, reaching native MainSettingsActivity, and inspected the complete settings screen. The owner also confirmed Vista's settings route works. This is distinct from a successful shell launch.
 - Fire TV Home's own on-screen Settings remains unreliable. Automated navigation reproduced a Vista redirect, but UI inspection reconnects Home on Fire and may lose intentional-navigation state; no clean physical diagnosis is claimed. The owner explicitly chose to leave that native control alone and use Vista settings. No speculative fix was applied.
+
+## Silent Home navigation (October 27, 2026)
+
+Vista 0.11.5 removes the Home navigation SoundPool, sample asset, rate-limit policy and lifecycle hooks. Existing Home focus/touch and policy/data regression checks and the launcher build pass. Both development and aligned APKs were inspected: no audio asset or SoundPool DEX reference remains. The historical reference generator was exercised with output redirected to a temporary directory; all eight WAVs pass its PCM/format checks and no app asset is recreated.
+
+The existing installation certificate was matched, the signed update installed in place, version 0.11.5/code 29 read back, and Home remained resumed after D-pad navigation. Device volume and other apps' audio were not changed. Physical listening confirmation was not collected; no performance or reboot-persistence claim is made for this small removal.
