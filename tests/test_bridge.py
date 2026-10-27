@@ -175,17 +175,18 @@ for code in [690, 645]:
     assert stop == 'picturedown'
     assert cpu.execute('picturedown', ('loop',)) == 'loop'
     assert cpu.read(cpu.r[13]+16) == 10 and cpu.read(cpu.r[13]+20) == 0
-for argument in ['--inputs', '--input', '--inputs-extra', '/dev/input/event6']:
+for argument in ['--inputs', '--input', '--inputs-extra', '--fire-home', '--fire-hom', '--fire-home-extra', '/dev/input/event6']:
     cpu = CPU(); cpu.r[10] = 0xA1000; cpu.r[5] = 7
     for i, byte in enumerate(argument.encode()+b'\0'): cpu.mem[cpu.r[10]+i] = byte
-    stop = cpu.execute('inputmode', ('emitinput', 'openremote'))
-    assert stop == ('emitinput' if argument == '--inputs' else 'openremote')
-    if stop == 'emitinput':
-        cpu.write(cpu.r[13], 0); cpu.write(cpu.r[13]+4, 200_000_000)
+    assert cpu.execute('inputmode', ('setupdevice',)) == 'setupdevice'
+    expected = 641 if argument == '--inputs' else 88 if argument == '--fire-home' else None
+    assert cpu.r[6] == (symbols['inputpacket' if expected == 641 else 'firehomepacket'] if expected else 0)
+    assert cpu.r[9] == symbols['keyboardsetup' if expected == 88 else 'setup']
+    if expected:
         assert cpu.execute('emitinput') == ['exit', 0]
         assert len(cpu.writes) == 1
         events = [struct.unpack_from('<llHHi', cpu.writes[0], i)[2:] for i in range(0, 64, 16)]
-        assert events == [(1,641,1),(0,0,0),(1,641,0),(0,0,0)]
+        assert events == [(1,expected,1),(0,0,0),(1,expected,0),(0,0,0)]
 for code in [103, 108, 105, 106, 158, 115, 114, 113, 217]:
     assert route(code)[1] == 'forward'
 assert route(172, 1)[1] == 'homedown'

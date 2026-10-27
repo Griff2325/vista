@@ -19,6 +19,48 @@ environmentready:
  ldrge r10,[sp,#8]
  movwlt r10,#:lower16:(remote - . - 12)
  addlt r10,pc,r10
+inputmode:
+ mov r6,#0
+ movw r9,#:lower16:(setup - . - 12)
+ add r9,pc,r9
+ ldr r0,[r10]
+ movw r1,#0x2d2d
+ movt r1,#0x6e69
+ cmp r0,r1
+ bne firehomemode
+ ldr r0,[r10,#4]
+ movw r1,#0x7570
+ movt r1,#0x7374
+ cmp r0,r1
+ bne setupdevice
+ ldrb r0,[r10,#8]
+ cmp r0,#0
+ bne setupdevice
+ movw r6,#:lower16:(inputpacket - . - 12)
+ add r6,pc,r6
+ b setupdevice
+firehomemode:
+ ldr r0,[r10]
+ movw r1,#0x2d2d
+ movt r1,#0x6966
+ cmp r0,r1
+ bne setupdevice
+ ldr r0,[r10,#4]
+ movw r1,#0x6572
+ movt r1,#0x682d
+ cmp r0,r1
+ bne setupdevice
+ ldr r0,[r10,#8]
+ movw r1,#0x6d6f
+ movt r1,#0x0065
+ cmp r0,r1
+ bne setupdevice
+ movw r6,#:lower16:(firehomepacket - . - 12)
+ add r6,pc,r6
+ @ Generic layout supplies F12 without remapping any physical remote key.
+ movw r9,#:lower16:(keyboardsetup - . - 12)
+ add r9,pc,r9
+setupdevice:
  movw r0,#:lower16:(uinput - . - 12)
  add r0,pc,r0
  mov r1,#2
@@ -51,8 +93,7 @@ keycaps_done:
  mov r2,#4
  bl .Lsetcap
  mov r0,r5
- movw r1,#:lower16:(setup - . - 12)
- add r1,pc,r1
+ mov r1,r9
  movw r2,#1116
  mov r7,#4
  svc #0
@@ -76,20 +117,9 @@ keycaps_done:
  mov r1,#0
  mov r7,#162
  svc #0
-inputmode:
- ldr r0,[r10]
- movw r1,#0x2d2d
- movt r1,#0x6e69
- cmp r0,r1
- bne openremote
- ldr r0,[r10,#4]
- movw r1,#0x7570
- movt r1,#0x7374
- cmp r0,r1
- bne openremote
- ldrb r0,[r10,#8]
- cmp r0,#0
- bne openremote
+ cmp r6,#0
+ bne emitinput
+ b openremote
 emitinput:
  mov r0,#0
  str r0,[sp]
@@ -100,10 +130,9 @@ emitinput:
  mov r1,#0
  mov r7,#162
  svc #0
- @ One-shot native Input press; never open or grab the physical remote.
+ @ One-shot key; never open or grab the physical remote.
  mov r0,r5
- movw r1,#:lower16:(inputpacket - . - 12)
- add r1,pc,r1
+ mov r1,r6
  mov r2,#64
  mov r7,#4
  svc #0
@@ -383,6 +412,20 @@ inputpacket:
  .short 0,0
  .word 0
 .balign 4
+firehomepacket:
+ .word 0,0
+ .short 1,88
+ .word 1
+ .word 0,0
+ .short 0,0
+ .word 0
+ .word 0,0
+ .short 1,88
+ .word 0
+ .word 0,0
+ .short 0,0
+ .word 0
+.balign 4
 nativepacket:
  .word 0,0
  .short 1,690
@@ -402,9 +445,14 @@ uinput: .asciz "/dev/uinput"
 remote: .asciz "/dev/input/event6"
 .balign 4
 .balign 4
-keycodes: .hword 116,217,96,103,105,106,108,172,158,139,168,208,164,113,114,115,362,402,403,2,3,4,5,6,7,8,9,10,11,370,644,358,638,744,745,746,747,398,399,400,401,641,642,643,645,647,646,633,748,249,676,677,678,679,680,681,682,683,684,685,686,687,689,690,691,692,695,672,673,674,675,688,694,65535
+keycodes: .hword 88,116,217,96,103,105,106,108,172,158,139,168,208,164,113,114,115,362,402,403,2,3,4,5,6,7,8,9,10,11,370,644,358,638,744,745,746,747,398,399,400,401,641,642,643,645,647,646,633,748,249,676,677,678,679,680,681,682,683,684,685,686,687,689,690,691,692,695,672,673,674,675,688,694,65535
 
 setup: .asciz "Sol Home Remote"
  .space 80-(.-setup)
  .short 5,0x0171,0x042c,1
+ .space 1028
+
+keyboardsetup: .asciz "Vista Home Shortcut"
+ .space 80-(.-keyboardsetup)
+ .short 5,0,0,1
  .space 1028

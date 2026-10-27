@@ -38,10 +38,14 @@ bash scripts/bridge-control.sh YOUR_ADB_SERIAL start
 
 ## Binary packaging
 
-The build uses Clang only as an assembler. `pack-arm.py` packages the object as a small static ELF executable and resolves only same-text ARM_CALL/JUMP24 relocations, rejecting others. This is deliberately narrow, not a general linker. The resulting binary is roughly 3 KB and uses no libc, network connection, or per-key laptop round trip. The launcher inherits Android’s environment. The native Settings path does not use the Java input CLI: a child stops Vista’s overlay service, briefly waits for teardown and writes a Settings down/up packet to uinput. The main process keeps reading and forwarding remote input. Child launch output and Home markers go to the local log; other key contents are not logged.
+The build uses Clang only as an assembler. `pack-arm.py` packages the object as a small static ELF executable and resolves only same-text ARM_CALL/JUMP24 relocations, rejecting others. This is deliberately narrow, not a general linker. The resulting binary is roughly 4 KB and uses no libc, network connection, or per-key laptop round trip. The launcher inherits Android’s environment. The native Settings path does not use the Java input CLI: a child stops Vista’s overlay service, briefly waits for teardown and writes a Settings down/up packet to uinput. The main process keeps reading and forwarding remote input. Child launch output and Home markers go to the local log; other key contents are not logged.
 
 ## Native Input command (0.11.2)
 
 `sol-home-bridge --inputs` creates a temporary virtual remote with the same tested capabilities, emits Input down/up (scan code 641), and exits. It never opens or exclusively grabs the physical remote. A short registration delay matches the on-device probe; this is separate from the persistent Home bridge. The existing shell control helper exposes only this fixed command through Vista's DUMP-protected provider, with request expiry and a child-process timeout. No network listener or system-package change is added.
 
 Update the APK, native bridge and control JAR together; an older native binary cannot handle this command. Build/install the native bridge as above, then follow the [control-helper setup](../docs/device-settings.md#native-tv-input-menu). Both helpers still need external startup after a full reboot.
+
+## Intentional native Home command (0.11.4)
+
+`sol-home-bridge --fire-home` emits F12 through a temporary Generic-layout device. Home on Fire must map F12 to Amazon Home; a direct activity launch is otherwise redirected by its normal Home fallback. This one-shot mode preserves the physical remote's vendor layout and grab, and shares the Inputs command's registration delay, bounded helper execution and request expiry. Exact argument matching keeps both one-shot modes separate from the physical-device path. See [native Home setup and the HDMI quick-settings fix](../docs/device-settings.md#native-fire-tv-home-and-complete-settings-0114).

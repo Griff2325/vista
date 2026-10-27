@@ -113,3 +113,15 @@ bash scripts/picture-control.sh YOUR_ADB_SERIAL start
 ```
 
 The control helper sleeps in a bounded provider wait while idle. If it is offline, Vista displays an unavailable message rather than opening Channel Scan. No new app permission, root operation or core-package modification is involved. A No signal screen establishes native input routing, not connected-device playback or ARC audio.
+
+## Native Fire TV Home and complete settings (0.11.4)
+
+The **Fire TV Home** tile sits at the bottom of the scrollable Home grid. It sends a fixed `fire-home` request through the same protected, expiring queue as Inputs. The helper runs `sol-home-bridge --fire-home` with the same 1.5-second timeout. This creates a separate Generic-layout virtual keyboard, emits F12 (Linux 88 / Android 142), and exits without opening or grabbing the physical remote. No physical remote key is remapped. A connected keyboard's F12 also becomes an intentional Amazon Home shortcut while the mapping is enabled.
+
+On the tested setup, Home on Fire 1.5.2 must have **Map custom buttons** enabled and **Amazon home: F12**. Configure its Amazon Home key learner and emit the one-shot command while it is listening. Leave its launcher key mapping unchanged. The mapping lets Home on Fire recognize the transition as deliberate; launching Amazon's Home activity directly was redirected back to Vista. Keep Replace Home and Launch on boot enabled for the existing fallback.
+
+Set Home on Fire's **Escape to Amazon home → Long-press** to **off**. On this TV its quick-settings detection interpreted Panasonic's HDMI side panel as a long Home escape and launched Vista over the picture. With that option off, the owner confirmed Settings stays over HDMI and Game Mode is usable. This does not change the native bridge's held-Home action, which still opens full TV settings. Double-press and other existing options are preserved.
+
+Vista Settings → TV settings now opens the complete native settings activity. Device & Software → About is the normal device-information route; the native `android.settings.DEVICE_INFO_SETTINGS` action was also verified directly on the tested TV. These routes depend on the installed Amazon/Panasonic system components. Update APK, native binary and control JAR together using the commands above. Existing full-reboot startup limitations still apply.
+
+The owner reported that Fire TV Home's own on-screen Settings item remains unreliable and chose to leave it alone because Vista's TV settings route works. Use **Vista Settings → TV settings** for complete native settings. The Fire TV Home tile is an intentional escape, not a guarantee that every launcher/fallback interaction in Amazon's interface has been resolved.

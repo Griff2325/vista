@@ -54,10 +54,10 @@ public final class PictureBridge {
     }
     private static Bundle execute(Bundle command)throws Exception{
         cache=command.getBinder("source");String key=command.getString("key");
-        if("inputs".equals(key)){
-            if(!PicturePolicy.current(SystemClock.elapsedRealtime(),command.getLong("deadline")))throw new IOException("Expired input request");
-            java.lang.Process child=new ProcessBuilder("/data/local/tmp/sol-home-bridge","--inputs").start();
-            try{if(!child.waitFor(1500,java.util.concurrent.TimeUnit.MILLISECONDS)||child.exitValue()!=0)throw new IOException("Input key failed");}
+        if("inputs".equals(key)||"fire-home".equals(key)){
+            if(!PicturePolicy.current(SystemClock.elapsedRealtime(),command.getLong("deadline")))throw new IOException("Expired TV control request");
+            java.lang.Process child=new ProcessBuilder("/data/local/tmp/sol-home-bridge","inputs".equals(key)?"--inputs":"--fire-home").start();
+            try{if(!child.waitFor(1500,java.util.concurrent.TimeUnit.MILLISECONDS)||child.exitValue()!=0)throw new IOException("TV control key failed");}
             finally{child.destroy();}
             return new Bundle();
         }
@@ -86,7 +86,7 @@ public final class PictureBridge {
         while(true){
             try{
                 Bundle command=call("next",null);if(command==null||!command.containsKey("id"))continue;
-                Bundle result;try{result=execute(command);}catch(Exception failed){result=new Bundle();result.putString("error","inputs".equals(command.getString("key"))?"Input menu unavailable; use Panasonic settings":"Picture operation failed; reopen or use Panasonic settings");}
+                Bundle result;try{result=execute(command);}catch(Exception failed){result=new Bundle();result.putString("error","inputs".equals(command.getString("key"))?"Input menu unavailable; use Panasonic settings":"fire-home".equals(command.getString("key"))?"Fire TV Home unavailable; check the Home on Fire mapping":"Picture operation failed; reopen or use Panasonic settings");}
                 result.putString("id",command.getString("id"));call("reply",result);
             }catch(Exception unavailable){release();Thread.sleep(1000);}
         }

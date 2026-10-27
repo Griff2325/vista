@@ -2,6 +2,14 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.11.4 — October 27, 2026
+
+- Added a remote-navigable Fire TV Home tile at the bottom of the Home grid. It uses Home on Fire's explicit Amazon Home mapping through the existing bounded shell control queue; normal physical Home routing remains Vista.
+- Vista's TV settings item now opens complete native settings, including Device & Software/About. The optional picture overlay is no longer substituted for that item.
+- On the tested TV, Home on Fire mistook Panasonic's HDMI quick-settings panel for a long Home press and launched Vista over the HDMI picture. Disabling only its Long-press escape fixed that route; the owner confirmed the menu stays over HDMI and Game Mode works. See device setup for the required helper configuration.
+- Installed the final full-size tile and verified native Home and complete settings through Vista’s actual UI. The owner confirmed the Home shortcut and Vista settings work; Amazon Home’s own on-screen Settings remains unreliable and was left alone at the owner’s request.
+- ARM one-shot routing, focus/touch checks, existing Java/data regression checks and all three builds pass. Full-reboot startup remains external; root and replacement firmware are not provided.
+
 ## 0.11.2 — October 25, 2026
 
 - Replaced the generic passthrough picker that opened Channel Scan on the tested Fire TV with the TV's native Input-key route. Source selection stays in the native player; no physical Input button is required.

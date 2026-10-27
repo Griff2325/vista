@@ -100,16 +100,17 @@ public class MainActivity extends Activity {
     String[] labels=found.keySet().toArray(new String[0]),packages=found.values().toArray(new String[0]);
     new AlertDialog.Builder(this).setTitle("All apps").setItems(labels,(d,n)->openApp(packages[n])).setNegativeButton("Close",null).show();
   }
-  private boolean openingInputs;
-  private void inputs(){
-    if(openingInputs)return;openingInputs=true;
+  private boolean openingTvControl;
+  private void inputs(){tvControl("inputs");}
+  private void tvControl(String command){
+    if(openingTvControl)return;openingTvControl=true;
     new Thread(()->{
-      try{PictureBridgeProvider.request("inputs",0,null,null);}
-      catch(Exception failed){toast("Input helper unavailable. Open Inputs from the TV's native settings menu.");}
-      finally{runOnUiThread(()->openingInputs=false);}
+      try{PictureBridgeProvider.request(command,0,null,null);}
+      catch(Exception failed){toast("inputs".equals(command)?"Input helper unavailable. Open Inputs from the TV's native settings menu.":"Fire TV Home helper unavailable.");}
+      finally{runOnUiThread(()->openingTvControl=false);}
     },"vista-inputs").start();
   }
-  private void tvSettings(){try{if(android.provider.Settings.canDrawOverlays(this))PicturePanelService.show(this);else PicturePanelService.nativeSettings(this);}catch(Exception e){toast("Hold Home to open TV settings.");}}
+  private void tvSettings(){try{PicturePanelService.nativeSettings(this);}catch(Exception e){toast("Hold Home to open TV settings.");}}
   void refreshCompanionScene(){scene.reloadTheme();home.invalidate();widgets.invalidate();}
   CompanionServer.Reply companionPanel(String panel){
     setAmbient(false,true);armIdle();
@@ -201,7 +202,7 @@ public class MainActivity extends Activity {
       String themeLabel=scene.themeLabel();paint.setTextSize(16);int count=paint.breakText(themeLabel,true,438,null);text(c,count<themeLabel.length()?themeLabel.substring(0,Math.max(0,count-1))+"…":themeLabel,108,274,16,0xffb7c9ab,false);
       c.save();c.clipRect(88,280,552,884);
       for(int i=0;i<HomeNavigation.GRID.length;i++){
-        int item=HomeNavigation.GRID[i],favorite=HomeNavigation.favoriteIndex(item);String label=favorite>=0?names[favorite]:item==11?"Explore":item==12?"Spotify vibes":controls[item-6]+(item==10&&!watching.isEmpty()?" · "+watching.size():"");
+        int item=HomeNavigation.GRID[i],favorite=HomeNavigation.favoriteIndex(item);String label=favorite>=0?names[favorite]:item==11?"Explore":item==12?"Spotify vibes":item==HomeNavigation.FIRE_TV_HOME?"Fire TV Home":controls[item-6]+(item==10&&!watching.isEmpty()?" · "+watching.size():"");
         float x=108+(i%2)*233,y=286+(i/2)*150-gridScroll,width=200;
         if(y+143<280||y>884)continue;
         boolean focus=selected==item;RectF tile=new RectF(x,y,x+width,y+113);
@@ -221,13 +222,14 @@ public class MainActivity extends Activity {
           paint.setStrokeWidth(3);c.drawLine(x+92,y+52,x+92,y+66,paint);c.drawLine(x+100,y+45,x+100,y+72,paint);c.drawLine(x+108,y+49,x+108,y+68,paint);
           paint.setStrokeCap(Paint.Cap.BUTT);paint.setColor(gold);c.drawRect(x+145,y+24,x+148,y+41,paint);c.drawRect(x+138,y+31,x+155,y+34,paint);
         }
+        else if(item==HomeNavigation.FIRE_TV_HOME)text(c,"fire tv",x+47,y+67,32,focus?gold:0xffb9d4a7,true);
         else if(item>=6&&item<=10){c.save();c.translate(x+width/2-36,y+22);c.scale(3,3);utilityIcon(c,item-6,0,0,focus?gold:0xffb9d4a7);c.restore();}
         else if(logo!=null){paint.setColor(Color.WHITE);c.drawBitmap(logo,null,tile,paint);}else text(c,label,x+18,y+67,25,white,true);
         text(c,label,x,y+137,20,focus?white:muted,focus);
       }
       c.restore();
       paint.setColor(0xff354840);c.drawRoundRect(new RectF(561,286,564,878),1.5f,1.5f,paint);
-      float thumbY=286+gridScroll/(float)HomeNavigation.MAX_SCROLL*254;paint.setColor(0xff8c9b80);c.drawRoundRect(new RectF(561,thumbY,564,thumbY+338),1.5f,1.5f,paint);
+      float thumbHeight=592*4f/((HomeNavigation.GRID.length+1)/2),thumbY=286+gridScroll/(float)HomeNavigation.MAX_SCROLL*(592-thumbHeight);paint.setColor(0xff8c9b80);c.drawRoundRect(new RectF(561,thumbY,564,thumbY+thumbHeight),1.5f,1.5f,paint);
       String[] shortcuts={"News briefs","This week"};
       for(int i=0;i<shortcuts.length;i++){float x=108+i*233;boolean focus=selected==13+i;paint.setColor(focus?0xff405549:0xff223832);c.drawRoundRect(new RectF(x,896,x+200,926),8,8,paint);text(c,shortcuts[i],x+16,918,18,focus?white:muted,focus);}
       codingView.home(c,WidgetRepository.get(MainActivity.this).codingUsage(),System.currentTimeMillis(),selected);
@@ -237,7 +239,7 @@ public class MainActivity extends Activity {
     void activate(){
       int favorite=HomeNavigation.favoriteIndex(selected);
       if(favorite>=0){lastApp=selected;openApp(favorites[favorite]);}
-      else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;case 15:case 16:CodingUsageView.show(MainActivity.this);break;case 17:forecast();break;}
+      else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case HomeNavigation.FIRE_TV_HOME:tvControl("fire-home");break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;case 15:case 16:CodingUsageView.show(MainActivity.this);break;case 17:forecast();break;}
     }
     void forecast(){new AlertDialog.Builder(MainActivity.this).setTitle("Cincinnati forecast").setMessage(weather==null?"Forecast unavailable":weather.optString("detail")+"\n\nNational Weather Service · Cincinnati city center").setPositiveButton("Close",null).show();}
     void stopScroll(){if(!gridScroller.isFinished())gridScroll=gridScroller.getFinalY();gridScroller.forceFinished(true);}
@@ -272,7 +274,7 @@ public class MainActivity extends Activity {
       if(dragged){int previous=selected,row=Math.round(gridScroll/150f);selected=HomeNavigation.GRID[Math.min(HomeNavigation.GRID.length-1,row*2)];menuMoved(previous,selected);lastGrid=selected;return true;}
       int item=HomeNavigation.hit(x,y,gridScroll);
       if(item>=0){selected=item;lastGrid=item;activate();}
-      else if(y>=896&&y<934&&x>=100&&x<573){selected=x<328?13:14;activate();}
+      else if(HomeNavigation.shortcutHit(x,y)>=0){selected=HomeNavigation.shortcutHit(x,y);activate();}
       else if(y>954&&x>=96&&x<700){selected=15;activate();}
       else if(y>954&&x>=730&&x<1350){selected=16;activate();}
       else if(y>954&&x>=1400){selected=17;activate();}
