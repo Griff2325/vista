@@ -16,7 +16,7 @@ mkdir -p "$ROOT/build/tests"
   "$ROOT/app/src/com/griffin/solhome/SceneCalendar.java" "$ROOT/app/src/com/griffin/solhome/SeasonPalette.java" "$ROOT/tests/SceneCalendarTest.java" \
   "$ROOT/app/src/com/griffin/solhome/WorldMotion.java" "$ROOT/tests/WorldMotionTest.java" \
   "$ROOT/app/src/com/griffin/solhome/CompanionServer.java" "$ROOT/tests/CompanionServerTest.java" \
-  "$ROOT/app/src/com/griffin/solhome/HomeNavigation.java" "$ROOT/tests/HomeNavigationTest.java" \
+  "$ROOT/app/src/com/griffin/solhome/HomeNavigation.java" "$ROOT/app/src/com/griffin/solhome/ParkRatLayout.java" "$ROOT/tests/HomeNavigationTest.java" \
   "$ROOT/app/src/com/griffin/solhome/CodingUsage.java" "$ROOT/app/src/com/griffin/solhome/UsageImportPolicy.java" "$ROOT/tests/CodingUsageTest.java" \
   "$ROOT/app/src/com/griffin/solhome/HuluAdBadge.java" "$ROOT/app/src/com/griffin/solhome/HuluMutePolicy.java" "$ROOT/tests/HuluMuteTest.java"
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.CincinnatiSkyTest

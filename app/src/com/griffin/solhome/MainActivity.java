@@ -23,8 +23,10 @@ public class MainActivity extends Activity {
   private HomeView home;
   private PixelSceneView scene;
   private AmbientWidgetsView widgets;
+  private AlertDialog homeLayoutDialog;
   private ValueAnimator immersionAnimator;
   private boolean ambient=false;
+  private boolean sceneRunning;
   private int wakeKey=-1;
   private static final long IDLE_MS=120000, TRANSITION_MS=2000;
   private final Runnable idle=()->{if(this.foreground&&hasWindowFocus())setAmbient(true,true);};
@@ -39,27 +41,35 @@ public class MainActivity extends Activity {
   @Override public void onCreate(Bundle state){
     super.onCreate(state);getWindow().getDecorView().setSystemUiVisibility(5894);
     home=new HomeView();scene=new PixelSceneView(this);FrameLayout root=new FrameLayout(this);root.setBackgroundColor(0xff17242a);root.addView(scene);root.addView(home);widgets=new AmbientWidgetsView(this);widgets.setAlpha(0);root.addView(widgets);setContentView(root);home.requestFocus();
+    home.setParkRat(getPreferences(MODE_PRIVATE).getBoolean("park_rat_home", false));
     new Thread(()->{
       Bitmap[] logos=new Bitmap[favorites.length];for(int n=0;n<logos.length;n++){try{PackageManager pm=getPackageManager();Intent intent=pm.getLeanbackLaunchIntentForPackage(favorites[n]);Drawable d=intent!=null?pm.getActivityBanner(intent.getComponent()):null;if(d==null)d=pm.getApplicationBanner(favorites[n]);if(d==null)d=pm.getApplicationIcon(favorites[n]);Bitmap icon=Bitmap.createBitmap(256,144,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(icon);float ratio=Math.min(256f/Math.max(1,d.getIntrinsicWidth()),144f/Math.max(1,d.getIntrinsicHeight()));int w=Math.round(d.getIntrinsicWidth()*ratio),h=Math.round(d.getIntrinsicHeight()*ratio);d.setBounds((256-w)/2,(144-h)/2,(256+w)/2,(144+h)/2);d.draw(c);logos[n]=icon;}catch(Exception ignored){}}
       runOnUiThread(()->{home.logos=logos;home.invalidate();});
     },"sol-logos").start();
   }
-  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);PicturePanelService.dismiss(this);SpotifyPanel.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(intent.getFloatExtra("sol.preview.world_seconds",-1));setAmbient(false,true);armIdle();}
-  @Override protected void onResume(){super.onResume();PicturePanelService.dismiss(this);foreground=true;setAmbient(false,true);home.requestFocus();home.revealSelection(false);handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(getIntent().getFloatExtra("sol.preview.world_seconds",-1));scene.start();widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
-  @Override protected void onPause(){foreground=false;home.stopScroll();handler.removeCallbacks(minuteTick);handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();scene.stop();widgets.stop();WidgetRepository.get(this).unlisten(widgetChanged);super.onPause();}
+  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);PicturePanelService.dismiss(this);SpotifyPanel.dismiss();if(homeLayoutDialog!=null)homeLayoutDialog.dismiss();setIntent(intent);scene.setPreviewTime(intent.getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(intent.getFloatExtra("sol.preview.world_seconds",-1));setAmbient(false,true);armIdle();}
+  @Override protected void onResume(){super.onResume();PicturePanelService.dismiss(this);foreground=true;setAmbient(false,true);home.requestFocus();home.revealSelection(false);handler.removeCallbacks(minuteTick);handler.post(minuteTick);scene.setPreviewTime(getIntent().getLongExtra("sol.preview.epoch",0));scene.setWorldPreview(getIntent().getFloatExtra("sol.preview.world_seconds",-1));widgets.start();WidgetRepository.get(this).listen(widgetChanged);loadWatching();armIdle();}
+  @Override protected void onPause(){foreground=false;home.stopScroll();handler.removeCallbacks(minuteTick);handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();syncScene();widgets.stop();WidgetRepository.get(this).unlisten(widgetChanged);super.onPause();}
   @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);scene.release();super.onDestroy();}
   @Override public void onWindowFocusChanged(boolean focus){super.onWindowFocusChanged(focus);if(focus)armIdle();else handler.removeCallbacks(idle);}
   @Override public void onUserInteraction(){super.onUserInteraction();armIdle();}
   private void armIdle(){handler.removeCallbacks(idle);if(foreground&&!ambient){long delay=Math.max(1000,Math.min(IDLE_MS,getIntent().getLongExtra("sol.preview.idle_ms",IDLE_MS)));handler.postDelayed(idle,Math.max(0,delay-TRANSITION_MS));}}
   private void setAmbient(boolean value,boolean animate){
     ambient=value;handler.removeCallbacks(idle);if(immersionAnimator!=null)immersionAnimator.cancel();
+    syncScene();
     float target=value?1:0;
     if(!animate||Math.abs(scene.immersion()-target)<.001f){setImmersion(target);return;}
     immersionAnimator=ValueAnimator.ofFloat(scene.immersion(),target);immersionAnimator.setDuration(value?TRANSITION_MS:650);immersionAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
     immersionAnimator.addUpdateListener(a->setImmersion((Float)a.getAnimatedValue()));immersionAnimator.start();
     android.util.Log.i("SolAmbient",value?"Expanding to screensaver":"Returning to Home");
   }
-  private void setImmersion(float amount){scene.setImmersion(amount);home.setAlpha(1-amount);home.invalidate();widgets.setAlpha(Math.max(0,(amount-.55f)/.45f));}
+  private void setImmersion(float amount){scene.setImmersion(amount);syncScene();home.setAlpha(1-amount);home.invalidate();widgets.setAlpha(Math.max(0,(amount-.55f)/.45f));}
+  private void syncScene(){
+    boolean needed = foreground && (home.parkRat == null || ambient || scene.immersion() > 0);
+    if (sceneRunning == needed) return;
+    sceneRunning = needed;
+    if (needed) scene.start(); else scene.stop();
+  }
   @Override public boolean dispatchKeyEvent(KeyEvent event){
     int key=event.getKeyCode();
     if(wakeKey==key){if(event.getAction()==KeyEvent.ACTION_UP)wakeKey=-1;return true;}
@@ -68,7 +78,7 @@ public class MainActivity extends Activity {
     return super.dispatchKeyEvent(event);
   }
   @Override public boolean dispatchTouchEvent(MotionEvent event){if(ambient){if(event.getAction()==MotionEvent.ACTION_UP){setAmbient(false,true);armIdle();}return true;}return super.dispatchTouchEvent(event);}
-  @Override public void onBackPressed(){setAmbient(false,true);home.selected=home.lastApp;home.revealSelection(false);home.invalidate();armIdle();}
+  @Override public void onBackPressed(){setAmbient(false,true);home.select(home.lastApp);home.revealSelection(false);home.invalidate();armIdle();}
   private String localTime(String pattern,Date date){SimpleDateFormat format=new SimpleDateFormat(pattern,Locale.US);format.setTimeZone(TimeZone.getTimeZone(CincinnatiSky.ZONE_ID));return format.format(date);}
   private void toast(String s){runOnUiThread(()->Toast.makeText(this,s,Toast.LENGTH_SHORT).show());}
   private void openApp(String pkg){try{
@@ -103,7 +113,47 @@ public class MainActivity extends Activity {
     else return new CompanionServer.Reply(400,"Unknown panel");
     return new CompanionServer.Reply(200,"Opened "+panel);
   }
-  private void settings(){new AlertDialog.Builder(this).setTitle("Vista settings").setItems(new String[]{"TV settings","Seasons & occasions","Phone companion","Wildlife · "+(SceneSettings.preferences(this).getBoolean("wildlife",true)?"On":"Off"),"Snow locations","This week · interests","Screensaver: 2 minutes · Sleep: 60 minutes","Coding usage","Hulu ad muting · "+(HuluAdMuteService.enabled(this)?"On":"Off")},(d,n)->{if(n==0)tvSettings();else if(n==1)ScenePanel.show(this,this::refreshCompanionScene);else if(n==2)CompanionPanel.show(this);else if(n==3){android.content.SharedPreferences p=SceneSettings.preferences(this);p.edit().putBoolean("wildlife",!p.getBoolean("wildlife",true)).apply();refreshCompanionScene();}else if(n==4)snowLocations();else if(n==5)EventsPanel.interests(this);else if(n==7)CodingUsageView.show(this);else if(n==8)HuluAdMuteService.show(this);else new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show();}).setNegativeButton("Close",null).show();}
+  private void settings(){
+    String[] options = {"TV settings", "Home theme · "+(home.parkRat == null ? "Classic" : "Park Rat"), "Seasons & occasions",
+        "Phone companion", "Wildlife · "+(SceneSettings.preferences(this).getBoolean("wildlife",true)?"On":"Off"),
+        "Snow locations", "This week · interests", "Screensaver: 2 minutes · Sleep: 60 minutes", "Coding usage",
+        "Hulu ad muting · "+(HuluAdMuteService.enabled(this)?"On":"Off")};
+    new AlertDialog.Builder(this).setTitle("Vista settings").setItems(options, (dialog, index) -> {
+      switch (index) {
+        case 0: tvSettings(); break;
+        case 1: homeTheme(); break;
+        case 2: ScenePanel.show(this,this::refreshCompanionScene); break;
+        case 3: CompanionPanel.show(this); break;
+        case 4:
+          SharedPreferences prefs = SceneSettings.preferences(this);
+          prefs.edit().putBoolean("wildlife",!prefs.getBoolean("wildlife",true)).apply();
+          refreshCompanionScene();
+          break;
+        case 5: snowLocations(); break;
+        case 6: EventsPanel.interests(this); break;
+        case 7: new AlertDialog.Builder(this).setTitle("Idle timing").setMessage("The scene expands after 2 minutes without input. The TV sleep setting is 60 minutes. Playback apps can keep the display awake.").setPositiveButton("OK",null).show(); break;
+        case 8: CodingUsageView.show(this); break;
+        case 9: HuluAdMuteService.show(this); break;
+      }
+    }).setNegativeButton("Close",null).show();
+  }
+  private void homeTheme(){
+    showHomeLayoutDialog(new AlertDialog.Builder(this).setTitle("Home theme")
+        .setSingleChoiceItems(new String[]{"Classic", "Park Rat"}, home.parkRat == null ? 0 : 1, (dialog, index) -> {
+          boolean parkRat = index == 1;
+          getPreferences(MODE_PRIVATE).edit().putBoolean("park_rat_home", parkRat).apply();
+          home.setParkRat(parkRat);
+          syncScene();
+          dialog.dismiss();
+        }).setNegativeButton("Cancel", null).create());
+  }
+  private void showHomeLayoutDialog(AlertDialog dialog){
+    homeLayoutDialog = dialog;
+    dialog.setOnDismissListener(closed -> {
+      if (homeLayoutDialog == dialog) homeLayoutDialog = null;
+    });
+    dialog.show();
+  }
   private void snowLocations(){WidgetRepository repo=WidgetRepository.get(this);JSONArray locations=repo.locations();String[] labels=new String[locations.length()+2];for(int i=0;i<locations.length();i++)labels[i]=locations.optJSONObject(i).optString("name");labels[locations.length()]="Add location";labels[locations.length()+1]="Restore default resorts";
     new AlertDialog.Builder(this).setTitle("Snow forecast locations").setItems(labels,(d,n)->{if(n==locations.length()+1){repo.resetLocations();snowLocations();}else if(n==locations.length()&&locations.length()>=2)toast("Edit or remove a location to replace it. Two snow locations fit beneath weather.");else editSnowLocation(locations,n);}).setNegativeButton("Close",null).show();}
   private void editSnowLocation(JSONArray locations,int index){
@@ -132,7 +182,10 @@ public class MainActivity extends Activity {
   }
   private void loadWeather(){WidgetRepository.get(this).refresh();weather=WidgetRepository.get(this).weather();home.invalidate();}
   class HomeView extends View {
+    private static final String CLASSIC_DESCRIPTION = "Vista. Use arrows to choose a tile, scroll down for TV controls, or move right to coding usage and weather. Press OK to open.";
     Bitmap[] logos=new Bitmap[favorites.length];int selected=0,lastApp=0,lastGrid=0,gridScroll=0;
+    ParkRatHome parkRat;
+    int parkRatTouch = -1;
     final android.widget.OverScroller gridScroller=new android.widget.OverScroller(MainActivity.this);
     final Paint paint=new Paint(3);final int white=Color.rgb(242,240,231),muted=Color.rgb(168,174,173),gold=Color.rgb(207,182,132);
     final String[] controls={"All apps","Inputs","Ambient","Settings","Watching"};
@@ -140,7 +193,59 @@ public class MainActivity extends Activity {
     final HomeWeatherView weatherView=new HomeWeatherView();
     final Shader wallLight=new LinearGradient(0,0,1920,900,0xff192b2c,0xff30403c,Shader.TileMode.CLAMP);
     final Shader railLight=new LinearGradient(72,0,577,0,0xff152323,0xff1c2e2c,Shader.TileMode.CLAMP);
-    HomeView(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);setContentDescription("Vista. Use arrows to choose a tile, scroll down for TV controls, or move right to coding usage and weather. Press OK to open.");}
+    HomeView(){super(MainActivity.this);setFocusable(true);setFocusableInTouchMode(true);setContentDescription(CLASSIC_DESCRIPTION);}
+    void setParkRat(boolean enabled){
+      if (enabled == (parkRat != null)) return;
+      if (enabled) {
+        ParkRatHome theme = new ParkRatHome();
+        parkRat = theme;
+        stopScroll();
+        new Thread(() -> {
+          try (InputStream input = getAssets().open("park-rat.jpg")) {
+            Bitmap art = BitmapFactory.decodeStream(input);
+            if (art == null) throw new IOException("Could not decode Park Rat artwork");
+            runOnUiThread(() -> {
+              if (parkRat == theme && !isDestroyed()) {
+                theme.setArt(art);
+                invalidate();
+              }
+            });
+          } catch (IOException error) {
+            android.util.Log.e("VistaHome", "Could not load Park Rat artwork", error);
+          }
+        }, "vista-park-rat-art").start();
+        select(ParkRatLayout.contains(selected) ? selected : lastApp);
+      } else {
+        parkRat = null;
+        if (selected == ParkRatLayout.MORE) selected = 9;
+        if (HomeNavigation.position(selected) >= 0) lastGrid = selected;
+        setContentDescription(CLASSIC_DESCRIPTION);
+        revealSelection(false);
+      }
+      invalidate();
+    }
+    void select(int item){
+      selected = item;
+      if (parkRat != null) {
+        setContentDescription("Vista Home. "+homeLabel(item)+". Use arrows to choose a tile and OK to open.");
+      }
+    }
+    String homeLabel(int item){
+      int favorite = HomeNavigation.favoriteIndex(item);
+      if (favorite >= 0) return names[favorite];
+      if (item >= 6 && item <= 10) return controls[item-6]+(item==10&&!watching.isEmpty()?" · "+watching.size():"");
+      switch (item) {
+        case 11: return "Explore";
+        case 12: return "Spotify vibes";
+        case 13: return "News briefs";
+        case 14: return "This week";
+        case 15: case 16: return "Coding usage";
+        case 17: return "Weather";
+        case HomeNavigation.FIRE_TV_HOME: return "Fire TV Home";
+        case ParkRatLayout.MORE: return "More";
+        default: throw new IllegalArgumentException("Unknown Home tile: "+item);
+      }
+    }
     void text(Canvas c,String s,float x,float y,float size,int color,boolean bold){paint.setShader(null);paint.setColor(color);paint.setTextSize(size);paint.setTypeface(Typeface.create("sans-serif"+(bold?"-medium":"-light"),Typeface.NORMAL));c.drawText(s,x,y,paint);}
     void drawRoom(Canvas c){
       float l=scene.windowLeft(),t=scene.windowTop(),r=scene.windowRight(),b=scene.windowBottom();
@@ -176,16 +281,22 @@ public class MainActivity extends Activity {
     }
     @Override protected void onDraw(Canvas c){
       super.onDraw(c);c.save();c.scale(getWidth()/1920f,getHeight()/1080f);
+      Date now=new Date();
+      if (parkRat != null) {
+        parkRat.draw(c, selected, logos, this::homeLabel, localTime("h:mm a",now), localTime("EEE, MMM d",now));
+        c.restore();
+        return;
+      }
       drawRoom(c);
       drawAppNiche(c);
       text(c,"VISTA",108,82,25,white,true);text(c,"/",207,82,23,muted,false);text(c,"HOME",234,82,17,muted,false);
-      Date now=new Date();text(c,localTime("h:mm",now),103,207,99,white,false);
+      text(c,localTime("h:mm",now),103,207,99,white,false);
       text(c,localTime("a",now),368,204,19,muted,false);
       text(c,localTime("EEEE, MMMM d",now),108,252,23,muted,false);
       String themeLabel=scene.themeLabel();paint.setTextSize(16);int count=paint.breakText(themeLabel,true,438,null);text(c,count<themeLabel.length()?themeLabel.substring(0,Math.max(0,count-1))+"…":themeLabel,108,274,16,0xffb7c9ab,false);
       c.save();c.clipRect(88,280,552,884);
       for(int i=0;i<HomeNavigation.GRID.length;i++){
-        int item=HomeNavigation.GRID[i],favorite=HomeNavigation.favoriteIndex(item);String label=favorite>=0?names[favorite]:item==11?"Explore":item==12?"Spotify vibes":item==HomeNavigation.FIRE_TV_HOME?"Fire TV Home":controls[item-6]+(item==10&&!watching.isEmpty()?" · "+watching.size():"");
+        int item=HomeNavigation.GRID[i],favorite=HomeNavigation.favoriteIndex(item);String label=homeLabel(item);
         float x=108+(i%2)*233,y=286+(i/2)*150-gridScroll,width=200;
         if(y+143<280||y>884)continue;
         boolean focus=selected==item;RectF tile=new RectF(x,y,x+width,y+113);
@@ -219,14 +330,22 @@ public class MainActivity extends Activity {
       weatherView.draw(c,weather,System.currentTimeMillis(),selected==17);
       c.restore();
     }
-    void activate(){
-      int favorite=HomeNavigation.favoriteIndex(selected);
-      if(favorite>=0){lastApp=selected;openApp(favorites[favorite]);}
-      else switch(selected){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case HomeNavigation.FIRE_TV_HOME:tvControl("fire-home");break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;case 15:case 16:CodingUsageView.show(MainActivity.this);break;case 17:forecast();break;}
+    void activate(int item){
+      int favorite=HomeNavigation.favoriteIndex(item);
+      if(favorite>=0){lastApp=item;openApp(favorites[favorite]);}
+      else switch(item){case 6:allApps();break;case 7:inputs();break;case 8:setAmbient(true,true);break;case 9:settings();break;case 10:continueWatching();break;case 11:startActivity(new Intent(MainActivity.this,StreamingActivity.class));break;case 12:SpotifyPanel.show(MainActivity.this);break;case HomeNavigation.FIRE_TV_HOME:tvControl("fire-home");break;case 13:NewsPanel.show(MainActivity.this);break;case 14:EventsPanel.show(MainActivity.this);break;case 15:case 16:CodingUsageView.show(MainActivity.this);break;case 17:forecast();break;case ParkRatLayout.MORE:showMore();break;}
+    }
+    void showMore(){
+      int[] items = ParkRatLayout.MORE_ACTIONS;
+      String[] labels = new String[items.length];
+      for (int i = 0; i < items.length; i++) labels[i] = homeLabel(items[i]);
+      showHomeLayoutDialog(new AlertDialog.Builder(MainActivity.this).setTitle("More")
+          .setItems(labels, (dialog, index) -> activate(items[index])).setNegativeButton("Close", null).create());
     }
     void forecast(){new AlertDialog.Builder(MainActivity.this).setTitle("Cincinnati forecast").setMessage(weather==null?"Forecast unavailable":weather.optString("detail")+"\n\nNational Weather Service · Cincinnati city center").setPositiveButton("Close",null).show();}
     void stopScroll(){if(!gridScroller.isFinished())gridScroll=gridScroller.getFinalY();gridScroller.forceFinished(true);}
     void revealSelection(boolean animate){
+      if (parkRat != null) return;
       int target=HomeNavigation.reveal(selected,gridScroller.isFinished()?gridScroll:gridScroller.getFinalY());
       if(!animate){gridScroller.forceFinished(true);gridScroll=target;invalidate();return;}
       if(target==(gridScroller.isFinished()?gridScroll:gridScroller.getFinalY()))return;
@@ -241,26 +360,44 @@ public class MainActivity extends Activity {
         case KeyEvent.KEYCODE_DPAD_DOWN:direction=HomeNavigation.DOWN;break;
         case KeyEvent.KEYCODE_DPAD_LEFT:direction=HomeNavigation.LEFT;break;
         case KeyEvent.KEYCODE_DPAD_RIGHT:direction=HomeNavigation.RIGHT;break;
-        case KeyEvent.KEYCODE_DPAD_CENTER:case KeyEvent.KEYCODE_ENTER:if(e.getRepeatCount()==0)activate();return true;
+        case KeyEvent.KEYCODE_DPAD_CENTER:case KeyEvent.KEYCODE_ENTER:if(e.getRepeatCount()==0)activate(selected);return true;
         default:return super.onKeyDown(key,e);
       }
-      selected=HomeNavigation.move(selected,direction,lastGrid);
-      if(HomeNavigation.position(selected)>=0)lastGrid=selected;if(HomeNavigation.favoriteIndex(selected)>=0)lastApp=selected;
+      if (parkRat != null) select(ParkRatLayout.move(selected,direction));
+      else {
+        selected=HomeNavigation.move(selected,direction,lastGrid);
+        if(HomeNavigation.position(selected)>=0)lastGrid=selected;
+      }
+      if(HomeNavigation.favoriteIndex(selected)>=0)lastApp=selected;
       revealSelection(true);invalidate();return true;
     }
     float dragStart;int dragScroll;boolean dragArea,dragged;
     @Override public boolean onTouchEvent(android.view.MotionEvent e){
       float x=e.getX()*1920/getWidth(),y=e.getY()*1080/getHeight();
+      if (parkRat != null) {
+        int hit = ParkRatLayout.hit(x,y);
+        if (e.getAction() == MotionEvent.ACTION_DOWN) parkRatTouch = hit;
+        if (e.getAction() == MotionEvent.ACTION_CANCEL) parkRatTouch = -1;
+        if (e.getAction() == MotionEvent.ACTION_UP) {
+          if (hit >= 0 && hit == parkRatTouch) {
+            select(hit);
+            invalidate();
+            activate(hit);
+          }
+          parkRatTouch = -1;
+        }
+        return true;
+      }
       if(e.getAction()==android.view.MotionEvent.ACTION_DOWN){dragArea=x>=88&&x<570&&y>=280&&y<884;dragStart=y;dragScroll=gridScroll;dragged=false;return true;}
       if(e.getAction()==android.view.MotionEvent.ACTION_MOVE&&dragArea&&Math.abs(y-dragStart)>18){dragged=true;gridScroller.forceFinished(true);gridScroll=Math.max(0,Math.min(HomeNavigation.MAX_SCROLL,dragScroll+Math.round(dragStart-y)));invalidate();return true;}
       if(e.getAction()!=android.view.MotionEvent.ACTION_UP)return true;
       if(dragged){int row=Math.round(gridScroll/150f);selected=HomeNavigation.GRID[Math.min(HomeNavigation.GRID.length-1,row*2)];lastGrid=selected;return true;}
       int item=HomeNavigation.hit(x,y,gridScroll);
-      if(item>=0){selected=item;lastGrid=item;activate();}
-      else if(HomeNavigation.shortcutHit(x,y)>=0){selected=HomeNavigation.shortcutHit(x,y);activate();}
-      else if(y>954&&x>=96&&x<700){selected=15;activate();}
-      else if(y>954&&x>=730&&x<1350){selected=16;activate();}
-      else if(y>954&&x>=1400){selected=17;activate();}
+      if(item>=0){selected=item;lastGrid=item;activate(selected);}
+      else if(HomeNavigation.shortcutHit(x,y)>=0){selected=HomeNavigation.shortcutHit(x,y);activate(selected);}
+      else if(y>954&&x>=96&&x<700){selected=15;activate(selected);}
+      else if(y>954&&x>=730&&x<1350){selected=16;activate(selected);}
+      else if(y>954&&x>=1400){selected=17;activate(selected);}
       invalidate();return true;
     }
   }

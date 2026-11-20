@@ -2,6 +2,10 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.12.0 — November 20, 2026
+
+- Added the optional Park Rat Home theme with original snowboarding-zine artwork, staggered app tiles and a More menu for Home controls. Choose and save the theme in Vista Settings → Home theme. Classic is the default.
+
 ## 0.11.5 — October 27, 2026
 
 - Removed Vista Home's navigation taps, audio pool and bundled focus sample at the owner's request. Focus, scrolling and shortcuts retain their existing behavior; TV and streaming-app volume is unchanged.

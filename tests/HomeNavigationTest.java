@@ -23,6 +23,48 @@ public final class HomeNavigationTest {
         Set<Integer> reachable=new HashSet<>();Queue<Integer> queue=new ArrayDeque<>();queue.add(0);
         while(!queue.isEmpty()){int current=queue.remove();if(!reachable.add(current))continue;for(int dir=0;dir<4;dir++)queue.add(HomeNavigation.move(current,dir,10));}
         check(reachable.contains(19),"Fire TV Home reachable");for(int tile:HomeNavigation.GRID)check(reachable.contains(tile),"every tile reachable");for(int control=13;control<=17;control++)check(reachable.contains(control),"every footer/reading control reachable");
-        System.out.println("Home grid, footer focus, scroll reveal and touch mapping checks passed.");
+        parkRat();
+        System.out.println("Classic and Park Rat Home focus, touch and action reachability checks passed.");
+    }
+
+    private static void parkRat(){
+        Set<Integer> main = new HashSet<>();
+        for (ParkRatLayout.Tile tile : ParkRatLayout.TILES) {
+            check(main.add(tile.id), "Park Rat tile IDs are unique");
+            check(ParkRatLayout.hit(tile.centerX(),tile.centerY()) == tile.id, "Touch hits the drawn tile");
+            check(tile.left >= 86 && tile.right <= 1834 && tile.top >= 54 && tile.bottom <= 1026,
+                "Park Rat tiles leave space for focus borders inside TV safe margins");
+            for (ParkRatLayout.Tile other : ParkRatLayout.TILES) {
+                if (tile == other) continue;
+                check(tile.right <= other.left || tile.left >= other.right || tile.bottom <= other.top || tile.top >= other.bottom,
+                    "Park Rat tile touch targets do not overlap");
+            }
+        }
+        check(ParkRatLayout.hit(960,500) == -1 && ParkRatLayout.hit(0,0) == -1, "Rider artwork and safe margin do not open a tile");
+        check(ParkRatLayout.move(0,HomeNavigation.RIGHT) == 2 && ParkRatLayout.move(2,HomeNavigation.LEFT) == 0,
+            "Right and Left cross the artwork between YouTube and Hulu");
+        check(ParkRatLayout.move(0,HomeNavigation.UP) == 0 && ParkRatLayout.move(0,HomeNavigation.DOWN) == 1,
+            "Up stays at the top; Down goes to Netflix");
+        check(ParkRatLayout.move(11,HomeNavigation.RIGHT) == ParkRatLayout.MORE
+            && ParkRatLayout.move(ParkRatLayout.MORE,HomeNavigation.LEFT) == 11, "More is directly reachable from Explore");
+        for (int start : main) {
+            Set<Integer> reachable = new HashSet<>();
+            Queue<Integer> remaining = new ArrayDeque<>();
+            remaining.add(start);
+            while (!remaining.isEmpty()) {
+                int id = remaining.remove();
+                if (!reachable.add(id)) continue;
+                for (int direction = 0; direction < 4; direction++) remaining.add(ParkRatLayout.move(id,direction));
+            }
+            check(reachable.equals(main), "Every Park Rat tile can reach every other tile with the D-pad");
+        }
+
+        Set<Integer> actions = new HashSet<>(main);
+        actions.remove(ParkRatLayout.MORE);
+        for (int item : ParkRatLayout.MORE_ACTIONS) check(actions.add(item), "More offers unique actions beyond the main tiles");
+        Set<Integer> classicActions = new HashSet<>();
+        for (int item : HomeNavigation.GRID) classicActions.add(item);
+        classicActions.addAll(Arrays.asList(13,14,15,17)); // Both Classic usage cards open the same detail panel.
+        check(actions.equals(classicActions), "Park Rat preserves every distinct Classic Home action");
     }
 }
