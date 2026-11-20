@@ -12,10 +12,17 @@ JAVABIN="${JAVA_HOME:+$JAVA_HOME/bin/}"
 BUILD="$ROOT/build/app"
 mkdir -p "$BUILD/classes" "$BUILD/dex" "$BUILD/gen"
 find "$BUILD/classes" -name '*.class' -delete
+ASSETS=(-A "$ROOT/app/assets")
+ART="$ROOT/.local/home-art"
+if [[ -f "$ART/gta-vi-rooftop.jpg" && -f "$ART/gta-vi-tuner.jpg" ]]; then
+  mkdir -p "$BUILD/home-art"
+  cp "$ART/gta-vi-rooftop.jpg" "$ART/gta-vi-tuner.jpg" "$BUILD/home-art/"
+  ASSETS+=(-A "$BUILD/home-art")
+fi
 "$TOOLS/aapt2" compile --dir "$ROOT/app/res" -o "$BUILD/resources.zip"
 "$TOOLS/aapt2" link -o "$BUILD/unsigned.apk" -I "$ANDROID" \
   --manifest "$ROOT/app/AndroidManifest.xml" -R "$BUILD/resources.zip" \
-  -A "$ROOT/app/assets" --java "$BUILD/gen"
+  "${ASSETS[@]}" --java "$BUILD/gen"
 "${JAVABIN}javac" -source 8 -target 8 -classpath "$ANDROID" -d "$BUILD/classes" \
   "$ROOT"/app/src/com/griffin/solhome/*.java
 "${JAVABIN}jar" cf "$BUILD/classes.jar" -C "$BUILD/classes" .

@@ -27,6 +27,13 @@ public final class SpotifyLinks {
       return "spotify:"+content;
     }catch(Exception error){throw new IllegalArgumentException("Use an open.spotify.com playlist or album link, or a Spotify content URI");}
   }
+  static String track(String input) {
+    if(input==null||input.isEmpty())return null;
+    try {
+      String content=normalize(input);
+      return content.startsWith("spotify:track:")?content:null;
+    }catch(IllegalArgumentException invalid){return null;}
+  }
   public static String search(String query) {
     try{return "spotify:search:"+URLEncoder.encode(query,"UTF-8").replace("+","%20");}
     catch(java.io.UnsupportedEncodingException impossible){throw new AssertionError(impossible);}

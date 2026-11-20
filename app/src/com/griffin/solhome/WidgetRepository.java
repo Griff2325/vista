@@ -76,7 +76,25 @@ public final class WidgetRepository {
             items.put(new JSONObject().put("title",teams.getJSONObject("away").getJSONObject("team").getString("name")+" at Cincinnati Reds").put("date",java.time.Instant.parse(game.getString("gameDate")).toEpochMilli()).put("dateOnly",game.optBoolean("startTimeTBD")).put("venue",game.getJSONObject("venue").getString("name")).put("category","sports").put("source","MLB schedule").put("link","https://www.mlb.com/reds/schedule").put("detail","Home game. Confirm the schedule and tickets with the Reds."));
         }}return new JSONObject().put("items",items);
     });}
-    public static String snowKey(JSONObject loc){return "snow:"+loc.optDouble("lat")+","+loc.optDouble("lon");}
+    public static String snowKey(JSONObject loc){return snowKey(loc.optDouble("lat"),loc.optDouble("lon"));}
+    private static String snowKey(double lat,double lon){return "snow:"+lat+","+lon;}
+
+    FirstChair.Outlook snowOutlook(FirstChair.Resort resort,long now){
+        JSONObject snow=data(snowKey(resort.lat,resort.lon));
+        return new FirstChair.Outlook(resort.name, snow.optDouble("inches"), snow.optInt("hours"),
+            snow.optLong("at"), snow.optLong("end"), now);
+    }
+
+    void refreshSnow(String name,double lat,double lon){
+        if(!FirstChair.validPoint(lat,lon))return;
+        request(snowKey(lat,lon),3600000,()->{
+            JSONObject point=json(nwsPoint(lat,lon)).getJSONObject("properties");JSONObject raw=json(nws(point.getString("forecastGridData"))).getJSONObject("properties");JSONObject snow=raw.getJSONObject("snowfallAmount");JSONArray rows=snow.getJSONArray("values");List<SnowForecast.Interval> values=new ArrayList<>();
+            for(int n=0;n<rows.length();n++){JSONObject row=rows.getJSONObject(n);if(!row.isNull("value"))values.add(new SnowForecast.Interval(row.getString("validTime"),row.getDouble("value")));}
+            long now=System.currentTimeMillis();JSONObject result=new JSONObject().put("name",name).put("start",now).put("issued",raw.optString("updateTime")).put("schema",4);double inches=Double.NaN;
+            for(int hours:new int[]{72,48,24}){inches=SnowForecast.inches(values,snow.getString("uom"),now,now+hours*3600000L);if(Double.isFinite(inches)){result.put("hours",hours).put("end",now+hours*3600000L);break;}}
+            if(Double.isFinite(inches))result.put("inches",inches);else result.put("unavailable",true);return result;
+        });
+    }
     public void refresh(){
         request("weather",600000,()->{
             JSONObject point=json(nwsPoint(39.1031,-84.5120)).getJSONObject("properties");JSONArray periods=json(nws(point.getString("forecast"))).getJSONObject("properties").getJSONArray("periods");JSONObject first=periods.getJSONObject(0);
@@ -114,13 +132,7 @@ public final class WidgetRepository {
         sports("bengals","football/nfl","4");sports("fcc","soccer/usa.1","18267");
         baseball();
         JSONArray locations=locations();for(int i=0;i<locations.length();i++){JSONObject loc=locations.optJSONObject(i);if(loc==null)continue;
-            request(snowKey(loc),3600000,()->{
-                JSONObject point=json(nwsPoint(loc.getDouble("lat"),loc.getDouble("lon"))).getJSONObject("properties");JSONObject raw=json(nws(point.getString("forecastGridData"))).getJSONObject("properties");JSONObject snow=raw.getJSONObject("snowfallAmount");JSONArray rows=snow.getJSONArray("values");List<SnowForecast.Interval> values=new ArrayList<>();
-                for(int n=0;n<rows.length();n++){JSONObject row=rows.getJSONObject(n);if(!row.isNull("value"))values.add(new SnowForecast.Interval(row.getString("validTime"),row.getDouble("value")));}
-                long now=System.currentTimeMillis();JSONObject result=new JSONObject().put("name",loc.getString("name")).put("start",now).put("issued",raw.optString("updateTime")).put("schema",4);double inches=Double.NaN;
-                for(int hours:new int[]{72,48,24}){inches=SnowForecast.inches(values,snow.getString("uom"),now,now+hours*3600000L);if(Double.isFinite(inches)){result.put("hours",hours).put("end",now+hours*3600000L);break;}}
-                if(Double.isFinite(inches))result.put("inches",inches);else result.put("unavailable",true);return result;
-            });
+            refreshSnow(loc.optString("name"),loc.optDouble("lat"),loc.optDouble("lon"));
         }
     }
     private interface Fetch {JSONObject run() throws Exception;}

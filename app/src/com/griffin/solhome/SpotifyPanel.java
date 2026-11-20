@@ -37,6 +37,7 @@ public final class SpotifyPanel {
   private final SpotifyPlayback playback;
   private final ArrayList<Dialog> children=new ArrayList<>();
   private final TextView title,artist,status;
+  private static final String[] SPOTIFY_PACKAGES={"com.spotify.tv.android","com.spotify.music"};
   private final Button previous,toggle,next,accessButton;
   private boolean closed;
   private final Application.ActivityLifecycleCallbacks lifecycle=new Application.ActivityLifecycleCallbacks(){
@@ -83,7 +84,7 @@ public final class SpotifyPanel {
   private void control(boolean sent){if(!sent)Toast.makeText(activity,"Spotify has not made this control available",Toast.LENGTH_SHORT).show();}
   private void requestAccess(){
     AlertDialog explanation=new AlertDialog.Builder(activity).setTitle("Enable Spotify controls")
-      .setMessage("Android requires notification access to read another app’s active media session. This permission is broader than music controls. Vista uses it only for Spotify track title, artist, playback state, and buttons while this panel is open. It does not read or store notification content or listening history.\n\nOn the next screen, enable Vista’s Spotify controls. You can revoke access there at any time.")
+      .setMessage("Android requires notification access to read another app’s active media session. This permission is broader than music controls. Vista uses it for Spotify track details, playback state and controls while this panel or Porchlight Home is visible. Porchlight keeps up to three tracks observed playing on this TV in memory. Vista never reads notification content.\n\nOn the next screen, enable Vista’s Spotify controls. You can revoke access there at any time.")
       .setPositiveButton("Open access settings",(d,w)->{
         try{activity.startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));}
         catch(Exception unsupported){new AlertDialog.Builder(activity).setTitle("Not available on this TV").setMessage("This Fire OS version does not expose Android’s notification-access screen. Vibe shortcuts still work. Playback control access needs a compatible system setting; Vista will not silently grant it.").setPositiveButton("OK",null).show();}
@@ -106,13 +107,23 @@ public final class SpotifyPanel {
     openSpotify(uri==null?"spotify:playlist:"+PLAYLISTS[index]:uri);
   }
   private void openSpotify(String content){
-    String[] packages={"com.spotify.tv.android","com.spotify.music"};
-    for(String pkg:packages){
+    for(String pkg:SPOTIFY_PACKAGES){
       Intent launch=activity.getPackageManager().getLeanbackLaunchIntentForPackage(pkg);if(launch==null)launch=activity.getPackageManager().getLaunchIntentForPackage(pkg);if(launch==null)continue;
-      if(content!=null){Intent deep=new Intent(Intent.ACTION_VIEW,Uri.parse(content)).setPackage(pkg);deep.putExtra(Intent.EXTRA_REFERRER,Uri.parse("android-app://"+activity.getPackageName()));try{activity.startActivity(deep);dialog.dismiss();return;}catch(Exception unsupported){/* TV builds may accept app launch only. */}}
+      if(content!=null&&openContent(activity,pkg,content)){dialog.dismiss();return;}
       try{activity.startActivity(launch);dialog.dismiss();if(content!=null)Toast.makeText(activity,"This Spotify TV app could not open the shortcut. Choose music in Spotify.",Toast.LENGTH_LONG).show();return;}catch(Exception unsupported){/* Try the other installed Spotify package. */}
     }
     Toast.makeText(activity,"Spotify is not available on this TV",Toast.LENGTH_LONG).show();
+  }
+  private static boolean openContent(Activity activity,String pkg,String content){
+    Intent deep=new Intent(Intent.ACTION_VIEW,Uri.parse(content)).setPackage(pkg);
+    deep.putExtra(Intent.EXTRA_REFERRER,Uri.parse("android-app://"+activity.getPackageName()));
+    try{activity.startActivity(deep);return true;}catch(Exception unsupported){return false;}
+  }
+  static boolean openTrack(Activity activity,String content){
+    String track=SpotifyLinks.track(content);
+    if(track==null)return false;
+    for(String pkg:SPOTIFY_PACKAGES)if(openContent(activity,pkg,track))return true;
+    return false;
   }
   private void close(){if(closed)return;closed=true;playback.close();activity.getApplication().unregisterActivityLifecycleCallbacks(lifecycle);for(Dialog child:children)if(child.isShowing())child.dismiss();children.clear();if(current==this)current=null;}
   private int dp(float n){return Math.round(n*activity.getResources().getDisplayMetrics().density);}

@@ -16,7 +16,8 @@ mkdir -p "$ROOT/build/tests"
   "$ROOT/app/src/com/griffin/solhome/SceneCalendar.java" "$ROOT/app/src/com/griffin/solhome/SeasonPalette.java" "$ROOT/tests/SceneCalendarTest.java" \
   "$ROOT/app/src/com/griffin/solhome/WorldMotion.java" "$ROOT/tests/WorldMotionTest.java" \
   "$ROOT/app/src/com/griffin/solhome/CompanionServer.java" "$ROOT/tests/CompanionServerTest.java" \
-  "$ROOT/app/src/com/griffin/solhome/HomeNavigation.java" "$ROOT/app/src/com/griffin/solhome/ParkRatLayout.java" "$ROOT/tests/HomeNavigationTest.java" \
+  "$ROOT/app/src/com/griffin/solhome/HomeNavigation.java" "$ROOT/app/src/com/griffin/solhome/HomeTheme.java" "$ROOT/app/src/com/griffin/solhome/HomeThemeLayout.java" "$ROOT/tests/HomeNavigationTest.java" \
+  "$ROOT/app/src/com/griffin/solhome/FirstChair.java" "$ROOT/app/src/com/griffin/solhome/RecentSpotifyTracks.java" "$ROOT/tests/HomeThemeTest.java" \
   "$ROOT/app/src/com/griffin/solhome/CodingUsage.java" "$ROOT/app/src/com/griffin/solhome/UsageImportPolicy.java" "$ROOT/tests/CodingUsageTest.java" \
   "$ROOT/app/src/com/griffin/solhome/HuluAdBadge.java" "$ROOT/app/src/com/griffin/solhome/HuluMutePolicy.java" "$ROOT/tests/HuluMuteTest.java"
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.CincinnatiSkyTest
@@ -37,6 +38,7 @@ mkdir -p "$ROOT/build/tests"
 python3 "$ROOT/tests/test_coding_usage.py"
 
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.HomeNavigationTest
+"${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.HomeThemeTest
 "${JAVABIN}java" -cp "$ROOT/build/tests" com.griffin.solhome.HuluMuteTest
 
 "${JAVABIN}javac" -d "$ROOT/build/tests" "$ROOT/app/src/com/griffin/solhome/PicturePolicy.java" "$ROOT/tests/PicturePolicyTest.java"

@@ -24,29 +24,39 @@ public final class HomeNavigationTest {
         while(!queue.isEmpty()){int current=queue.remove();if(!reachable.add(current))continue;for(int dir=0;dir<4;dir++)queue.add(HomeNavigation.move(current,dir,10));}
         check(reachable.contains(19),"Fire TV Home reachable");for(int tile:HomeNavigation.GRID)check(reachable.contains(tile),"every tile reachable");for(int control=13;control<=17;control++)check(reachable.contains(control),"every footer/reading control reachable");
         parkRat();
-        System.out.println("Classic and Park Rat Home focus, touch and action reachability checks passed.");
+        for (HomeTheme theme : HomeTheme.values()) {
+            if (theme == HomeTheme.CLASSIC) continue;
+            verifyLayout(HomeThemeLayout.forTheme(theme), theme);
+        }
+        verifyLayout(HomeThemeLayout.porchlight(2), HomeTheme.PORCHLIGHT);
+        verifyLayout(HomeThemeLayout.porchlight(3), HomeTheme.PORCHLIGHT);
+        System.out.println("Classic and all five Home themes passed focus, touch and action reachability checks.");
     }
 
     private static void parkRat(){
+        HomeThemeLayout layout = HomeThemeLayout.forTheme(HomeTheme.PARK_RAT);
+        check(layout.hit(960,500) == -1 && layout.hit(0,0) == -1, "Rider artwork and safe margin do not open a tile");
+        check(layout.move(0,HomeNavigation.RIGHT,0) == 2 && layout.move(2,HomeNavigation.LEFT,0) == 0,
+            "Right and Left cross the artwork between YouTube and Hulu");
+        check(layout.move(0,HomeNavigation.UP,0) == 0 && layout.move(0,HomeNavigation.DOWN,0) == 1,
+            "Up stays at the top; Down goes to Netflix");
+        check(layout.move(11,HomeNavigation.RIGHT,0) == HomeThemeLayout.MORE
+            && layout.move(HomeThemeLayout.MORE,HomeNavigation.LEFT,0) == 11, "More is directly reachable from Explore");
+    }
+
+    private static void verifyLayout(HomeThemeLayout layout, HomeTheme theme){
         Set<Integer> main = new HashSet<>();
-        for (ParkRatLayout.Tile tile : ParkRatLayout.TILES) {
-            check(main.add(tile.id), "Park Rat tile IDs are unique");
-            check(ParkRatLayout.hit(tile.centerX(),tile.centerY()) == tile.id, "Touch hits the drawn tile");
-            check(tile.left >= 86 && tile.right <= 1834 && tile.top >= 54 && tile.bottom <= 1026,
-                "Park Rat tiles leave space for focus borders inside TV safe margins");
-            for (ParkRatLayout.Tile other : ParkRatLayout.TILES) {
+        for (HomeThemeLayout.Tile tile : layout.tiles) {
+            check(main.add(tile.id), theme.label + " tile IDs are unique");
+            check(layout.hit(tile.centerX(),tile.centerY()) == tile.id, "Touch hits the drawn tile");
+            check(tile.left >= 86 && tile.right <= 1844 && tile.top >= 54 && tile.bottom <= 1037,
+                theme.label + " tiles leave space for focus borders inside TV safe margins");
+            for (HomeThemeLayout.Tile other : layout.tiles) {
                 if (tile == other) continue;
                 check(tile.right <= other.left || tile.left >= other.right || tile.bottom <= other.top || tile.top >= other.bottom,
-                    "Park Rat tile touch targets do not overlap");
+                    theme.label + " tile touch targets do not overlap");
             }
         }
-        check(ParkRatLayout.hit(960,500) == -1 && ParkRatLayout.hit(0,0) == -1, "Rider artwork and safe margin do not open a tile");
-        check(ParkRatLayout.move(0,HomeNavigation.RIGHT) == 2 && ParkRatLayout.move(2,HomeNavigation.LEFT) == 0,
-            "Right and Left cross the artwork between YouTube and Hulu");
-        check(ParkRatLayout.move(0,HomeNavigation.UP) == 0 && ParkRatLayout.move(0,HomeNavigation.DOWN) == 1,
-            "Up stays at the top; Down goes to Netflix");
-        check(ParkRatLayout.move(11,HomeNavigation.RIGHT) == ParkRatLayout.MORE
-            && ParkRatLayout.move(ParkRatLayout.MORE,HomeNavigation.LEFT) == 11, "More is directly reachable from Explore");
         for (int start : main) {
             Set<Integer> reachable = new HashSet<>();
             Queue<Integer> remaining = new ArrayDeque<>();
@@ -54,17 +64,24 @@ public final class HomeNavigationTest {
             while (!remaining.isEmpty()) {
                 int id = remaining.remove();
                 if (!reachable.add(id)) continue;
-                for (int direction = 0; direction < 4; direction++) remaining.add(ParkRatLayout.move(id,direction));
+                for (int direction = 0; direction < 4; direction++) remaining.add(layout.move(id,direction,0));
             }
-            check(reachable.equals(main), "Every Park Rat tile can reach every other tile with the D-pad");
+            check(reachable.equals(main), theme.label + " tile " + start + " cannot reach " + main.stream().filter(id -> !reachable.contains(id)).collect(java.util.stream.Collectors.toList()));
         }
 
         Set<Integer> actions = new HashSet<>(main);
-        actions.remove(ParkRatLayout.MORE);
-        for (int item : ParkRatLayout.MORE_ACTIONS) check(actions.add(item), "More offers unique actions beyond the main tiles");
+        check(actions.remove(HomeThemeLayout.MORE), theme.label + " has More");
+        actions.removeIf(id -> HomeThemeLayout.snowControl(id) || id >= HomeThemeLayout.FIRST_TRACK);
+        for (int item : layout.moreActions) check(actions.add(item), "More offers unique actions beyond the main tiles");
+        if (theme == HomeTheme.FIRST_CHAIR) {
+            check(!main.contains(13) && !main.contains(14), "First Chair uses its own information strip");
+            check(layout.move(11,HomeNavigation.UP,11) == HomeThemeLayout.SNOW_TOGGLE
+                && layout.move(HomeThemeLayout.SNOW_TOGGLE,HomeNavigation.RIGHT,11) == HomeThemeLayout.SNOW_NEXT
+                && layout.move(HomeThemeLayout.SNOW_NEXT,HomeNavigation.DOWN,11) == 11, "Snow controls return to the last dock tile");
+        }
         Set<Integer> classicActions = new HashSet<>();
         for (int item : HomeNavigation.GRID) classicActions.add(item);
         classicActions.addAll(Arrays.asList(13,14,15,17)); // Both Classic usage cards open the same detail panel.
-        check(actions.equals(classicActions), "Park Rat preserves every distinct Classic Home action");
+        check(actions.equals(classicActions), theme.label + " preserves every distinct Classic Home action");
     }
 }

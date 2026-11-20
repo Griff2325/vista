@@ -2,6 +2,13 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.13.0 — November 20, 2026
+
+- Added First Chair, Porchlight, River City and GTA VI to the native Home theme picker alongside Park Rat and Classic. Each theme retains the app shortcuts and access to Vista and TV controls through More. Existing Park Rat selections carry forward.
+- First Chair rotates a seven-resort National Weather Service snow outlook above the app dock. Pause or advance with the remote. The ticker labels saved forecasts and shows unavailable when a forecast window is missing or expired.
+- Porchlight shows up to three tracks observed playing locally through optional Spotify playback access. The tracks stay in memory while Porchlight is selected.
+- GTA VI loads two locally supplied trailer frames when present in a development build. The ordinary build shows artwork setup guidance alongside the working launcher.
+
 ## 0.12.0 — November 20, 2026
 
 - Added the optional Park Rat Home theme with original snowboarding-zine artwork, staggered app tiles and a More menu for Home controls. Choose and save the theme in Vista Settings → Home theme. Classic is the default.

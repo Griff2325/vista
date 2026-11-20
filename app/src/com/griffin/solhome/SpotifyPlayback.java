@@ -2,6 +2,7 @@ package com.griffin.solhome;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
@@ -12,14 +13,15 @@ import android.provider.Settings;
 import android.view.KeyEvent;
 import java.util.List;
 
-/** In-memory Spotify-only controller. Open while a panel is visible, close on dismissal. */
+/** In-memory Spotify-only controller. Open only while Vista presents Spotify playback. */
 public final class SpotifyPlayback implements AutoCloseable {
+  private static final String ACCESS_SETTING="enabled_notification_listeners";
   public interface Listener { void changed(State state); }
   public static final class State {
     public final boolean access,connected,playing,canToggle,canPrevious,canNext;
-    public final String title,artist;
-    State(boolean access,boolean connected,boolean playing,boolean toggle,boolean previous,boolean next,String title,String artist){
-      this.access=access;this.connected=connected;this.playing=playing;this.canToggle=toggle;this.canPrevious=previous;this.canNext=next;this.title=title;this.artist=artist;
+    public final String title,artist,mediaUri,mediaId;
+    State(boolean access,boolean connected,boolean playing,boolean toggle,boolean previous,boolean next,String title,String artist,String mediaUri,String mediaId){
+      this.access=access;this.connected=connected;this.playing=playing;this.canToggle=toggle;this.canPrevious=previous;this.canNext=next;this.title=title;this.artist=artist;this.mediaUri=mediaUri;this.mediaId=mediaId;
     }
   }
   private final Context context;
@@ -30,6 +32,9 @@ public final class SpotifyPlayback implements AutoCloseable {
   private MediaController controller;
   private boolean started,listening,access;
   private final MediaSessionManager.OnActiveSessionsChangedListener sessions=this::choose;
+  private final ContentObserver accessChanges=new ContentObserver(handler){
+    @Override public void onChange(boolean selfChange){refreshAccess();}
+  };
   private final MediaController.Callback callback=new MediaController.Callback(){
     @Override public void onMetadataChanged(MediaMetadata metadata){publish();}
     @Override public void onPlaybackStateChanged(PlaybackState state){publish();}
@@ -41,40 +46,59 @@ public final class SpotifyPlayback implements AutoCloseable {
     component=new ComponentName(this.context,SpotifyMediaListener.class);
   }
   public static boolean accessEnabled(Context context){
-    String setting=Settings.Secure.getString(context.getContentResolver(),"enabled_notification_listeners");
+    String setting=Settings.Secure.getString(context.getContentResolver(),ACCESS_SETTING);
     if(setting==null)return false;
     ComponentName expected=new ComponentName(context,SpotifyMediaListener.class);
     for(String item:setting.split(":"))if(expected.equals(ComponentName.unflattenFromString(item)))return true;
     return false;
   }
   public void start(){
-    if(started)return;started=true;access=accessEnabled(context);
-    if(access&&manager!=null){try{manager.addOnActiveSessionsChangedListener(sessions,component,handler);listening=true;}catch(SecurityException ignored){access=false;}}
+    if(started)return;
+    started=true;
+    context.getContentResolver().registerContentObserver(Settings.Secure.getUriFor(ACCESS_SETTING),false,accessChanges);
+    refreshAccess();
+  }
+  private void refreshAccess(){
+    if(!started)return;
+    access=accessEnabled(context);
+    if(!access)stopSessionListener();
+    if(access&&manager!=null&&!listening){
+      try{manager.addOnActiveSessionsChangedListener(sessions,component,handler);listening=true;}
+      catch(SecurityException ignored){access=false;}
+    }
     refresh();
   }
   private void refresh(){
     if(!started)return;
-    if(access&&manager!=null){try{choose(manager.getActiveSessions(component));return;}catch(SecurityException ignored){access=false;}}
+    if(access&&manager!=null){
+      try{choose(manager.getActiveSessions(component));return;}
+      catch(SecurityException ignored){access=false;stopSessionListener();}
+    }
     choose(null);
+  }
+  private void stopSessionListener(){
+    if(listening){manager.removeOnActiveSessionsChangedListener(sessions);listening=false;}
   }
   private static boolean spotify(MediaController candidate){String pkg=candidate.getPackageName();return "com.spotify.tv.android".equals(pkg)||"com.spotify.music".equals(pkg);}
   private void choose(List<MediaController> active){
     if(!started)return;
     MediaController selected=null;
-    if(active!=null)for(MediaController item:active){if(!spotify(item))continue;if(selected==null)selected=item;PlaybackState state=item.getPlaybackState();if(state!=null&&state.getState()==PlaybackState.STATE_PLAYING){selected=item;break;}}
+    if(access&&active!=null)for(MediaController item:active){if(!spotify(item))continue;if(selected==null)selected=item;PlaybackState state=item.getPlaybackState();if(state!=null&&state.getState()==PlaybackState.STATE_PLAYING){selected=item;break;}}
     if(controller!=null&&(selected==null||!controller.getSessionToken().equals(selected.getSessionToken()))){controller.unregisterCallback(callback);controller=null;}
     if(controller==null&&selected!=null){controller=selected;controller.registerCallback(callback,handler);}
     publish();
   }
   private void publish(){
     if(!started)return;
+    if(access&&!accessEnabled(context)){refreshAccess();return;}
     MediaMetadata metadata=controller==null?null:controller.getMetadata();
     PlaybackState playback=controller==null?null:controller.getPlaybackState();
     boolean playing=playback!=null&&playback.getState()==PlaybackState.STATE_PLAYING;
     long actions=playback==null?0:playback.getActions();
     boolean toggle=(actions&PlaybackState.ACTION_PLAY_PAUSE)!=0||(actions&(playing?PlaybackState.ACTION_PAUSE:PlaybackState.ACTION_PLAY))!=0;
     listener.changed(new State(access,controller!=null,playing,toggle,(actions&PlaybackState.ACTION_SKIP_TO_PREVIOUS)!=0,(actions&PlaybackState.ACTION_SKIP_TO_NEXT)!=0,
-      text(metadata,MediaMetadata.METADATA_KEY_TITLE),text(metadata,MediaMetadata.METADATA_KEY_ARTIST)));
+      text(metadata,MediaMetadata.METADATA_KEY_TITLE),text(metadata,MediaMetadata.METADATA_KEY_ARTIST),
+      text(metadata,MediaMetadata.METADATA_KEY_MEDIA_URI),text(metadata,MediaMetadata.METADATA_KEY_MEDIA_ID)));
   }
   private static String text(MediaMetadata metadata,String key){CharSequence value=metadata==null?null:metadata.getText(key);return value==null?"":value.toString();}
   public boolean toggle(){
@@ -95,8 +119,11 @@ public final class SpotifyPlayback implements AutoCloseable {
     catch(RuntimeException ignored){refresh();return false;}
   }
   @Override public void close(){
-    started=false;if(controller!=null){controller.unregisterCallback(callback);controller=null;}
-    if(listening&&manager!=null){manager.removeOnActiveSessionsChangedListener(sessions);listening=false;}
+    if(!started)return;
+    started=false;
+    context.getContentResolver().unregisterContentObserver(accessChanges);
+    if(controller!=null){controller.unregisterCallback(callback);controller=null;}
+    stopSessionListener();
     handler.removeCallbacksAndMessages(null);
   }
 }
