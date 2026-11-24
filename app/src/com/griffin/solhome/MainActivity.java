@@ -19,6 +19,8 @@ import java.io.*;
 import java.util.*;
 import java.text.SimpleDateFormat;
 
+import static com.griffin.solhome.HomeThemeLayout.THEMES;
+
 public class MainActivity extends Activity {
   private HomeView home;
   private PixelSceneView scene;
@@ -197,7 +199,7 @@ public class MainActivity extends Activity {
     home.invalidate();
   }
   class HomeView extends View {
-    private static final String CLASSIC_DESCRIPTION = "Vista. Use arrows to choose a tile, scroll down for TV controls, or move right to coding usage and weather. Press OK to open.";
+    private static final String CLASSIC_DESCRIPTION = "Vista. Use arrows to choose a tile. Press Up from the first row for Themes. Scroll down for TV controls, or move right to coding usage and weather. Press OK to open.";
     Bitmap[] logos=new Bitmap[favorites.length];int selected=0,lastApp=0,lastGrid=0,gridScroll=0;
     HomeTheme theme = HomeTheme.CLASSIC;
     HomeThemeLayout layout;
@@ -226,9 +228,9 @@ public class MainActivity extends Activity {
         themedHome = null;
         layout = null;
         if (selected == HomeThemeLayout.MORE) selected = 9;
-        if (selected > HomeThemeLayout.MORE) selected = lastApp;
+        if (selected > HomeThemeLayout.MORE && selected != THEMES) selected = lastApp;
         if (HomeNavigation.position(selected) >= 0) lastGrid = selected;
-        setContentDescription(CLASSIC_DESCRIPTION);
+        updateHomeDescription();
         revealSelection(false);
       } else {
         ThemedHome renderer = new ThemedHome(theme);
@@ -260,7 +262,7 @@ public class MainActivity extends Activity {
         }
         if (theme == HomeTheme.PORCHLIGHT) {
           music = new RecentSpotifyTracks();
-          select(4);
+          select(selected == THEMES ? THEMES : 4);
         } else {
           if (theme == HomeTheme.FIRST_CHAIR) {
             firstChair = new FirstChair(!ValueAnimator.areAnimatorsEnabled());
@@ -298,7 +300,7 @@ public class MainActivity extends Activity {
               layout = HomeThemeLayout.porchlight(music.size());
               if (!layout.contains(selected)) select(HomeThemeLayout.FIRST_TRACK);
             }
-            updateThemedDescription();
+            updateHomeDescription();
             invalidate();
           });
           porchPlayback.start();
@@ -330,19 +332,23 @@ public class MainActivity extends Activity {
     void updateSnowOutlook(){
       if (theme != HomeTheme.FIRST_CHAIR) return;
       snowOutlook = WidgetRepository.get(MainActivity.this).snowOutlook(firstChair.resort(), System.currentTimeMillis());
-      updateThemedDescription();
+      updateHomeDescription();
     }
     void select(int item){
       selected = item;
-      if (theme == HomeTheme.FIRST_CHAIR && item != HomeThemeLayout.MORE && !HomeThemeLayout.snowControl(item)) {
+      if (theme == HomeTheme.FIRST_CHAIR && (HomeNavigation.favoriteIndex(item) >= 0 || item == 11)) {
         lastDockTile = item;
       }
-      updateThemedDescription();
+      updateHomeDescription();
     }
-    private void updateThemedDescription(){
-      if (themedHome == null || !layout.contains(selected)) return;
-      String label = "Vista Home. " + homeLabel(selected) + ". Use arrows to choose a tile and OK to open.";
-      if (HomeThemeLayout.snowControl(selected)) label = snowOutlook.description() + ". " + label;
+    private void updateHomeDescription(){
+      String label = CLASSIC_DESCRIPTION;
+      if (selected == THEMES) {
+        label = "Vista Home. Themes. Press OK to choose a Home theme.";
+      } else if (layout != null && layout.contains(selected)) {
+        label = "Vista Home. " + homeLabel(selected) + ". Use arrows to choose a tile and OK to open.";
+        if (HomeThemeLayout.snowControl(selected)) label = snowOutlook.description() + ". " + label;
+      }
       if (!label.contentEquals(getContentDescription())) setContentDescription(label);
     }
     String homeLabel(int item){
@@ -362,6 +368,7 @@ public class MainActivity extends Activity {
         case 17: return "Weather";
         case HomeNavigation.FIRE_TV_HOME: return "Fire TV Home";
         case HomeThemeLayout.MORE: return "More";
+        case THEMES: return "Themes";
         case HomeThemeLayout.SNOW_TOGGLE: return firstChair.paused ? "Resume resort rotation" : "Pause resort rotation";
         case HomeThemeLayout.SNOW_NEXT: return "Next resort";
         default: throw new IllegalArgumentException("Unknown Home tile: "+item);
@@ -412,6 +419,15 @@ public class MainActivity extends Activity {
       drawRoom(c);
       drawAppNiche(c);
       text(c,"VISTA",108,82,25,white,true);text(c,"/",207,82,23,muted,false);text(c,"HOME",234,82,17,muted,false);
+      HomeThemeLayout.Tile themesButton = HomeThemeLayout.THEMES_TILE;
+      boolean themesFocused = selected == THEMES;
+      paint.setColor(themesFocused ? gold : 0xff637970);
+      c.drawRoundRect(themesButton.left - 2, themesButton.top - 2, themesButton.right + 2, themesButton.bottom + 2, 9, 9, paint);
+      paint.setColor(themesFocused ? 0xff405549 : 0xff223832);
+      c.drawRoundRect(themesButton.left, themesButton.top, themesButton.right, themesButton.bottom, 7, 7, paint);
+      paint.setTextAlign(Paint.Align.CENTER);
+      text(c,homeLabel(THEMES),themesButton.centerX(),themesButton.centerY()+8,24,white,true);
+      paint.setTextAlign(Paint.Align.LEFT);
       text(c,localTime("h:mm",now),103,207,99,white,false);
       text(c,localTime("a",now),368,204,19,muted,false);
       text(c,localTime("EEEE, MMMM d",now),108,252,23,muted,false);
@@ -453,6 +469,7 @@ public class MainActivity extends Activity {
       c.restore();
     }
     void activate(int item){
+      if (item == THEMES) {homeTheme();return;}
       if (item >= HomeThemeLayout.FIRST_TRACK) {
         RecentSpotifyTracks.Track track = music.get(item - HomeThemeLayout.FIRST_TRACK);
         if (track == null || !SpotifyPlayback.accessEnabled(MainActivity.this)
@@ -463,7 +480,7 @@ public class MainActivity extends Activity {
       if (item == HomeThemeLayout.SNOW_TOGGLE) {
         firstChair.paused = !firstChair.paused;
         scheduleSnowRotation();
-        updateThemedDescription();
+        updateHomeDescription();
         invalidate();
         return;
       }
@@ -508,7 +525,7 @@ public class MainActivity extends Activity {
         }
         select(next);
       } else {
-        selected=HomeNavigation.move(selected,direction,lastGrid);
+        select(HomeNavigation.move(selected,direction,lastGrid));
         if(HomeNavigation.position(selected)>=0)lastGrid=selected;
       }
       if(HomeNavigation.favoriteIndex(selected)>=0)lastApp=selected;
@@ -531,16 +548,22 @@ public class MainActivity extends Activity {
         }
         return true;
       }
-      if(e.getAction()==android.view.MotionEvent.ACTION_DOWN){dragArea=x>=88&&x<570&&y>=280&&y<884;dragStart=y;dragScroll=gridScroll;dragged=false;return true;}
+      if(e.getAction()==MotionEvent.ACTION_DOWN){
+        themeTouch=HomeNavigation.shortcutHit(x,y)==THEMES?THEMES:-1;
+        dragArea=x>=88&&x<570&&y>=280&&y<884;dragStart=y;dragScroll=gridScroll;dragged=false;return true;
+      }
+      if(e.getAction()==MotionEvent.ACTION_CANCEL)themeTouch=-1;
       if(e.getAction()==android.view.MotionEvent.ACTION_MOVE&&dragArea&&Math.abs(y-dragStart)>18){dragged=true;gridScroller.forceFinished(true);gridScroll=Math.max(0,Math.min(HomeNavigation.MAX_SCROLL,dragScroll+Math.round(dragStart-y)));invalidate();return true;}
       if(e.getAction()!=android.view.MotionEvent.ACTION_UP)return true;
-      if(dragged){int row=Math.round(gridScroll/150f);selected=HomeNavigation.GRID[Math.min(HomeNavigation.GRID.length-1,row*2)];lastGrid=selected;return true;}
-      int item=HomeNavigation.hit(x,y,gridScroll);
-      if(item>=0){selected=item;lastGrid=item;activate(selected);}
-      else if(HomeNavigation.shortcutHit(x,y)>=0){selected=HomeNavigation.shortcutHit(x,y);activate(selected);}
-      else if(y>954&&x>=96&&x<700){selected=15;activate(selected);}
-      else if(y>954&&x>=730&&x<1350){selected=16;activate(selected);}
-      else if(y>954&&x>=1400){selected=17;activate(selected);}
+      int pressed=themeTouch;themeTouch=-1;
+      if(dragged){int row=Math.round(gridScroll/150f);select(HomeNavigation.GRID[Math.min(HomeNavigation.GRID.length-1,row*2)]);lastGrid=selected;return true;}
+      int item=HomeNavigation.hit(x,y,gridScroll),shortcut=HomeNavigation.shortcutHit(x,y);
+      if(pressed==THEMES && shortcut!=THEMES)return true;
+      if(item>=0){select(item);lastGrid=item;activate(selected);}
+      else if(shortcut>=0 && (shortcut!=THEMES || pressed==THEMES)){select(shortcut);activate(selected);}
+      else if(y>954&&x>=96&&x<700){select(15);activate(selected);}
+      else if(y>954&&x>=730&&x<1350){select(16);activate(selected);}
+      else if(y>954&&x>=1400){select(17);activate(selected);}
       invalidate();return true;
     }
   }

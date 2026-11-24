@@ -4,9 +4,11 @@ package com.griffin.solhome;
 final class HomeThemeLayout {
     static final int WIDTH = 1920, HEIGHT = 1080;
     static final int MORE = 20;
-    static final int SNOW_TOGGLE = 21, SNOW_NEXT = 22, FIRST_TRACK = 23;
+    static final int SNOW_TOGGLE = 21, SNOW_NEXT = 22, THEMES = 23, FIRST_TRACK = 24;
+    static final Tile THEMES_TILE = new Tile(THEMES, 17, 5, 7.8f, 5);
     private static final int[] MORE_ORDER = {9, 6, 7, 8, 10, 12, HomeNavigation.FIRE_TV_HOME, 15, 17, 13, 14};
     private static final HomeThemeLayout PARK_RAT = new HomeThemeLayout(
+        THEMES_TILE,
         new Tile(0, 5, 22, 28, 23),
         new Tile(1, 7, 48, 20, 15),
         new Tile(3, 5, 66, 25, 17),
@@ -20,6 +22,7 @@ final class HomeThemeLayout {
         new Tile(MORE, 79, 86, 16, 9)
     );
     private static final HomeThemeLayout FIRST_CHAIR = new HomeThemeLayout(
+        THEMES_TILE,
         new Tile(0, 5, 73, 11, 17),
         new Tile(1, 16.3f, 73, 11, 17),
         new Tile(2, 27.6f, 73, 11, 17),
@@ -33,6 +36,7 @@ final class HomeThemeLayout {
         new Tile(MORE, 84.1f, 91, 11, 5)
     );
     private static final HomeThemeLayout PORCHLIGHT = new HomeThemeLayout(
+        THEMES_TILE,
         new Tile(4, 5, 39, 17, 23),
         new Tile(0, 83, 17, 12, 9),
         new Tile(1, 84, 27, 11, 9),
@@ -51,6 +55,7 @@ final class HomeThemeLayout {
         new Tile(FIRST_TRACK + 2, 62.4f, 38, 16.7f, 38)
     };
     private static final HomeThemeLayout RIVER_CITY = new HomeThemeLayout(
+        THEMES_TILE,
         new Tile(13, 42, 5.5f, 11, 8),
         new Tile(14, 54, 5.5f, 8, 8),
         new Tile(MORE, 63, 5.5f, 7.5f, 8),
@@ -64,6 +69,7 @@ final class HomeThemeLayout {
         new Tile(HomeNavigation.PRIME_VIDEO, 86, 81, 9, 13)
     );
     private static final HomeThemeLayout GTA_VI = new HomeThemeLayout(
+        THEMES_TILE,
         new Tile(MORE, 85, 14, 11, 6),
         new Tile(13, 70, 22, 14, 9),
         new Tile(14, 85, 22, 11, 9),
@@ -117,6 +123,8 @@ final class HomeThemeLayout {
             bottom = (y + height) * HEIGHT / 100f;
         }
 
+        boolean contains(float x, float y) { return x >= left && x < right && y >= top && y < bottom; }
+
         float centerX() { return (left + right) / 2; }
         float centerY() { return (top + bottom) / 2; }
     }
@@ -132,15 +140,15 @@ final class HomeThemeLayout {
 
     int hit(float x, float y) {
         for (Tile tile : tiles) {
-            if (x >= tile.left && x < tile.right && y >= tile.top && y < tile.bottom) return tile.id;
+            if (tile.contains(x,y)) return tile.id;
         }
         return -1;
     }
 
     int move(int id, int direction, int lastDockTile) {
         if (this == FIRST_CHAIR) {
-            if (snowControl(id) && direction == HomeNavigation.DOWN) return lastDockTile;
-            if (!snowControl(id) && id != MORE && direction == HomeNavigation.UP) return SNOW_TOGGLE;
+            if ((snowControl(id) || id == THEMES) && direction == HomeNavigation.DOWN) return lastDockTile;
+            if (!snowControl(id) && id != MORE && id != THEMES && direction == HomeNavigation.UP) return SNOW_TOGGLE;
         }
         Tile current = find(id);
         if (current == null) return 0;

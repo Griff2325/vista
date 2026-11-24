@@ -194,7 +194,7 @@ final class ThemedHome {
             case 4: background = 0xff4f5d47; foreground = 0xffdae9b9; break;
             case HomeNavigation.PRIME_VIDEO: background = 0xff3a5774; foreground = 0xffb7eaff; break;
             case 11: background = 0xffefd9b0; foreground = 0xff47313d; break;
-            case 13: case 14: case MORE: background = 0xff333750; border = 0xffa59bac; break;
+            case 13: case 14: case MORE: case THEMES: background = 0xff333750; border = 0xffa59bac; break;
         }
 
         paint.setColor(tile.id == 0 ? 0xff743940 : 0xff232238);
@@ -261,7 +261,7 @@ final class ThemedHome {
         int bg, stroke, focus;
         float radius, markWidth = .78f;
         int id = tile.id;
-        boolean utility = id == 13 || id == 14 || id == MORE;
+        boolean utility = id == 13 || id == 14 || id == MORE || id == THEMES;
         switch (theme) {
             case FIRST_CHAIR:
                 bg = id == 0 ? 0xff355c7a : id == 11 ? 0xff345872 : 0xe8243e56;
@@ -385,15 +385,15 @@ final class ThemedHome {
         paint.setColor(0x63422d46);
         c.drawRoundRect(1286, 348, 1863, 988, 12, 12, paint);
         if (artworkUnavailable) {
-            text(c, "Trailer artwork unavailable", 96, 795, 40, CREAM, bold);
-            text(c, "Add both frames to .local/home-art and rebuild Vista.", 96, 845, 27, CREAM, medium);
+            text(c, "Rockstar artwork unavailable", 96, 795, 40, CREAM, bold);
+            text(c, "Add both JPEGs to .local/home-art and rebuild Vista.", 96, 845, 27, CREAM, medium);
         }
         if (inset == null) return;
         rect(c, tuner.left - 2, tuner.top - 2, tuner.right + 2, tuner.bottom + 2, 0xffecc3c5);
         paint.setAlpha(255);
         c.drawBitmap(inset, null, tuner, paint);
         rect(c, 1480, 1003, 1836, 1041, 0xdd202f31);
-        text(c, "Rockstar Games trailer frames", 1492, 1030, 22, CREAM, medium);
+        text(c, "Rockstar Games imagery", 1492, 1030, 22, CREAM, medium);
     }
 
     private void drawCrate(Canvas c, int selected, RecentSpotifyTracks music) {

@@ -1,5 +1,7 @@
 package com.griffin.solhome;
 import java.util.*;
+
+import static com.griffin.solhome.HomeThemeLayout.THEMES;
 public final class HomeNavigationTest {
     static void check(boolean ok,String why){if(!ok)throw new AssertionError(why);}
     public static void main(String[] args){
@@ -20,6 +22,12 @@ public final class HomeNavigationTest {
         check(HomeNavigation.move(19,HomeNavigation.UP,10)==9&&HomeNavigation.move(19,HomeNavigation.DOWN,10)==13,"native Home shortcut exits to grid/footer");
         check(HomeNavigation.hit(200,800,600)==19&&HomeNavigation.hit(450,800,600)==-1&&HomeNavigation.reveal(19,0)==600&&HomeNavigation.shortcutHit(550,910)==-1&&HomeNavigation.shortcutHit(600,930)==-1,"shortcut touch respects visible bounds and gutters");
         check(HomeNavigation.favoriteIndex(19)==-1,"native Home is not an app favorite");
+        HomeThemeLayout.Tile themes = HomeThemeLayout.THEMES_TILE;
+        check(HomeNavigation.move(0,HomeNavigation.UP,0) == THEMES
+            && HomeNavigation.move(1,HomeNavigation.UP,1) == THEMES
+            && HomeNavigation.move(THEMES,HomeNavigation.DOWN,1) == 1, "Classic Themes is one Up from the first row and returns Down to the previous tile");
+        check(HomeNavigation.shortcutHit(themes.centerX(), themes.centerY()) == THEMES
+            && HomeNavigation.shortcutHit(themes.right, themes.centerY()) == -1, "Classic Themes uses the shared header touch bounds");
         Set<Integer> reachable=new HashSet<>();Queue<Integer> queue=new ArrayDeque<>();queue.add(0);
         while(!queue.isEmpty()){int current=queue.remove();if(!reachable.add(current))continue;for(int dir=0;dir<4;dir++)queue.add(HomeNavigation.move(current,dir,10));}
         check(reachable.contains(19),"Fire TV Home reachable");for(int tile:HomeNavigation.GRID)check(reachable.contains(tile),"every tile reachable");for(int control=13;control<=17;control++)check(reachable.contains(control),"every footer/reading control reachable");
@@ -38,8 +46,8 @@ public final class HomeNavigationTest {
         check(layout.hit(960,500) == -1 && layout.hit(0,0) == -1, "Rider artwork and safe margin do not open a tile");
         check(layout.move(0,HomeNavigation.RIGHT,0) == 2 && layout.move(2,HomeNavigation.LEFT,0) == 0,
             "Right and Left cross the artwork between YouTube and Hulu");
-        check(layout.move(0,HomeNavigation.UP,0) == 0 && layout.move(0,HomeNavigation.DOWN,0) == 1,
-            "Up stays at the top; Down goes to Netflix");
+        check(layout.move(0,HomeNavigation.UP,0) == THEMES && layout.move(0,HomeNavigation.DOWN,0) == 1,
+            "Up reaches Themes and Down goes to Netflix");
         check(layout.move(11,HomeNavigation.RIGHT,0) == HomeThemeLayout.MORE
             && layout.move(HomeThemeLayout.MORE,HomeNavigation.LEFT,0) == 11, "More is directly reachable from Explore");
     }
@@ -69,6 +77,11 @@ public final class HomeNavigationTest {
             check(reachable.equals(main), theme.label + " tile " + start + " cannot reach " + main.stream().filter(id -> !reachable.contains(id)).collect(java.util.stream.Collectors.toList()));
         }
 
+        int focus = theme == HomeTheme.PORCHLIGHT ? 4 : 0;
+        for (int moves = 0; moves < 3 && focus != THEMES; moves++) focus = layout.move(focus,HomeNavigation.UP,0);
+        check(focus == THEMES, theme.label + " Themes is at most three presses Up from the first app");
+        HomeThemeLayout.Tile themes = HomeThemeLayout.THEMES_TILE;
+        check(layout.hit(themes.centerX(), themes.centerY()) == THEMES, theme.label + " Themes uses the shared header touch bounds");
         Set<Integer> actions = new HashSet<>(main);
         check(actions.remove(HomeThemeLayout.MORE), theme.label + " has More");
         actions.removeIf(id -> HomeThemeLayout.snowControl(id) || id >= HomeThemeLayout.FIRST_TRACK);
@@ -81,7 +94,7 @@ public final class HomeNavigationTest {
         }
         Set<Integer> classicActions = new HashSet<>();
         for (int item : HomeNavigation.GRID) classicActions.add(item);
-        classicActions.addAll(Arrays.asList(13,14,15,17)); // Both Classic usage cards open the same detail panel.
+        classicActions.addAll(Arrays.asList(13,14,15,17,THEMES)); // Both Classic usage cards open the same detail panel.
         check(actions.equals(classicActions), theme.label + " preserves every distinct Classic Home action");
     }
 }

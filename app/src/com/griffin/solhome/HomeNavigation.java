@@ -9,9 +9,10 @@ final class HomeNavigation {
     static int favoriteIndex(int id){return id==PRIME_VIDEO?6:id>=0&&id<6?id:-1;}
     static int position(int id){for(int i=0;i<GRID.length;i++)if(GRID[i]==id)return i;return -1;}
     static int move(int id,int direction,int lastGrid){
+        if(id==HomeThemeLayout.THEMES)return direction==DOWN?(position(lastGrid)>=0?lastGrid:0):id;
         int p=position(id);
         if(p>=0){
-            if(direction==UP)return p>=2?GRID[p-2]:id;
+            if(direction==UP)return p>=2?GRID[p-2]:HomeThemeLayout.THEMES;
             if(direction==DOWN)return p/2<(GRID.length-1)/2?GRID[Math.min(p+2,GRID.length-1)]:13+p%2;
             if(direction==LEFT)return p%2==1?GRID[p-1]:id;
             return p%2==0&&p+1<GRID.length?GRID[p+1]:15;
@@ -27,6 +28,7 @@ final class HomeNavigation {
         int row=p/2,first=current/STEP;return row<first?row*STEP:row>first+3?(row-3)*STEP:current;
     }
     static int shortcutHit(float x,float y){
+        if(HomeThemeLayout.THEMES_TILE.contains(x,y))return HomeThemeLayout.THEMES;
         if(y<896||y>=926)return -1;
         for(int i=0;i<2;i++)if(x>=108+i*233&&x<308+i*233)return 13+i;
         return -1;

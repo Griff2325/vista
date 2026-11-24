@@ -14,9 +14,10 @@ mkdir -p "$BUILD/classes" "$BUILD/dex" "$BUILD/gen"
 find "$BUILD/classes" -name '*.class' -delete
 ASSETS=(-A "$ROOT/app/assets")
 ART="$ROOT/.local/home-art"
-if [[ -f "$ART/gta-vi-rooftop.jpg" && -f "$ART/gta-vi-tuner.jpg" ]]; then
+if [[ -f "$ART/gta-vi-jason-lucia.jpg" && -f "$ART/gta-vi-tuner.jpg" ]]; then
   mkdir -p "$BUILD/home-art"
-  cp "$ART/gta-vi-rooftop.jpg" "$ART/gta-vi-tuner.jpg" "$BUILD/home-art/"
+  rm -f "$BUILD/home-art/gta-vi-rooftop.jpg"
+  cp "$ART/gta-vi-jason-lucia.jpg" "$ART/gta-vi-tuner.jpg" "$BUILD/home-art/"
   ASSETS+=(-A "$BUILD/home-art")
 fi
 "$TOOLS/aapt2" compile --dir "$ROOT/app/res" -o "$BUILD/resources.zip"

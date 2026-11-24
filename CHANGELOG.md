@@ -2,6 +2,11 @@
 
 Repository established October 17, 2026. Earlier development stages below are supported by retained snapshots and session measurements; they were not originally Git commits. All imported history uses the actual import date.
 
+## 0.13.1 — November 24, 2026
+
+- Added a **Themes** button beside the Home header in all six layouts for opening the existing theme picker with the remote or by touch. The choice is saved, and the button stays focused for another switch.
+- Updated the optional GTA VI background to Rockstar's official Jason and Lucia screenshot and kept the pink tuner inset.
+
 ## 0.13.0 — November 20, 2026
 
 - Added First Chair, Porchlight, River City and GTA VI to the native Home theme picker alongside Park Rat and Classic. Each theme retains the app shortcuts and access to Vista and TV controls through More. Existing Park Rat selections carry forward.

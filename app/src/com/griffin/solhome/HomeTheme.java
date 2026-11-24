@@ -6,7 +6,7 @@ enum HomeTheme {
     FIRST_CHAIR("first-chair", "First Chair", "first-chair.jpg"),
     PORCHLIGHT("porchlight", "Porchlight", null),
     RIVER_CITY("river-city", "River City", "river-city.jpg"),
-    GTA_VI("gta-vi", "GTA VI", "gta-vi-rooftop.jpg");
+    GTA_VI("gta-vi", "GTA VI", "gta-vi-jason-lucia.jpg");
 
     static final String PREFERENCE = "home_theme", LEGACY_PARK_RAT = "park_rat_home";
     static final String GTA_INSET = "gta-vi-tuner.jpg";

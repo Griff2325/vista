@@ -1,6 +1,6 @@
 # Home themes
 
-Open **Vista Settings → Home theme** to choose Classic, Park Rat, First Chair, Porchlight, River City, or GTA VI. Vista saves the selection on the TV. Existing Park Rat selections carry forward from 0.12.0. All of the themed layouts offer **More** for shortcuts including Settings, Inputs, Ambient, and Fire TV Home.
+Choose **Themes** beside the Home header to open the picker. Use **Up** from the apps to reach it with the remote. You can also open the picker from **Vista Settings → Home theme**. Choose Classic, Park Rat, First Chair, Porchlight, River City, or GTA VI. Vista saves the selection on the TV. Existing Park Rat selections carry forward from 0.12.0. All of the themed layouts offer **More** for shortcuts including Settings, Inputs, Ambient, and Fire TV Home.
 
 ## First Chair
 
@@ -14,11 +14,11 @@ Open **Spotify vibes** from the record crate or the More menu to enable local Sp
 
 ## GTA VI artwork
 
-The art comes from [Rockstar Games' official Grand Theft Auto VI trailers](https://www.rockstargames.com/VI/media/videos). For a local development build with the theme’s complete artwork, put both authorized JPEGs in the ignored `.local/home-art/` directory at the repository root, then run `bash scripts/build-app.sh`.
+For a local development build with the complete GTA VI theme, put both authorized JPEGs in the ignored `.local/home-art/` directory at the repository root, then run `bash scripts/build-app.sh`. Rockstar’s official screenshot gallery labels the background **Jason and Lucia 03**. [Rockstar gallery](https://www.rockstargames.com/VI/media/screenshots).
 
-| File | Source frame | Approved preview SHA-256 |
+| File | Source | SHA-256 |
 | --- | --- | --- |
-| `gta-vi-rooftop.jpg` | Trailer 1 at 0:38.52 | `5e4f22e98d8aedc0f6fb73a956e823ad376a9f2245f3d3b17419ffe383270226` |
-| `gta-vi-tuner.jpg` | Trailer 2 at 0:29.85 | `dd470e35e58ff944e6949786cda2e7a8ae58f0d2d4a8197843328d5235165bb5` |
+| `gta-vi-jason-lucia.jpg` | [Jason and Lucia 03, 1920 × 1080](https://www.rockstargames.com/VI/_next/static/media/Jason_and_Lucia_03.15z-.c0tptrzs.jpg?akim=1&imdensity=1&imwidth=1920) | `30b98cac824253479d431318a09dd4deab4ad2e778a93f2792eedb9aa790f441` |
+| `gta-vi-tuner.jpg` | [Trailer 2 at 0:29.85](https://www.rockstargames.com/VI/media/videos) | `dd470e35e58ff944e6949786cda2e7a8ae58f0d2d4a8197843328d5235165bb5` |
 
-The regular development build packages the launcher layout and shows artwork setup guidance. Keep the trailer JPEGs and any APK containing them local.
+The regular development build packages the launcher layout and shows artwork setup guidance. Keep the Rockstar JPEGs and any APK containing them local.
